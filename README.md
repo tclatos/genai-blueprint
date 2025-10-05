@@ -140,11 +140,30 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
     - `coding_agent_example.py`: Coding agent implementation
     - `research_agent_example.py`: Research agent demonstration
   - `ekg/`: Enterprise Knowledge Graph demos
-    - `cli_commands.py` and `cli_commands_baml.py`: EKG CLI commands
+    - `baml_src/`: BAML schema definitions
+      - `clients.baml`: Client data schemas
+      - `generators.baml`: Data generation schemas
+      - `rainbow_project_kg.baml`: Knowledge graph schemas
+    - `cli_commands/`: EKG CLI command implementations
+      - `commands.py`: Main CLI commands
+      - `commands_baml.py`: BAML-specific CLI commands
+      - `commands_ekg.py`: EKG-specific commands
+    - `notebooks/`: Jupyter notebooks for EKG development
+      - `0_scratchpad_ekg2.ipynb`: EKG development scratchpad
+      - `0_struct_rag.ipynb`: Structured RAG notebook
+      - `scratchpad.ipynb`: General development scratchpad
+    - `struct_rag/`: Structured RAG implementations
+      - `struct_rag_doc_processing.py`: Document processing
+      - `struct_rag_tool_factory.py`: RAG tool factory
+    - `example_new_subgraph.py`: Subgraph example
     - `generate_fake_rainbows.py`: Synthetic data generation
-    - `struct_rag_doc_processing.py`: Structured RAG document processing
-    - `struct_rag_tool_factory.py`: RAG tool factory
+    - `graph_core.py`: Core graph functionality
+    - `graph_schema.py`: Graph schema definitions
+    - `kuzu_graph_html.py`: Kuzu graph HTML visualization
+    - `rainbow_subgraph.py`: Rainbow subgraph implementation
     - `test_baml_extract.py`: BAML extraction testing
+    - `test_graph.py`: Graph functionality testing
+    - `test_refactored_ekg.py`: Refactored EKG testing
   - `maintenance_agent/`: System maintenance agent demos
     - `dummy_data.py`: Test data generation
     - `tools.py`: Maintenance tools implementation
@@ -152,6 +171,11 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
     - `loader.py`: Data loading utilities
     - `model_subset.py`: Model subset management
     - `search.py`: Search implementation
+  - `todo/`: Additional demo implementations
+    - `20_▫️_CrewAI_demo.py`: CrewAI demonstration
+    - `azure_gpt4o.py`: Azure GPT-4o integration
+    - `human-in-loop-agent.py`: Human-in-the-loop agent
+  - `mergekit.yml`: MergeKit configuration
 
 - `genai_blueprint/webapp/`: Streamlit web application
   - `pages/`: Streamlit page implementations organized by category
