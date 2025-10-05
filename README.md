@@ -122,9 +122,11 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
   - `B_2_self_query.py`: Self-querying retrieval demo
   - `C_1_tools_example.py`: Tool usage examples
   - `C_2_advanced_rag_langgraph.py`: Advanced RAG with LangGraph
+  - `C_2_advanced_rag_langgraph_functional.py`: Functional approach to advanced RAG
   - `C_2_Agentic_Rag_Functional.py`: Agentic RAG functional approach
   - `C_3_essay_writer_agent.py`: Essay writing agent
   - `C_4_agent_structured_output.py`: Structured output agents
+  - `fabric_chain.py`: Fabric pattern chain implementation
 
 #### Main Application Components
 - `genai_blueprint/main/`: Main application entry points
@@ -208,7 +210,7 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
     - `smolagents_streamlit.py`: SmolAgents UI components
     - `streamlit_chat.py`: Helper to display LangGraph chat in Streamlit
     - `config_editor.py`: Configuration editing interface
-    - `cypher_graph_display.py`: Graph visualization component
+    - `cypher_graph_display.py`: Cypher graph visualization component
     - `llm_selector.py`: LLM selection component
   - `cli_commands.py`: Webapp-specific CLI commands
 
