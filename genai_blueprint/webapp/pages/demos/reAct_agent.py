@@ -38,7 +38,7 @@ from langchain_community.tools import DuckDuckGoSearchRun  # noqa: E402
 
 duckduck_search_tool = DuckDuckGoSearchRun()
 
-CONFIG_FILE = "config/agents/react.yaml"
+CONFIG_FILE = "config/agents/langchain.yaml"
 assert Path(CONFIG_FILE).exists(), f"Cannot load {CONFIG_FILE}"
 
 # Default system prompt

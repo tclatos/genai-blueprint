@@ -38,11 +38,11 @@ if "research_full_report" not in sss:
 
 # Configuration area
 with st.expander("Search Configuration", expanded=True):
+    gpt_researcher_config = global_config().merge_with("config/components/gpt_researcher.yaml")
+    available_configs = list(gpt_researcher_config.get("gpt_researcher").keys())
     config_name = st.selectbox(
         "Research Configuration",
-        options=global_config()
-        .merge_with("config/components/gpt_researcher.yaml")
-        .get_list("gpt_researcher.available_configs"),
+        options=available_configs,
         index=0,
         help="Select a preconfigured research profile",
     )

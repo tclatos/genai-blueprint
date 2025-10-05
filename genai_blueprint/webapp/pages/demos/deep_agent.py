@@ -36,7 +36,7 @@ from genai_blueprint.webapp.ui_components.streamlit_chat import StreamlitStatusC
 
 load_dotenv()
 
-CONFIG_FILE = "config/demos/deep_agent.yaml"
+CONFIG_FILE = "config/agents/deepagents.yaml"
 assert Path(CONFIG_FILE).exists(), f"Cannot load {CONFIG_FILE}"
 
 # Only run UI code when this script is executed in Streamlit context (not during import)

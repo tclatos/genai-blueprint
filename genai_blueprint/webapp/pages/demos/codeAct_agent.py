@@ -50,7 +50,7 @@ MODEL_ID = None  # Use the one by configuration
 # MODEL_ID = "qwen_qwq32_openrouter"
 
 DATA_PATH = Path.cwd() / "use_case_data/other"
-CONF_YAML_FILE = "config/agents/codeact.yaml"
+CONF_YAML_FILE = "config/agents/smolagents.yaml"
 
 # Initialize session state variables for managing agent output and display
 if "agent_output" not in sss:
