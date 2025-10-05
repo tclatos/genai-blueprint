@@ -68,16 +68,35 @@ The configuration system now supports **flexible project directory discovery**:
 - `config/baseline.yaml`: Core LLM, embeddings, and vector store configurations
 - `config/overrides.yaml`: Environment-specific overrides (selected via `BLUEPRINT_CONFIG`)
 - `config/mcp_servers.yaml`: MCP server configurations
+- `config/basic_auth.yaml`: Basic authentication settings
 - `.env`: API keys and environment variables (can be in project root or parent directories)
+
+**Development Configuration**:
+- `config/.vscode/`: VSCode development settings
+  - `settings.json`: Editor configuration for the project
+
+**Agent Configurations**:
+- `config/agents/`: Agent-specific configurations
+  - `deepagents.yaml`: Deep agent configurations
+  - `langchain.yaml`: LangChain agent settings
+  - `smolagents.yaml`: SmolAgents configurations
 
 **Provider Configurations**:
 - `config/providers/llm.yaml`: LLM model definitions and provider configurations
 - `config/providers/embeddings.yaml`: Embedding model configurations
 
 **Demo and Component Configurations**:
-- `config/demos/`: Demo-specific configurations (CLI examples, agent configs, etc.)
-- `config/components/`: Component-specific configurations (Cognee, GPT Researcher, etc.)
+- `config/demos/`: Demo-specific configurations
+  - `cli_examples.yaml`: CLI demo configurations
+  - `cognee_kg.yaml`: Cognee knowledge graph settings
+  - `graph_rag.yaml`: Graph RAG configurations
+  - `mergekit.yaml`: MergeKit demo settings
+  - `presidio_anonymization.yaml`: Presidio anonymization demo
+  - `README.md`: Demo documentation
+- `config/components/`: Component-specific configurations
+  - `gpt_researcher.yaml`: GPT Researcher component settings
 - `config/schemas/`: Schema definitions for structured data
+  - `document_extractor.yaml`: Document extraction schema
 
 **Development Configuration**:
 - `pyproject.toml`: Project dependencies and build configuration
@@ -150,10 +169,17 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
       - `welcome.py`: Welcome and overview page
       - `configuration.py`: System configuration interface
       - `MCP_servers.py`: MCP server management
-    - `training/`: Educational and training pages
-      - `runnable_playground.py`: Interactive runnable testing
-      - `tokenization.py`: Tokenization demonstration
-      - `CLI_runner.py`: CLI command testing interface
+    - `unmaintained/`: Legacy demo pages (preserved for reference)
+      - `12_▫️_Crew_AI.py`: CrewAI demonstration
+      - `13_▫️_OCR_Ollama.py`: OCR with Ollama
+      - `15_▫️_Chat_Human_in_Loop.py`: Human-in-the-loop chat
+      - `20_browser_control.py`: Browser control demo
+      - `3_▫️_Stock_Price.py`: Stock price analysis
+      - `4_▫️_Dataframe_Agent.py`: Dataframe agent demo
+      - `991_ Terminal.py`: Terminal interface demo
+      - `991_test scroll.py`: Scroll testing
+      - `99_▫️_Folium_Map_State.py`: Folium map visualization
+      - `9_▫️_SmollAgent.py`: SmolAgent demonstration
   - `ui_components/`: Reusable Streamlit components
     - `smolagents_streamlit.py`: SmolAgents UI components
     - `streamlit_chat.py`: Helper to display LangGraph chat in Streamlit
@@ -177,11 +203,34 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
   - `tech_news.py`: Technology news server
   - `weather_server.py`: Weather information server
 
+#### Documentation and Examples
+- `docs/`: Additional documentation and guides
+  - `deep_agent_cli_examples.md`: Deep agent CLI usage examples
+- `examples/`: Standalone example implementations
+  - `vllm_demo.py`: vLLM inference demo
+- `vibe_coding/`: Development conventions and scripts
+  - `CONVENTIONS.md`: Coding conventions used by Aider-chat
+  - `scripts.md`: Development scripts reference
+
+#### Test Data and Use Cases
+- `use_case_data/`: Sample data for testing and demonstrations
+  - `generated/`: Generated test data
+  - `maintenance/`: Maintenance procedure documents
+  - `ocr/`: OCR test images and samples
+  - `scientific_papers/`: Research paper PDFs for testing
+  - `other/`: Miscellaneous test data (CSV, images, text files)
+
 #### Testing and Development
 - `tests/`: Unit and integration tests
-- `src/wip/`: Work in progress
+  - `unit_tests/`: Unit test implementations
+  - `integration_tests/`: Integration test suites
+- `genai_blueprint/wip/`: Work in progress and experimental features
 - `Makefile`: Common development and deployment tasks
-- `CONVENTION.md`: Coding convention used by Aider-chat (a coding assistant)
+
+#### Project Root Files
+- `Agents.md`: Additional agent documentation and examples
+- `package.json` & `package-lock.json`: Node.js dependencies for some components
+- `quick_test.py`: Quick testing script for basic functionality verification
 
 #### Deployment
   - `Dockerfile`: Optimized dockerfile
