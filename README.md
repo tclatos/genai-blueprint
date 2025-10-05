@@ -107,7 +107,12 @@ The configuration system now supports **flexible project directory discovery**:
 ```bash
 make test_install  # Verifies basic functionality
 make test         # Runs test suite (some parallel tests may need adjustment)
-make webapp       # lauch the Streamlit app
+make webapp       # launch the Streamlit app
+```
+
+**Alternative Quick Test**:
+```bash
+python quick_test.py  # Quick functionality verification script
 ```
 Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
 
