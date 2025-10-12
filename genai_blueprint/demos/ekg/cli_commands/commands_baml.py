@@ -28,15 +28,15 @@ Data Flow:
 
 import asyncio
 from pathlib import Path
-from typing import Annotated, Generic, TypeVar, Type
+from typing import Annotated, Generic, Type, TypeVar
 
 import typer
 from loguru import logger
 from pydantic import BaseModel
 from upath import UPath
 
-from genai_blueprint.demos.ekg.baml_client.async_client import b as baml_async_client
 import genai_blueprint.demos.ekg.baml_client.types as baml_types
+from genai_blueprint.demos.ekg.baml_client.async_client import b as baml_async_client
 
 LLM_ID = None
 KV_STORE_ID = "file"
@@ -53,9 +53,7 @@ class BamlStructuredProcessor(Generic[T]):
         self.kvstore_id = kvstore_id or KV_STORE_ID
         self.force = force
 
-    async def abatch_analyze_documents(
-        self, document_ids: list[str], markdown_contents: list[str]
-    ) -> list[T]:
+    async def abatch_analyze_documents(self, document_ids: list[str], markdown_contents: list[str]) -> list[T]:
         """Process multiple documents asynchronously with caching using BAML."""
         from genai_tk.utils.pydantic.kv_store import PydanticStore, save_object_to_kvstore
 
@@ -177,7 +175,9 @@ def register_baml_commands(cli_app: typer.Typer) -> None:
         recursive: bool = typer.Option(False, help="Search for files recursively"),
         batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
         force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
-        class_name: Annotated[str, typer.Option("--class", help="Name of the Pydantic model class to instantiate")] = "ReviewedOpportunity",
+        class_name: Annotated[
+            str, typer.Option("--class", help="Name of the Pydantic model class to instantiate")
+        ] = "ReviewedOpportunity",
     ) -> None:
         """Extract structured project data from Markdown files using BAML and save as JSON in a key-value store.
 

@@ -8,7 +8,7 @@
 training_adn:
   llm:
     models:
-      #default:  gpt_4omini_edenai
+      #default:  mistral_small_edenai
       default: gpt_41_azure
       azure: gpt_41_azure
       for_vision : gpt_41_azure

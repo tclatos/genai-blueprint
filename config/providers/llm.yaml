@@ -190,6 +190,7 @@ llm:
   providers:
     - mistral: mistral-medium-latest
     - openrouter: mistralai/mistral-medium-3.1
+    - edenai: mistral/magistral-medium-2506
   capabilities: ['structured_outputs', 'vision']
 
 - model:
