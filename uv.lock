@@ -1170,7 +1170,7 @@ ui = [
 [[package]]
 name = "genai-tk"
 version = "0.1.0"
-source = { git = "https://github.com/tclatos/genai-tk?rev=main#a941b74ee012c84d7d4748acf0f7fe73b477e79f" }
+source = { git = "https://github.com/tclatos/genai-tk?rev=main#c4cf65b673ed56e786128eb60ec33e43916ff1d3" }
 dependencies = [
     { name = "beartype" },
     { name = "deepagents" },
