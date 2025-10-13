@@ -21,7 +21,7 @@ import pandas as pd
 import streamlit as st
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, dict_input_message
-from langchain.callbacks import tracing_v2_enabled
+from genai_tk.utils.tracing import tracing_context
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -203,7 +203,7 @@ async def main() -> None:
 
     try:
         # Run agent with tracing
-        with tracing_v2_enabled() as cb:
+        with tracing_context() as cb:
             astream = agent.astream(
                 inputs,
                 config | {"callbacks": [st_callback, status_callback]},
@@ -218,7 +218,8 @@ async def main() -> None:
 
             url = cb.get_run_url()
             st.session_state.messages.append(response)
-            st.link_button("Trace", url)
+            if url:
+                st.link_button("Trace", url)
 
         status.update(label="Done", state="complete", expanded=False)
     except Exception as ex:

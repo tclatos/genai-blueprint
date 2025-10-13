@@ -7,8 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import yfinance as yf
 from genai_tk.core.llm_factory import get_llm
-from genai_tk.utils.config_mngr import global_config
-from langchain.callbacks import tracing_v2_enabled
+from genai_tk.utils.tracing import tracing_context
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from loguru import logger
@@ -157,12 +156,12 @@ def main() -> None:
         submitted = st.form_submit_button("Search", disabled=user_question is None)
 
         if submitted and user_question:
-            if global_config().get_bool("monitoring.langsmith"):
-                # use Langsmith context manager to get the UTL to the trace
-                with tracing_v2_enabled() as cb:
-                    response = call_functions(llm_with_tools, user_question)
-                    st.write(response)
-                    url = cb.get_run_url()
+            # use Langsmith context manager to get the URL to the trace
+            with tracing_context() as cb:
+                response = call_functions(llm_with_tools, user_question)
+                st.write(response)
+                url = cb.get_run_url()
+                if url:
                     st.write(f"[trace]({url})")
 
 

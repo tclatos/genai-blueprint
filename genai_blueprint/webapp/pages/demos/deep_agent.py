@@ -19,7 +19,7 @@ from genai_tk.tools.smolagents.config_loader import process_tools_from_config
 from genai_tk.tools.smolagents.deep_config_loader import (
     load_all_deep_agent_demos_from_config,
 )
-from langchain.callbacks import tracing_v2_enabled
+from genai_tk.utils.tracing import tracing_context
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -226,7 +226,7 @@ async def handle_agent_execution(placeholder: DeltaGenerator, demo, query: str) 
 
             response = "A problem occurred"
 
-            with tracing_v2_enabled() as cb:
+            with tracing_context() as cb:
                 try:
                     result = await run_deep_agent(
                         agent=sss.current_agent, messages=messages, files=sss.get("agent_files", {}), stream=False
@@ -261,7 +261,8 @@ async def handle_agent_execution(placeholder: DeltaGenerator, demo, query: str) 
             if response:
                 sss.messages.append(response)
 
-            st.link_button("Trace", url)
+            if url:
+                st.link_button("Trace", url)
 
             # Show files if any were created/modified
             if sss.get("agent_files"):

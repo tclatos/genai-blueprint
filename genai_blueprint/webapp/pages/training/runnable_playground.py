@@ -19,7 +19,7 @@ import streamlit as st
 from devtools import debug
 from genai_tk.core.chain_registry import ChainRegistry
 from genai_tk.utils.config_mngr import global_config
-from langchain.callbacks import tracing_v2_enabled
+from genai_tk.utils.tracing import tracing_context
 from pydantic import BaseModel
 
 st.title("💬 Runnable Playground")
@@ -100,14 +100,12 @@ with st.form("my_form"):
     # print(config)
     if submitted:
         chain = runnable_desc.get().with_config(configurable=config)
-        if global_config().get_bool("monitoring.langsmith", False):
-            # use Langsmith context manager to get the UTL to the trace
-            with tracing_v2_enabled() as cb:
-                result = chain.invoke(input)
-                url = cb.get_run_url()
-                st.write(f"[trace]({url})")
-        else:
+        # use Langsmith context manager to get the URL to the trace
+        with tracing_context() as cb:
             result = chain.invoke(input)
+            url = cb.get_run_url()
+            if url:
+                st.write(f"[trace]({url})")
         if isinstance(result, BaseModel):
             result_str = debug.format(result)
 

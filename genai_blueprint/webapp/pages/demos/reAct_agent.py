@@ -19,7 +19,7 @@ from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.mcp_client import get_mcp_servers_dict
 from genai_tk.core.prompts import dedent_ws
 from genai_tk.tools.langchain.shared_config_loader import LangChainAgentConfig, load_all_langchain_agent_configs
-from langchain.callbacks import tracing_v2_enabled
+from genai_tk.utils.tracing import tracing_context
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -357,7 +357,7 @@ async def process_user_input(
             final_response = None
 
             # Stream the response
-            with tracing_v2_enabled() as cb:
+            with tracing_context() as cb:
                 astream = agent.astream(inputs, config | {"callbacks": callbacks})
                 async for step in astream:
                     status.write(f"Processing step: {type(step).__name__}")

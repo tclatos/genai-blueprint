@@ -1,5 +1,5 @@
 # ReAct Agent Demos Configuration
-react_agent_demos:
+langchain_agents:
   - name: "Weather"
     tools:  
      # - function: genai-blueprint.webapp.pages.demos.reAct_agent:my_custom_weather
