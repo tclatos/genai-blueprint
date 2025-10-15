@@ -441,7 +441,7 @@ async def main() -> None:
     initialize_session_state()
 
     # Load demo configurations
-    sample_demos = load_all_langchain_agent_configs(CONFIG_FILE, "react_agent_demos")
+    sample_demos = load_all_langchain_agent_configs(CONFIG_FILE, "langchain_agents")
 
     if not sample_demos:
         st.error(f"No demo configurations found in {CONFIG_FILE}")

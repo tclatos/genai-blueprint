@@ -5,7 +5,7 @@ paths:
   ekg_data: 
 
   
-codeact_agent_demos:
+smolagents_codeact:
   - name: "from Hugging Face"
     tools: 
       - class: smolagents:WebSearchTool
