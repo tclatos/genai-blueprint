@@ -40,6 +40,7 @@ embeddings:
       - deepinfra: Qwen/Qwen3-Embedding-0.6B
     dimension: 1024
 
+
   - model:
       id: qwen3_4b
     providers:
@@ -80,12 +81,6 @@ embeddings:
       id: mistral_1024
     providers:
       - edenai: mistral/1024__mistral-embed
-    dimension: 1024
-
-  - model:
-      id: mxbai_large
-    providers:
-      - ollama: mxbai-embed-large
     dimension: 1024
 
   - model:

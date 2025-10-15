@@ -212,8 +212,7 @@ def display_final_msg(msg: Any) -> None:
         raise ex
 
 
-model_name = LlmFactory(llm_id=MODEL_ID).get_litellm_model_name()
-llm = LiteLLMModel(model_id=model_name)
+# LLM will be initialized in handle_submission to avoid early initialization errors
 
 
 ##########################
@@ -319,6 +318,15 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
         strecorder.replay(log_widget)
         with log_widget:
             if prompt:
+                # Initialize LLM model with error handling
+                try:
+                    model_name = LlmFactory(llm_id=MODEL_ID).get_litellm_model_name()
+                    llm = LiteLLMModel(model_id=model_name)
+                except Exception as e:
+                    st.error(f"Failed to initialize LLM model: {e}")
+                    logger.error(f"LLM initialization error: {e}")
+                    return
+                
                 tools = demo.tools + mcp_tools + [my_final_answer]
                 authorized_imports_list = list(dict.fromkeys(COMMON_AUTHORIZED_IMPORTS + demo.authorized_imports))
                 agent = CodeAgent(
@@ -330,13 +338,20 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                 with st.spinner(text="Thinking..."):
                     result_display.write(f"query: {prompt}")
                     formatted_prompt = PRE_PROMPT.format(authorized_imports=", ".join(authorized_imports_list)) + prompt
-                    with strecorder:
-                        stream_to_streamlit(
-                            agent,
-                            formatted_prompt,
-                            # additional_args={"widget": col_display_right},  # does not work in fact
-                            display_details=False,
-                        )
+                    try:
+                        with strecorder:
+                            stream_to_streamlit(
+                                agent,
+                                formatted_prompt,
+                                # additional_args={"widget": col_display_right},  # does not work in fact
+                                display_details=False,
+                            )
+                    except Exception as e:
+                        st.error(f"Agent execution failed: {e}")
+                        logger.error(f"Agent execution error: {e}")
+                        # Display the full traceback for debugging
+                        import traceback
+                        st.code(traceback.format_exc(), language="python")
                     scroll_to_here()
     finally:
         if mcp_client:

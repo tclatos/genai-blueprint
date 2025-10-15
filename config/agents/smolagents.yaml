@@ -39,13 +39,13 @@ smolagents_codeact:
 
   - name: "Stock Price"
     tools:
-     # - function: ${paths.smolagent_custom_tools}.yfinance_tools:get_stock_info
-     # - function: ${paths.smolagent_custom_tools}.yfinance_tools:get_historical_price
+     - function: ${paths.smolagent_custom_tools}.yfinance_tools:get_stock_info
+     - function: ${paths.smolagent_custom_tools}.yfinance_tools:get_historical_price
       - class: smolagents:WebSearchTool
       - class: smolagents:VisitWebpageTool
     authorized_imports: ["pandas", "matplotlib.*"]
     mcp: 
-      - yahoo-finance-mcp
+     # - yahoo-finance-mcp
     examples:
       - "What is the current price of Meta stock?"
       - "Show me the historical prices of Apple vs Microsoft stock over the past 6 months"
