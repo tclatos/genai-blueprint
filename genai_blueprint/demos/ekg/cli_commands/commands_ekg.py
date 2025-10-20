@@ -13,25 +13,25 @@ Features:
     - Rich console output with colors and tables
 
 Commands:
-    ekg add --key OPPORTUNITY_KEY         Add opportunity data to KB
-    ekg delete                           Delete entire KB
-    ekg query                            Interactive Cypher query shell
-    ekg info                             Display DB info and schema
-    ekg export-html                      Export HTML visualization
+    cli kg add --key OPPORTUNITY_KEY     Add opportunity data to KB
+    cli kg delete                        Delete entire KB
+    cli kg query                         Interactive Cypher query shell
+    cli kg info                          Display DB info and schema
+    cli kg export-html                   Export HTML visualization
 
 Usage Examples:
     ```bash
     # Add opportunity data to knowledge base
-    uv run test_graph_cli.py ekg add --key cnes-venus-tma
+    uv run cli kg add --key cnes-venus-tma
 
     # Query the knowledge base interactively
-    uv run test_graph_cli.py ekg query
+    uv run cli kg query
 
     # Display database information and mapping
-    uv run test_graph_cli.py ekg info
+    uv run cli kg info
 
     # Export HTML visualization
-    uv run test_graph_cli.py ekg export-html
+    uv run cli kg export-html
     ```
 """
 
@@ -98,9 +98,10 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
     """Register EKG commands with the CLI application."""
     from genai_blueprint.demos.ekg.rainbow_subgraph import get_subgraph
 
-    app = cli_app
+    # Create kg sub-app
+    kg_app = typer.Typer(no_args_is_help=True, help="Knowledge Graph commands.")
 
-    @app.command("kg-add")
+    @kg_app.command("add")
     def add_data(
         key: Annotated[str, typer.Option("--key", "-k", help="Data key to add to the EKG database")],
         subgraph: Annotated[str, typer.Option("--subgraph", "-g", help="Subgraph type to use")] = "opportunity",
@@ -178,11 +179,11 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
         console.print(summary_table)
 
         console.print("\n[green]💡 Next steps:[/green]")
-        console.print("   • Query: [bold]ekg kg-query[/bold]")
-        console.print("   • Info:  [bold]ekg kg-info[/bold]")
-        console.print("   • Export: [bold]ekg kg-export-html[/bold]")
+        console.print("   • Query: [bold]cli kg query[/bold]")
+        console.print("   • Info:  [bold]cli kg info[/bold]")
+        console.print("   • Export: [bold]cli kg export-html[/bold]")
 
-    @app.command("kg-delete")
+    @kg_app.command("delete")
     def delete_ekg() -> None:
         """Delete the entire EKG database.
 
@@ -249,12 +250,12 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
             elif db_path.is_dir():
                 shutil.rmtree(db_path)
             console.print("[green]✅ EKG database deleted successfully[/green]")
-            console.print("[green]You can now start fresh with [bold]ekg add --key <opportunity_key>[/bold][/green]")
+            console.print("[green]You can now start fresh with [bold]cli kg add --key <opportunity_key>[/bold][/green]")
         except Exception as e:
             console.print(f"[red]❌ Error deleting database: {e}[/red]")
             raise typer.Exit(1)
 
-    @app.command("kg-query")
+    @kg_app.command("query")
     def query_ekg(
         query: Annotated[str | None, typer.Option("--query", "-q", help="Cypher query to execute")] = None,
         subgraph: Annotated[
@@ -278,7 +279,7 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
         result = get_db_connection()
         if not result:
             console.print("[red]❌ No EKG database found[/red]")
-            console.print("[yellow]💡 Add data first: [bold]ekg kg-add --key <data_key>[/bold][/yellow]")
+            console.print("[yellow]💡 Add data first: [bold]cli kg add --key <data_key>[/bold][/yellow]")
             raise typer.Exit(1)
 
         db, conn = result
@@ -364,7 +365,7 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
                 console.print("\n[yellow]Goodbye! 👋[/yellow]")
                 break
 
-    @app.command("kg-info")
+    @kg_app.command("info")
     def show_info(
         subgraph: Annotated[
             str, typer.Option("--subgraph", "-g", help="Subgraph type to display info for")
@@ -388,7 +389,7 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
         result = get_db_connection()
         if not result:
             console.print("[red]❌ No EKG database found[/red]")
-            console.print("[yellow]💡 Add data first: [bold]ekg kg-add --key <data_key>[/bold][/yellow]")
+            console.print("[yellow]💡 Add data first: [bold]cli kg add --key <data_key>[/bold][/yellow]")
             raise typer.Exit(1)
 
         db, conn = result
@@ -502,10 +503,10 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
 
         # Quick query suggestions
         console.print("\n[green]💡 Try these queries:[/green]")
-        console.print('   • [bold]ekg kg-query --query "MATCH (n) RETURN labels(n)[0], count(n)"[/bold]')
-        console.print("   • [bold]ekg kg-query[/bold] (interactive shell)")
+        console.print('   • [bold]cli kg query --query "MATCH (n) RETURN labels(n)[0], count(n)"[/bold]')
+        console.print("   • [bold]cli kg query[/bold] (interactive shell)")
 
-    @app.command("kg-export-html")
+    @kg_app.command("export-html")
     def export_html(
         output_dir: Annotated[str, typer.Option("--output-dir", "-o", help="Output directory")] = "/tmp",
         open_browser: Annotated[bool, typer.Option("--open/--no-open", help="Open in browser")] = True,
@@ -523,7 +524,7 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
         result = get_db_connection()
         if not result:
             console.print("[red]❌ No EKG database found[/red]")
-            console.print("[yellow]💡 Add data first: [bold]ekg add --key <opportunity_key>[/bold][/yellow]")
+            console.print("[yellow]💡 Add data first: [bold]cli kg add --key <opportunity_key>[/bold][/yellow]")
             raise typer.Exit(1)
 
         db, conn = result
@@ -587,6 +588,101 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
         except Exception as e:
             console.print(f"[red]❌ Error generating visualization: {e}[/red]")
             raise typer.Exit(1)
+
+    @kg_app.command("agent")
+    def ekg_agent_shell(
+        input: Annotated[str | None, typer.Option(help="Input query or '-' to read from stdin")] = None,
+        cache: Annotated[str, typer.Option(help="Cache strategy: 'sqlite', 'memory' or 'no_cache'")] = "memory",
+        mcp: Annotated[
+            list[str], typer.Option(help="MCP server names to connect to (e.g. playwright, filesystem, ..)")
+        ] = [],
+        lc_verbose: Annotated[bool, typer.Option("--verbose", "-v", help="Enable LangChain verbose mode")] = False,
+        lc_debug: Annotated[bool, typer.Option("--debug", "-d", help="Enable LangChain debug mode")] = False,
+        llm: Annotated[str | None, typer.Option("--llm", "-m", help="LLM identifier (ID or tag from config)")] = None,
+        chat: Annotated[bool, typer.Option("--chat", help="Start an interactive shell to send prompts")] = False,
+    ) -> None:
+        """Run a ReAct agent to query the Enterprise Knowledge Graph (EKG).
+
+        Can either start an interactive shell or execute a single query directly.
+        The agent can query processed project data using semantic search across the
+        vector store and has access to project information extracted from Markdown files.
+
+        Examples:
+            # Basic interactive shell
+            uv run cli kg agent
+
+            # Execute a single query
+            uv run cli kg agent --input "Find all projects using Python"
+
+            # With custom LLM and cache
+            uv run cli kg agent --llm gpt-4o-mini --cache sqlite
+        """
+        import asyncio
+        import sys
+        from typing import Optional
+
+        from genai_blueprint.demos.ekg.struct_rag_tool_factory import create_structured_rag_tool
+        from genai_tk.core.llm_factory import LlmFactory
+        from genai_tk.utils.cli.langchain_setup import setup_langchain
+        from genai_tk.utils.cli.langgraph_agent_shell import run_langgraph_agent_shell
+        from genai_tk.core.llm_factory import get_llm_unified
+        from genai_tk.core.mcp_client import get_mcp_servers_dict
+        from genai_tk.utils.langgraph import print_astream
+        from langchain_core.messages import HumanMessage
+        from langchain_mcp_adapters.client import MultiServerMCPClient
+        from langgraph.prebuilt import create_react_agent
+        from loguru import logger
+
+        async def call_ekg_agent(
+            query: str, llm_id: str | None = None, tools: list | None = None, mcp_server_names: list[str] | None = None
+        ) -> None:
+            """Execute a single query using the EKG agent with tools and stream the response."""
+            model = get_llm_unified(llm=llm_id)
+            all_tools = tools or []
+
+            if mcp_server_names:
+                logger.info(f"Connecting to MCP servers: {mcp_server_names}")
+                client = MultiServerMCPClient(get_mcp_servers_dict(mcp_server_names))
+                mcp_tools = await client.get_tools()
+                all_tools.extend(mcp_tools)
+
+            agent = create_react_agent(model, all_tools)
+            logger.info("Executing EKG agent query...")
+            resp = agent.astream({"messages": [HumanMessage(content=query)]})
+            await print_astream(resp)
+
+        # Resolve LLM identifier if provided
+        llm_id = None
+        if llm:
+            resolved_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm)
+            if error_msg:
+                print(error_msg)
+                return
+            llm_id = resolved_id
+
+        if not setup_langchain(llm_id, lc_debug, lc_verbose, cache):
+            return
+
+        LLM_ID = None
+        KV_STORE_ID = "file"
+        rainbow_schema = "Rainbow File"
+        rainbow_tool = create_structured_rag_tool(rainbow_schema, llm_id=LLM_ID, kvstore_id=KV_STORE_ID)
+
+        if chat:
+            asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+        else:
+            if not input and not sys.stdin.isatty():
+                input = sys.stdin.read()
+
+            if input and len(input.strip()) >= 5:
+                asyncio.run(call_ekg_agent(input.strip(), llm_id=llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+            else:
+                if input and len(input.strip()) < 5:
+                    print("Warning: Input too short (minimum 5 characters), starting interactive shell instead")
+                asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+
+    # Mount kg app on root app
+    cli_app.add_typer(kg_app, name="kg")
 
 
 def main() -> None:

@@ -5,7 +5,8 @@
 # Default configuration, as defined in baseline.yaml, overrides.yaml, here, or elsewhere.
 # It can be overidden by 'BLUEPRINT_CONFIG' environment variable, or in code
 
-default_config: ${oc.env:BLUEPRINT_CONFIG,training_adn}
+#default_config: ${oc.env:BLUEPRINT_CONFIG,training_adn}
+default_config: ${oc.env:BLUEPRINT_CONFIG,ekg_local}
 
 # Note : configuration leverage OmegaConf solvers. See :
 # https://omegaconf.readthedocs.io/en/2.3_branch/usage.html#variable-interpolation

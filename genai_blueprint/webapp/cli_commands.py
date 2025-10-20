@@ -11,7 +11,10 @@ import typer
 
 
 def register_commands(cli_app: typer.Typer) -> None:
-    @cli_app.command("hash-password")
+    # Create auth sub-app
+    auth_app = typer.Typer(no_args_is_help=True, help="Authentication commands.")
+    
+    @auth_app.command("hash-password")
     def hash_password_cmd(
         password: Annotated[str, typer.Argument(help="Password to hash")],
     ) -> None:
@@ -24,3 +27,6 @@ def register_commands(cli_app: typer.Typer) -> None:
 
         hashed = hash_password(password)
         print(f"Hashed password: {hashed}")
+    
+    # Mount auth app on root app
+    cli_app.add_typer(auth_app, name="auth")

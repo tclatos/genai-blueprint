@@ -41,8 +41,8 @@ smolagents_codeact:
     tools:
      - function: ${paths.smolagent_custom_tools}.yfinance_tools:get_stock_info
      - function: ${paths.smolagent_custom_tools}.yfinance_tools:get_historical_price
-      - class: smolagents:WebSearchTool
-      - class: smolagents:VisitWebpageTool
+     - class: smolagents:WebSearchTool
+     - class: smolagents:VisitWebpageTool
     authorized_imports: ["pandas", "matplotlib.*"]
     mcp: 
      # - yahoo-finance-mcp

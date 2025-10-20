@@ -18,19 +18,22 @@ Key Features:
 Usage Examples:
     ```bash
     # Extract structured data from Markdown files
-    uv run cli rainbow-extract "*.md" --output-dir ./data
+    uv run cli structured extract "*.md" --output-dir ./data
 
     # Generate fake project data from existing JSON templates
-    uv run cli rainbow-generate-fake "templates/*.json" --output-dir ./fake --count 5
+    uv run cli structured gen-fake "templates/*.json" --output-dir ./fake --count 5
+
+    # Extract with BAML
+    uv run cli structured extract-baml "*.md" --class ReviewedOpportunity --force
 
     # Start interactive agent for querying the knowledge graph
-    uv run cli ekg-agent-shell --llm gpt-4o-mini --mcp filesystem
+    uv run cli kg agent --llm gpt-4o-mini --mcp filesystem
 
     # Process recursively with custom settings
-    uv run cli rainbow-extract ./reviews/ --recursive --batch-size 10 --force
+    uv run cli structured extract ./reviews/ --recursive --batch-size 10 --force
 
     # Debug mode for troubleshooting
-    uv run cli ekg-agent-shell --debug --verbose --cache sqlite
+    uv run cli kg agent --debug --verbose --cache sqlite
     ```
 
 Data Flow:
@@ -100,7 +103,10 @@ async def call_ekg_agent(
 
 
 def register_commands(cli_app: typer.Typer) -> None:
-    @cli_app.command()
+    # Create structured sub-app for extraction and generation commands
+    structured_app = typer.Typer(no_args_is_help=True, help="Structured extraction and data generation commands.")
+    
+    @structured_app.command("extract")
     def structured_extract(
         file_or_dir: Annotated[
             Path,
@@ -120,8 +126,8 @@ def register_commands(cli_app: typer.Typer) -> None:
         """Extract structured project data from Markdown files and save as JSON in a key-value store.
 
         Example:
-           uv run cli extract-rainbow "*.md" "projects/*.md" --output-dir=./json_output --llm-id gpt-4o
-           uv run cli extract-rainbow "**/*.md" --recursive --output-dir=./data
+           uv run cli structured extract "*.md" "projects/*.md" --output-dir=./json_output --llm-id gpt-4o
+           uv run cli structured extract "**/*.md" --recursive --output-dir=./data
         """
 
         from genai_blueprint.demos.ekg.struct_rag_doc_processing import (
@@ -208,7 +214,7 @@ def register_commands(cli_app: typer.Typer) -> None:
 
         logger.success(f"Project extraction complete. {len(md_files)} files processed. Results saved to KV Store")
 
-    @cli_app.command()
+    @structured_app.command("gen-fake")
     def rainbow_generate_fake(
         file_or_dir: Annotated[
             Path,
@@ -238,9 +244,9 @@ def register_commands(cli_app: typer.Typer) -> None:
         of the originals.
 
         Example:
-           uv run cli generate-fake-rainbow "projects/*.json" --output-dir=./fake_data --count=5
-           uv run cli generate-fake-rainbow sample_project.json --output-dir=./generated --count=3
-           uv run cli generate-fake-rainbow "data/**/*.json" --recursive --output-dir=./generated
+           uv run cli structured gen-fake "projects/*.json" --output-dir=./fake_data --count=5
+           uv run cli structured gen-fake sample_project.json --output-dir=./generated --count=3
+           uv run cli structured gen-fake "data/**/*.json" --recursive --output-dir=./generated
         """
         from genai_tk.core.llm_factory import LlmFactory
 
@@ -293,8 +299,99 @@ def register_commands(cli_app: typer.Typer) -> None:
             f"Successfully generated {total_generated} fake project reviews from {len(all_files)} templates in {output_dir}"
         )
 
-    @cli_app.command()
-    def ekg_agent_shell(
+    @structured_app.command("extract-baml")
+    def structured_extract_baml(
+        file_or_dir: Annotated[
+            Path,
+            typer.Argument(
+                help="Markdown files or directories to process",
+                exists=True,
+                file_okay=True,
+                dir_okay=True,
+            ),
+        ],
+        recursive: bool = typer.Option(False, help="Search for files recursively"),
+        batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
+        force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
+        class_name: Annotated[
+            str, typer.Option("--class", help="Name of the Pydantic model class to instantiate")
+        ] = "ReviewedOpportunity",
+    ) -> None:
+        """Extract structured project data from Markdown files using BAML.
+
+        Example:
+           uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
+        """
+        from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
+        import genai_blueprint.demos.ekg.baml_client.types as baml_types
+        from loguru import logger
+        from pydantic import BaseModel
+
+        logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
+
+        # Resolve model class from the BAML types module
+        try:
+            model_cls = getattr(baml_types, class_name)
+        except AttributeError as e:
+            logger.error(f"Unknown class '{class_name}' in baml_client.types: {e}")
+            return
+
+        if not isinstance(model_cls, type) or not issubclass(model_cls, BaseModel):
+            logger.error(f"Provided class '{class_name}' is not a Pydantic BaseModel")
+            return
+
+        # Collect all Markdown files
+        all_files = []
+        KV_STORE_ID = "file"
+
+        if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
+            all_files.append(file_or_dir)
+        elif file_or_dir.is_dir():
+            if recursive:
+                md_files = list(file_or_dir.rglob("*.[mM][dD]"))
+            else:
+                md_files = list(file_or_dir.glob("*.[mM][dD]"))
+            all_files.extend(md_files)
+        else:
+            logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
+            return
+
+        if not all_files:
+            logger.warning("No Markdown files found matching the provided patterns.")
+            return
+
+        logger.info(f"Found {len(all_files)} Markdown files to process")
+
+        if force:
+            logger.info("Force option enabled - will reprocess all files and overwrite existing KV entries")
+
+        # Create BAML processor
+        processor = BamlStructuredProcessor(model_cls=model_cls, kvstore_id=KV_STORE_ID, force=force)
+
+        # Filter out files that already have JSON in KV unless forced
+        if not force:
+            from genai_tk.utils.pydantic.kv_store import PydanticStore
+
+            unprocessed_files = []
+            for md_file in all_files:
+                key = md_file.stem
+                cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=model_cls).load_object(key)
+                if not cached_doc:
+                    unprocessed_files.append(md_file)
+                else:
+                    logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
+            all_files = unprocessed_files
+
+        if not all_files:
+            logger.info("All files have already been processed. Use --force to reprocess.")
+            return
+
+        asyncio.run(processor.process_files(all_files, batch_size))
+        logger.success(f"BAML-based project extraction complete. {len(all_files)} files processed.")
+
+    # This agent command will be moved to kg group in commands_ekg.py
+    # @ekg_app.command("agent")
+    def ekg_agent_shell_moved(
         input: Annotated[str | None, typer.Option(help="Input query or '-' to read from stdin")] = None,
         cache: Annotated[str, typer.Option(help="Cache strategy: 'sqlite', 'memory' or 'no_cache'")] = "memory",
         mcp: Annotated[
@@ -317,25 +414,25 @@ def register_commands(cli_app: typer.Typer) -> None:
         Examples:
             ```bash
             # Basic interactive shell
-            uv run cli ekg-agent-shell
+            uv run cli ekg agent
 
             # Execute a single query
-            uv run cli ekg-agent-shell --input "Find all projects using Python"
+            uv run cli ekg agent --input "Find all projects using Python"
 
             # Read query from stdin
-            echo "Which projects had budgets over $1M?" | uv run cli ekg-agent-shell
+            echo "Which projects had budgets over $1M?" | uv run cli ekg agent
 
             # With custom LLM and cache
-            uv run cli ekg-agent-shell --llm gpt-4o-mini --cache sqlite
+            uv run cli ekg agent --llm gpt-4o-mini --cache sqlite
 
             # With MCP servers for extended capabilities
-            uv run cli ekg-agent-shell --mcp filesystem --mcp playwright --input "List files and analyze project data"
+            uv run cli ekg agent --mcp filesystem --mcp playwright --input "List files and analyze project data"
 
             # Force interactive shell even with input
-            uv run cli ekg-agent-shell --shell --input "This will be ignored"
+            uv run cli ekg agent --shell --input "This will be ignored"
 
             # Debug mode for troubleshooting
-            uv run cli ekg-agent-shell --debug --verbose
+            uv run cli ekg agent --debug --verbose
             ```
 
         Usage modes:
@@ -388,3 +485,8 @@ def register_commands(cli_app: typer.Typer) -> None:
                 if input and len(input.strip()) < 5:
                     print("Warning: Input too short (minimum 5 characters), starting interactive shell instead")
                 asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+
+    # Mount sub-apps on root app
+    cli_app.add_typer(structured_app, name="structured")
+    # generate_app merged into structured_app
+    # ekg_app removed - agent command moved to kg group
