@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from langchain.retrievers import EnsembleRetriever
+from langchain_classic.retrievers import EnsembleRetriever
 from langchain_core.runnables import Runnable
 from streamlit import session_state as sss
 

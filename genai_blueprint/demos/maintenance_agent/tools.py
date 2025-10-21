@@ -21,13 +21,13 @@ from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, def_prompt
 from genai_tk.tools.langchain.sql_tool_factory import SQLToolConfig, SQLToolFactory
 from genai_tk.utils.config_mngr import global_config
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools import BaseTool, tool
-from langchain.vectorstores.base import VectorStore
+from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.utilities import SQLDatabase
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain_core.vectorstores.base import VectorStore
 from loguru import logger
 
 from genai_blueprint.demos.maintenance_agent.dummy_data import dummy_database

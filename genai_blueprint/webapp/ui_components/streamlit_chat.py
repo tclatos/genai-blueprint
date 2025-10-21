@@ -2,7 +2,7 @@ import textwrap
 from typing import Any, Dict, List
 
 import streamlit as st
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import AIMessage, HumanMessage
 from loguru import logger
 from streamlit.delta_generator import DeltaGenerator

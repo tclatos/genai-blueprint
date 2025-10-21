@@ -10,7 +10,7 @@ import pickle
 import time
 from typing import Any, TypedDict
 
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks.base import BaseCallbackHandler
 
 
 # This is intentionally not an enum so that we avoid serializing a

@@ -6,22 +6,21 @@ authors = [{ name = "Thierry Caminel", email = "thierry.caminel@atos.net" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     # GenAI Toolkit - core AI components
-    # Note: genai-tk now includes ai-core, extra, kg, and nlp in main dependencies
     "genai_tk @ git+https://github.com/tclatos/genai-tk@main",
-    
+
     # Application framework dependencies
-    "pydantic>=2.7.0,<3", # Data validation framework
-    "devtools>=0.12.2", # Development utilities
-    "loguru>=0.7.3", # Logging library
-    "typer>=0.13.0", # CLI framework
-    "omegaconf>=2.3.0", # Configuration management
+    "pydantic>=2.7.0,<3",         # Data validation framework
+    "devtools>=0.12.2",           # Development utilities
+    "loguru>=0.7.3",              # Logging library
+    "typer>=0.13.0",              # CLI framework
+    "omegaconf>=2.3.0",           # Configuration management
     "fastapi[standard]>=0.115.6", # Web framework
-    "rich[jupyter]>=13.9.4", # Terminal formatting
-    "universal-pathlib>=0.2.6", # Cross-platform paths
-    "pip>=25.1.1", # Package installer
-    "modal>=1.0.5", # Serverless cloud platform
-    "python-dotenv>=1.1.1", # Environment variables
-    "beartype>=0.21.0", # Run time type checking
+    "rich[jupyter]>=13.9.4",      # Terminal formatting
+    "universal-pathlib>=0.2.6",   # Cross-platform paths
+    "pip>=25.1.1",                # Package installer
+    "modal>=1.0.5",               # Serverless cloud platform
+    "python-dotenv>=1.1.1",       # Environment variables
+    "beartype>=0.21.0",           # Run time type checking
     "baml-py>=0.209.0",
 ]
 
@@ -39,14 +38,6 @@ browser_control = [
     "playwright>=1.51.0",     # Browser automation
     "helium>=5.1.0,<6",       # Web automation wrapper
     "browser-use-sdk>=2.0.4", # Browser automation agent
-]
-
-# Transformers dependencies (from genai-tk transformers group)
-# Large dependency (~5GB) - kept optional
-transformers = [
-    "accelerate>=1.4.0",            # Model acceleration
-    "langchain-huggingface>=0.1.2", # Hugging Face integration
-    "sentence-transformers>=3.4.1", # Sentence embeddings
 ]
 
 # AutoGen dependencies (from genai-tk autogen group)
@@ -164,4 +155,3 @@ python_files = ["test_*.py", "*_test.py"]
 
 [project.scripts]
 cli = "genai_bp.main.cli:main"
-mcp_math_server = "genai_bp.mcp_server.math_server:main" # (for test)

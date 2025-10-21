@@ -12,15 +12,15 @@ from genai_tk.core.chain_registry import (
 )
 from genai_tk.core.embeddings_store import EmbeddingsStore
 from genai_tk.core.llm_factory import get_llm
-from langchain.chains.query_constructor.base import (
+from langchain_classic.chains.query_constructor.base import (
     StructuredQueryOutputParser,
     get_query_constructor_prompt,
 )
-from langchain.chains.query_constructor.schema import AttributeInfo
-from langchain.retrievers.self_query.base import SelfQueryRetriever
-from langchain.vectorstores.base import VectorStore
+from langchain_classic.chains.query_constructor.schema import AttributeInfo
+from langchain_classic.retrievers.self_query.base import SelfQueryRetriever
 from langchain_community.query_constructors.chroma import ChromaTranslator
 from langchain_core.documents import Document
+from langchain_core.vectorstores.base import VectorStore
 
 # cSpell:disable
 
