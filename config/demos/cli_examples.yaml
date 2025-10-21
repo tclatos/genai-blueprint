@@ -4,28 +4,28 @@
 cli_commands:
 
   - name: Calculate an embedding vector
-    command: embedd "hello world"
+    command: core embedd "hello world"
 
   - name: Similarity matching
-    command: similarity "This is a test" "This is another test" "Ceci est un test" "How are you ?"
+    command: core similarity "This is a test" "This is another test" "Ceci est un test" "How are you ?"
 
   - name: Simple LLM query
-    command: llm --input "Tell me a joke on managers" --raw
+    command: core llm "Tell me a joke on managers" --raw
   
   - name: "Run a joke chain"
-    command: run joke --input "bears" 
+    command: core run joke --input "bears" 
   
   - name: List available models
-    command: list-models 
+    command: info models 
 
   - name: print configuration
-    command: config-info  
+    command: info config
 
   - name: ReAct agent with filesystem MCP server
-    command: react-agent --input "get configuration files in current dir" --mcp filesystem
+    command: agents react --input "get configuration files in current dir" --mcp filesystem
 
   - name: List MCP server tools
-    command: list-mcp-tools --filter filesystem
+    command: info mcp-tools --filter filesystem
 
 
   # - name: Agent with Browser

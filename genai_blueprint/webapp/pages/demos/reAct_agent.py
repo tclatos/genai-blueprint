@@ -20,23 +20,21 @@ from genai_tk.core.mcp_client import get_mcp_servers_dict
 from genai_tk.core.prompts import dedent_ws
 from genai_tk.tools.langchain.shared_config_loader import LangChainAgentConfig, load_all_langchain_agent_configs
 from genai_tk.utils.tracing import tracing_context
+from langchain.agents import create_agent
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
 from streamlit import session_state as sss
+from streamlit.delta_generator import DeltaGenerator
 
 from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
 
 load_dotenv()
 
-from langchain_community.tools import DuckDuckGoSearchRun  # noqa: E402
-
-duckduck_search_tool = DuckDuckGoSearchRun()
 
 CONFIG_FILE = "config/agents/langchain.yaml"
 assert Path(CONFIG_FILE).exists(), f"Cannot load {CONFIG_FILE}"
@@ -78,7 +76,7 @@ class StreamlitToolCallbackHandler(BaseCallbackHandler):
             print(f"Tool completed: {self.current_tool_call['tool_name']}")  # Debug
             self.current_tool_call = None
 
-    def on_tool_error(self, error: Exception, **kwargs: Any) -> None:
+    def on_tool_error(self, error: BaseException, **kwargs: Any) -> None:
         if self.current_tool_call:
             self.current_tool_call["error"] = str(error)
             self.tool_calls.append(self.current_tool_call.copy())
@@ -168,7 +166,7 @@ def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -
                         "**Examples:**",
                         help="💡 **Copy any example below and paste it into the chat input to get started!",
                     )
-                    for i, example in enumerate(demo.examples, 1):
+                    for _i, example in enumerate(demo.examples, 1):
                         st.code(example, language="text", height=None, wrap_lines=True)
 
         if st.button("🗑️ Clear Chat History"):
@@ -185,7 +183,7 @@ def display_tool_calls_sidebar(tool_calls: List[Dict[str, Any]]) -> None:
         return
 
     st.subheader("🔧 Tool Calls")
-    for i, call in enumerate(tool_calls):
+    for _i, call in enumerate(tool_calls):
         tool_name = call.get("tool_name", "Unknown Tool")
         input_str = call.get("input", "")
         output = call.get("output")
@@ -314,7 +312,7 @@ async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
 
             # Create agent with demo's system prompt or default
             system_prompt = demo.system_prompt or SYSTEM_PROMPT
-            agent = create_react_agent(model=llm, tools=all_tools, prompt=system_prompt, checkpointer=checkpointer)
+            agent = create_agent(model=llm, tools=all_tools, prompt=system_prompt, checkpointer=checkpointer)
 
             # Cache the agent
             sss.agent = agent
@@ -323,7 +321,10 @@ async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
 
 
 async def process_user_input(
-    demo: LangChainAgentConfig, user_input: str, status_container, chat_container=None
+    demo: LangChainAgentConfig,
+    user_input: str,
+    status_container: DeltaGenerator,
+    chat_container: DeltaGenerator | None = None,
 ) -> None:
     """Process user input and generate agent response."""
     # Add user message to chat
@@ -484,7 +485,7 @@ async def main() -> None:
             st.caption(f"Debug: {len(sss.messages)} messages, {len(sss.tool_calls)} tool calls")
 
         # Display chat messages
-        chat_container = st.container(height=600)
+        chat_container = st.container(height=450)
         with chat_container:
             for msg in sss.messages:
                 if isinstance(msg, HumanMessage):

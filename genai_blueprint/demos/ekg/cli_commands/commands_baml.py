@@ -14,10 +14,10 @@ Key Features:
 Usage Examples:
     ```bash
     # Extract structured data from Markdown files using BAML
-    uv run cli structured-baml extract-baml "*.md" --class ReviewedOpportunity --force
+    uv run cli structured extract-baml "*.md" --class ReviewedOpportunity --force
 
     # Process recursively with custom settings
-    uv run cli structured-baml extract-baml ./reviews/ --recursive --batch-size 10 --force --class ReviewedOpportunity
+    uv run cli structured extract-baml ./reviews/ --recursive --batch-size 10 --force --class ReviewedOpportunity
     ```
 
 Data Flow:
@@ -187,8 +187,8 @@ def register_baml_commands(cli_app: typer.Typer) -> None:
         as structured_extract but uses BAML for structured output.
 
         Example:
-           uv run cli structured-baml-extract "*.md" --force --class ReviewedOpportunity
-           uv run cli structured-baml-extract "**/*.md" --recursive --class ReviewedOpportunity
+           uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
+           uv run cli structured extract-baml "**/*.md" --recursive --class ReviewedOpportunity
         """
 
         logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")

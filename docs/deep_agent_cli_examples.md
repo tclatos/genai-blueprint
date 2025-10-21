@@ -24,40 +24,40 @@ The Deep Agent CLI now features enhanced markdown rendering for beautiful, reada
 ### Research Agent
 ```bash
 # Basic research query
-uv run cli deep-agent research --input "Latest AI developments" --llm-id gpt_41_openrouter
+uv run cli agents deep research --input "Latest AI developments" --llm gpt_41_openrouter
 
 # Research with specific focus
-uv run cli deep-agent research --input "What are the environmental impacts of lithium mining?" --llm-id claude_sonnet_openrouter
+uv run cli agents deep research --input "What are the environmental impacts of lithium mining?" --llm claude_sonnet_openrouter
 
 # Save results to file
-uv run cli deep-agent research --input "Quantum computing breakthroughs 2024" --output-dir ./research --llm-id gpt_41_openrouter
+uv run cli agents deep research --input "Quantum computing breakthroughs 2024" --output-dir ./research --llm gpt_41_openrouter
 ```
 
 ### Coding Agent
 ```bash
 # Generate code
-uv run cli deep-agent coding --input "Write a Python async web scraper" --llm-id gpt_41_openrouter
+uv run cli agents deep coding --input "Write a Python async web scraper" --llm gpt_41_openrouter
 
 # Debug code
-uv run cli deep-agent coding --input "Debug this function" --files buggy_code.py --llm-id gpt_41_openrouter
+uv run cli agents deep coding --input "Debug this function" --files buggy_code.py --llm gpt_41_openrouter
 
 # Refactor code
-uv run cli deep-agent coding --input "Refactor for better performance" --files app.py --llm-id gpt_41_openrouter
+uv run cli agents deep coding --input "Refactor for better performance" --files app.py --llm gpt_41_openrouter
 ```
 
 ### Analysis Agent
 ```bash
 # Analyze data
-uv run cli deep-agent analysis --input "Analyze sales trends" --files sales_data.csv --llm-id gpt_41_openrouter
+uv run cli agents deep analysis --input "Analyze sales trends" --files sales_data.csv --llm gpt_41_openrouter
 
 # Generate insights
-uv run cli deep-agent analysis --input "Find patterns in user behavior" --files logs.json --llm-id gpt_41_openrouter
+uv run cli agents deep analysis --input "Find patterns in user behavior" --files logs.json --llm gpt_41_openrouter
 ```
 
 ### Custom Agent
 ```bash
 # Custom instructions
-uv run cli deep-agent custom --input "Plan a project timeline" --instructions "You are a project manager. Create detailed timelines with milestones." --llm-id gpt_41_openrouter
+uv run cli agents deep custom --input "Plan a project timeline" --instructions "You are a project manager. Create detailed timelines with milestones." --llm gpt_41_openrouter
 ```
 
 ## Output Format

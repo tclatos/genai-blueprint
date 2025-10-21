@@ -284,64 +284,73 @@ Thanks to the enhanced configuration system, CLI commands work from any project 
 
 ```bash
 # From project root
-cd /path/to/genai-blueprint && uv run cli config-info
+cd /path/to/genai-blueprint && uv run cli info config
 
 # From notebooks directory
-cd /path/to/genai-blueprint/notebooks && uv run cli config-info
+cd /path/to/genai-blueprint/notebooks && uv run cli info config
 
 # From any subdirectory - automatically finds project configuration!
-cd /path/to/genai-blueprint/genai_blueprint/demos && uv run cli config-info
+cd /path/to/genai-blueprint/genai_blueprint/demos && uv run cli info config
 ```
 
 **Available Commands**:
 The framework provides extensive CLI commands for AI interactions, implemented in `cli_command.py` files and registered in `app_conf.yaml`:
 
 ```bash
-uv run cli --help   # List all available commands with descriptions
-uv run cli config-info  # Show current configuration and available models
+uv run cli --help       # List all available commands with descriptions
+uv run cli info config  # Show current configuration and available models
 ```
 
 **Basic LLM Interaction**
 ```bash
-uv run cli llm --input "Hello world"  # Simple LLM query
-echo "Hello world" | uv run cli llm  # Pipe input
-uv run cli llm --llm-id gpt-4 --stream  # Use specific model with streaming
-uv run cli run joke --input "bears"  # Run a joke chain
+uv run cli core llm "Hello world"              # Simple LLM query
+echo "Hello world" | uv run cli core llm       # Pipe input
+uv run cli core llm "Hello" --llm gpt-4 --stream  # Use specific model with streaming
+uv run cli core run joke --input "bears"       # Run a joke chain
 ```
 
 **Agent with tools / MCP**
 ```bash
-uv run cli mcp-agent --server filesystem --shell # start interactive shell
-echo "get news from atos.net web site" | uv run cli mcp-agent --server playwright --server filesystem # ReAct Agent
-uv run cli smolagents "How many seconds would it take for a leopard at full speed to run through Pont des Arts?" -t web_search  # CodeAct Agent
+uv run cli agents mcp --server filesystem --chat        # start interactive shell
+echo "get news from atos.net web site" | uv run cli agents mcp --server playwright --server filesystem # ReAct Agent
+uv run cli agents smolagents "How many seconds would it take for a leopard at full speed to run through Pont des Arts?" -t web_search  # CodeAct Agent
 ```
 
 **Deep Agents (Enhanced with beautiful markdown rendering)**
 ```bash
 # Research agent with markdown output
-uv run cli deep-agent research --input "Latest AI developments" --llm-id gpt-4
+uv run cli agents deep research --input "Latest AI developments" --llm gpt-4
 
 # Coding agent for development tasks
-uv run cli deep-agent coding --input "Write a Python async web scraper" --llm-id gpt-4
+uv run cli agents deep coding --input "Write a Python async web scraper" --llm gpt-4
 
 # Analysis agent for data insights
-uv run cli deep-agent analysis --input "Analyze sales trends" --files sales_data.csv --llm-id gpt-4
+uv run cli agents deep analysis --input "Analyze sales trends" --files sales_data.csv --llm gpt-4
 
 # Custom agent with specific instructions
-uv run cli deep-agent custom --input "Plan a project timeline" --instructions "You are a project manager" --llm-id gpt-4
+uv run cli agents deep custom --input "Plan a project timeline" --instructions "You are a project manager" --llm gpt-4
 ```
 
-**Misc**
+**Knowledge Graph & Document Processing**
 ```bash
-echo "artificial intelligence" | uv run cli fabric -p "create_aphorisms" --llm-id llama-70-groq # Fabric patterns
-uv run cli ocr-pdf "*.pdf" "data/*.pdf" --output-dir=./ocr_results # OCR with Mistral API
+# Extract structured data from documents
+uv run cli structured extract "*.md" --schema "project_schema"
+uv run cli structured extract-baml "*.md" --class ReviewedOpportunity --force
+uv run cli structured gen-fake "projects/*.json" --output-dir ./fake --count 5
+
+# Knowledge graph operations
+uv run cli kg add --key project-alpha
+uv run cli kg query --query "MATCH (p:Project) RETURN p.name"
+uv run cli kg agent --input "Find all Python projects"
+uv run cli kg export-html --output-dir ./viz
 ```
 
 **Utilities**
 ```bash
-uv run cli list-models  # List available models
-uv run cli config-info  # Show current configuration
-uv run cli list-mcp-tools --filter playwright  # List available MCP tools
+uv run cli info models         # List available models
+uv run cli info config         # Show current configuration
+uv run cli info mcp-tools --filter playwright  # List available MCP tools
+uv run cli tools markdownize document.pdf      # Convert documents to markdown
 ```
 
 ## Aditional install (for some demos / components)
@@ -386,9 +395,9 @@ nvm install --lts
 
 ```bash
 # All of these work now:
-cd /project/root && uv run cli config-info
-cd /project/root/notebooks && uv run cli config-info  
-cd /project/root/genai_blueprint/demos && uv run cli config-info
+cd /project/root && uv run cli info config
+cd /project/root/notebooks && uv run cli info config  
+cd /project/root/genai_blueprint/demos && uv run cli info config
 ```
 
 ### Dependency Issues
@@ -413,7 +422,7 @@ export GENAI_DEV_PATH="/path/to/local/genai-tk:$PYTHONPATH"
 alias uv-dev="PYTHONPATH=$GENAI_DEV_PATH uv"
 
 # Then use uv-dev for development:
-uv-dev run cli config-info
+uv-dev run cli info config
 ```
 
 Or rely on the standard Git dependency system - just push changes to genai-tk and run:

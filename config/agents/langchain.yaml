@@ -30,7 +30,7 @@ langchain_agents:
       
   - name: "Chinook DB"
     tools:
-      - factory: genai_tk.extra.tools.langchain.sql_tool_factory:create_sql_tool_from_config
+      - factory: genai_tk.tools.langchain.sql_tool_factory:create_sql_tool_from_config
         config:
           database_uri: "sqlite:///use_case_data/other/Chinook.db"
           tool_name: "query_chinook"
