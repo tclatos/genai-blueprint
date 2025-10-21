@@ -4,9 +4,11 @@ version = "0.1.2"
 description = "GenAI Blueprint - Application framework built on genai_tk"
 authors = [{ name = "Thierry Caminel", email = "thierry.caminel@atos.net" }]
 requires-python = ">=3.12,<3.13"
-dependencies = [ # core dependencies - genai_tk provides AI capabilities
+dependencies = [
     # GenAI Toolkit - core AI components
+    # Note: genai-tk now includes ai-core, extra, kg, and nlp in main dependencies
     "genai_tk @ git+https://github.com/tclatos/genai-tk@main",
+    
     # Application framework dependencies
     "pydantic>=2.7.0,<3", # Data validation framework
     "devtools>=0.12.2", # Development utilities
@@ -21,8 +23,6 @@ dependencies = [ # core dependencies - genai_tk provides AI capabilities
     "python-dotenv>=1.1.1", # Environment variables
     "beartype>=0.21.0", # Run time type checking
     "baml-py>=0.209.0",
-    "kuzu>=0.11.2",
-    "langchain-chroma>=0.2.6",
 ]
 
 [project.urls]
@@ -32,6 +32,30 @@ Repository = "https://github.com/tclatos/genai-blueprint"
 
 [dependency-groups]
 # UI and web application dependencies
+
+# Browser control dependencies (from genai-tk browser-control group)
+# These are kept as optional since browser automation is not always needed
+browser_control = [
+    "playwright>=1.51.0",     # Browser automation
+    "helium>=5.1.0,<6",       # Web automation wrapper
+    "browser-use-sdk>=2.0.4", # Browser automation agent
+]
+
+# Transformers dependencies (from genai-tk transformers group)
+# Large dependency (~5GB) - kept optional
+transformers = [
+    "accelerate>=1.4.0",            # Model acceleration
+    "langchain-huggingface>=0.1.2", # Hugging Face integration
+    "sentence-transformers>=3.4.1", # Sentence embeddings
+]
+
+# AutoGen dependencies (from genai-tk autogen group)
+# Multi-agent framework - kept optional
+autogen = [
+    "autogen-openaiext-client>=0.0.3", # OpenAI extension client
+    "autogen-agentchat>=0.4.3",        # Multi-agent chat framework
+    "autogen-ext[openai]>=0.4.3",      # AutoGen OpenAI extensions
+]
 
 extra = [
     # Additional AI capabilities 
@@ -65,34 +89,7 @@ demos = [
     "matplotlib>=3.9.0,<4",       # Plotting library
     "sqlalchemy>=2.0.29",         # SQL toolkit
     "pypdf>=5.1.0,<6",            # PDF processing
-    #    "giskard>=2.15.5",  # ML testing framework
-    #   "ollama-ocr>=0.1.3,<0.2",  # OCR for Ollama
-    "scikit-learn>=1.6.1", # ML algorithms
-    # "streamlit-folium>=0.24.1",  # Streamlit maps
-    #    "streamlit-extras>=0.6.0",  # Streamlit utilities
-    #"wordcloud>=1.9.4", # Word cloud generation
-    #"md2pdf>=1.0.1",    # Markdown to PDF
-    #"vizro>=0.1.40",  # Dashboard framework
-]
-
-browser_control = [
-    "playwright>=1.51.0",     # Browser automation
-    "helium>=5.1.0,<6",       # Web automation wrapper
-    "browser-use-sdk>=2.0.4", # Browser automation agent
-    #   "browser-use>=0.4.4",  # AI browser control  MANY IMPACTS ON DEPENDENCIES
-
-]
-
-
-autogen = [
-    "autogen-openaiext-client>=0.0.3", # OpenAI extension client
-    "autogen-agentchat>=0.4.3",        # Multi-agent chat framework
-    "autogen-ext[openai]>=0.4.3",      # AutoGen OpenAI extensions
-]
-transformers = [ # LARGE DEPENDENCY (5 GB)
-    "accelerate>=1.4.0",            # Model acceleration
-    "langchain-huggingface>=0.1.2", # Hugging Face integration
-    "sentence-transformers>=3.4.1", # Sentence embeddings
+    "scikit-learn>=1.6.1",        # ML algorithms
 ]
 
 dev = [
@@ -105,7 +102,7 @@ dev = [
 
 [tool.uv]
 package = true
-default-groups = ["ui", "demos", "extra", "dev", "browser_control"]
+default-groups = ["ui", "demos", "extra", "dev"]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]

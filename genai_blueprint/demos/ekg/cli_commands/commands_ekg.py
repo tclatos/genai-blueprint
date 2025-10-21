@@ -619,18 +619,16 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
         """
         import asyncio
         import sys
-        from typing import Optional
 
         from genai_blueprint.demos.ekg.struct_rag_tool_factory import create_structured_rag_tool
-        from genai_tk.core.llm_factory import LlmFactory
+        from genai_tk.core.llm_factory import LlmFactory, get_llm_unified
+        from genai_tk.core.mcp_client import get_mcp_servers_dict
         from genai_tk.utils.cli.langchain_setup import setup_langchain
         from genai_tk.utils.cli.langgraph_agent_shell import run_langgraph_agent_shell
-        from genai_tk.core.llm_factory import get_llm_unified
-        from genai_tk.core.mcp_client import get_mcp_servers_dict
         from genai_tk.utils.langgraph import print_astream
+        from langchain.agents import create_agent
         from langchain_core.messages import HumanMessage
         from langchain_mcp_adapters.client import MultiServerMCPClient
-        from langgraph.prebuilt import create_react_agent
         from loguru import logger
 
         async def call_ekg_agent(
@@ -646,7 +644,7 @@ def register_ekg_commands(cli_app: typer.Typer) -> None:
                 mcp_tools = await client.get_tools()
                 all_tools.extend(mcp_tools)
 
-            agent = create_react_agent(model, all_tools)
+            agent = create_agent(model, all_tools)
             logger.info("Executing EKG agent query...")
             resp = agent.astream({"messages": [HumanMessage(content=query)]})
             await print_astream(resp)

@@ -312,7 +312,7 @@ async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
 
             # Create agent with demo's system prompt or default
             system_prompt = demo.system_prompt or SYSTEM_PROMPT
-            agent = create_agent(model=llm, tools=all_tools, prompt=system_prompt, checkpointer=checkpointer)
+            agent = create_agent(model=llm, tools=all_tools, system_prompt=system_prompt, checkpointer=checkpointer)
 
             # Cache the agent
             sss.agent = agent

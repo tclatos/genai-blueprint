@@ -56,56 +56,10 @@ LLM_ID = None
 KV_STORE_ID = "file"
 
 
-async def call_ekg_agent(
-    query: str, llm_id: str | None = None, tools: list | None = None, mcp_server_names: list[str] | None = None
-) -> None:
-    """Execute a single query using the EKG agent with tools and stream the response.
-
-    Creates a ReAct agent with EKG tools and optional MCP tools, then streams the
-    response to the query. This is similar to call_react_agent but for EKG agents.
-
-    Args:
-        query: The input query to process
-        llm_id: Optional ID of the language model to use
-        tools: List of tools (e.g., structured RAG tools) to include in the agent
-        mcp_server_names: Optional list of MCP server names to include
-
-    Example:
-        await call_ekg_agent(
-            "Find all projects using Python",
-            llm_id="gpt-4o-mini",
-            tools=[rainbow_tool],
-            mcp_server_names=["filesystem"]
-        )
-    """
-    from genai_tk.core.llm_factory import get_llm_unified
-    from genai_tk.core.mcp_client import get_mcp_servers_dict
-    from genai_tk.utils.langgraph import print_astream
-    from langchain_core.messages import HumanMessage
-    from langchain_mcp_adapters.client import MultiServerMCPClient
-    from langgraph.prebuilt import create_react_agent
-    from loguru import logger
-
-    model = get_llm_unified(llm=llm_id)
-    all_tools = tools or []
-
-    # Add MCP tools if specified
-    if mcp_server_names:
-        logger.info(f"Connecting to MCP servers: {mcp_server_names}")
-        client = MultiServerMCPClient(get_mcp_servers_dict(mcp_server_names))
-        mcp_tools = await client.get_tools()
-        all_tools.extend(mcp_tools)
-
-    agent = create_react_agent(model, all_tools)
-    logger.info("Executing EKG agent query...")
-    resp = agent.astream({"messages": [HumanMessage(content=query)]})
-    await print_astream(resp)
-
-
 def register_commands(cli_app: typer.Typer) -> None:
     # Create structured sub-app for extraction and generation commands
     structured_app = typer.Typer(no_args_is_help=True, help="Structured extraction and data generation commands.")
-    
+
     @structured_app.command("extract")
     def structured_extract(
         file_or_dir: Annotated[
@@ -322,10 +276,11 @@ def register_commands(cli_app: typer.Typer) -> None:
         Example:
            uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
         """
-        from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
-        import genai_blueprint.demos.ekg.baml_client.types as baml_types
         from loguru import logger
         from pydantic import BaseModel
+
+        import genai_blueprint.demos.ekg.baml_client.types as baml_types
+        from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
 
         logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
 

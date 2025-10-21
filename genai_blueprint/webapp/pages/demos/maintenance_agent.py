@@ -22,11 +22,11 @@ import streamlit as st
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, dict_input_message
 from genai_tk.utils.tracing import tracing_context
+from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
 from loguru import logger  # noqa: F401
 
 from genai_blueprint.demos.maintenance_agent.dummy_data import dummy_database
@@ -189,10 +189,10 @@ async def main() -> None:
 
     # Get agent configuration
     config, checkpointer = get_agent_config()
-    agent = create_react_agent(
+    agent = create_agent(
         model=get_llm(),
         tools=create_maintenance_tools(),
-        prompt=f"{SYSTEM_PROMPT}\nCurrent date:{datetime.now().strftime('%Y-%m-%d')}",
+        system_prompt=f"{SYSTEM_PROMPT}\nCurrent date:{datetime.now().strftime('%Y-%m-%d')}",
         checkpointer=checkpointer,
     )
     st_callback = get_streamlit_cb(st.container())
