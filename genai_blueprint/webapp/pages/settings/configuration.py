@@ -13,7 +13,7 @@ import streamlit as st
 from genai_tk.core.cache import LlmCache
 from genai_tk.core.llm_factory import PROVIDER_INFO
 from genai_tk.utils.config_mngr import global_config
-from langchain.globals import set_debug, set_verbose
+from langchain_core.globals import set_debug, set_verbose
 
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
 

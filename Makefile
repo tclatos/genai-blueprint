@@ -125,7 +125,7 @@ clean-notebooks: ## Clean Jupyter notebook outputs.
 ##  uv and project  install
 ##############################
 
-.PHONY: check_uv install
+.PHONY: check-uv install
 
 check-uv: ## Check if uv is installed, install if missing
 	@if command -v uv >/dev/null 2>&1; then \
@@ -137,7 +137,7 @@ check-uv: ## Check if uv is installed, install if missing
 		. $HOME/.local/bin/env; \
 	fi
 
-install: check_uv   ## Install SW
+install: check-uv   ## Install SW
 	uv sync
 
 ##############

@@ -450,7 +450,7 @@ def test_nodes() -> None:
 
 
 if __name__ == "__main__":
-    from langchain.globals import set_debug, set_verbose
+    from langchain_core.globals set_debug, set_verbose
 
     set_debug(True)
     set_verbose(True)

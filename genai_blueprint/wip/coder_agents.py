@@ -5,8 +5,8 @@ from typing import Optional
 
 from genai_tk.core.prompts import dedent_ws
 from langchain.agents.agent_types import AgentType
-from langchain.callbacks.manager import CallbackManagerForToolRun
 from langchain.tools import BaseTool
+from langchain_core.callbacks.manager import CallbackManagerForToolRun
 from langchain_experimental.agents.agent_toolkits import (
     create_python_agent,
 )

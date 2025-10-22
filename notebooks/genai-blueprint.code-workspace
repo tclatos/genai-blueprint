@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../genai-tk"
+		}
+	],
+	"settings": {
+		"notebook.formatOnSave.enabled": true,
+		"terminal.integrated.env.linux": {
+			"PYTHONPATH": "${env:PYTHONPATH}:${workspaceFolder}/src:${env:PYTHONPATH}:${workspaceFolder}/notebooks:${workspaceFolder}/test"
+		}
+	}
+}

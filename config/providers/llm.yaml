@@ -155,6 +155,13 @@ llm:
           quantization: awq
   capabilities: ['structured_outputs']
 
+- model:
+  id: mistral_atos
+  providers:
+    - vllm:  # DEV ! NOT TESTED !
+        model: "bla bla vla"
+ 
+  capabilities: ['structured_outputs']
 
 - model:
   id: llama32_90V
