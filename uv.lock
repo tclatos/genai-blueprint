@@ -1375,7 +1375,7 @@ ui = [
 [[package]]
 name = "genai-tk"
 version = "0.1.0"
-source = { git = "https://github.com/tclatos/genai-tk?rev=main#de9395dc54aa3196210db1d9253167c302057357" }
+source = { git = "https://github.com/tclatos/genai-tk?rev=main#082447d38aaf6dafecd99d75ba6d7036cebfd0a7" }
 dependencies = [
     { name = "abbreviations" },
     { name = "baml-cli" },
@@ -1395,7 +1395,6 @@ dependencies = [
     { name = "langchain-community" },
     { name = "langchain-core" },
     { name = "langchain-deepseek" },
-    { name = "langchain-experimental" },
     { name = "langchain-groq" },
     { name = "langchain-kuzu" },
     { name = "langchain-mcp-adapters" },
@@ -1977,11 +1976,11 @@ wheels = [
 
 [[package]]
 name = "json-repair"
-version = "0.52.2"
+version = "0.52.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/5a/93/5220c447b9ce20ed14ab33bae9a29772be895a8949bb723eaa30cc42a4e1/json_repair-0.52.2.tar.gz", hash = "sha256:1c83e1811d7e57092ad531b333f083166bdf398b042c95f3cd62b30d74dc7ecd", size = 35584, upload-time = "2025-10-20T07:24:20.221Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/f4/30c46f60c2f87d02ae0ab40347cfb30dc4906b6c8aa8157730fe7d959041/json_repair-0.52.3.tar.gz", hash = "sha256:5e6a6e4df41eb4ad2d316312940095964964f98c5f754583a0ae6efa4d6a613d", size = 35572, upload-time = "2025-10-22T04:37:33.879Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/20/1935a6082988efea16432cecfdb757111122c32a07acaa595ccd78a55c47/json_repair-0.52.2-py3-none-any.whl", hash = "sha256:c7bb514d3f59d49364653717233eb4466bda0f4fdd511b4dc268aa877d406c81", size = 26512, upload-time = "2025-10-20T07:24:18.893Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/cd/20e2aa73c9b937fbad7fe42624e1bc2552a2d589be9f0adbd7d98d06ef2a/json_repair-0.52.3-py3-none-any.whl", hash = "sha256:cf8affd088ccd7a3c196dad7f6152c005f126f63a614b9ea5d0c1dfa7f5d7186", size = 26522, upload-time = "2025-10-22T04:37:32.44Z" },
 ]
 
 [[package]]
@@ -2256,18 +2255,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1d/0e/a4c7e3782a07e40cdfa22439805764b16b76250eaf84ddb58fefc9570329/langchain_deepseek-1.0.0.tar.gz", hash = "sha256:8d09bbf42240a918589981e46e5168358aecdf30cc2fbcf6d1888c2bbe0fb62a", size = 146189, upload-time = "2025-10-17T15:56:49.739Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4f/35/c84672001fd9899f8e40f99f81c81235d2093386ce3d159111002edd8365/langchain_deepseek-1.0.0-py3-none-any.whl", hash = "sha256:6c1e2a8350dbbd94445cf5998c8b9c6f0cba320a144d6a764fbfbef3032b2a09", size = 7604, upload-time = "2025-10-17T15:56:49.011Z" },
-]
-
-[[package]]
-name = "langchain-experimental"
-version = "0.0.42"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "langchain" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/1c/2ea6dc455eea0d033046793f8196ce4712542d1e222b6febbadf662f68cc/langchain_experimental-0.0.42.tar.gz", hash = "sha256:1571ef536b056c46781d1de0fa926ab27c7d386da203ba61e0e0601d4cfc96be", size = 102761, upload-time = "2023-11-18T23:14:50.168Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bd/34/147eb8d99408c200b2d0d6fc26841833542123622cb45c27af8f33a7d925/langchain_experimental-0.0.42-py3-none-any.whl", hash = "sha256:8e9190fa5ebdd03dfed6ca20846ebb26fc7e0c1fffbab070a12f1ce0cf5053d2", size = 159392, upload-time = "2023-11-18T23:14:48.542Z" },
 ]
 
 [[package]]

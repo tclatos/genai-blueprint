@@ -14,10 +14,11 @@ from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import def_prompt
 from genai_tk.tools.langchain.web_search_tool import basic_web_search
 from genai_tk.utils.singleton import once
-from langchain.output_parsers.enum import EnumOutputParser
-from langchain.schema import Document
 from langchain_community.document_loaders.web_base import WebBaseLoader
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
+
+# from langchain_core.output_parsers import EnumOutputParser
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnableLambda
 from langchain_text_splitters import RecursiveCharacterTextSplitter

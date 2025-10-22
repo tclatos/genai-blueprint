@@ -92,9 +92,9 @@ chains:
   modules:
     - ${..root}.A_1_joke 
     - ${..root}.B_1_naive_rag_example
-    - ${..root}.B_2_self_query
-    - ${..root}.C_1_tools_example
-    - ${..root}.C_2_advanced_rag_langgraph
+    # - ${..root}.B_2_self_query
+    # - ${..root}.C_1_tools_example
+    # - ${..root}.C_2_advanced_rag_langgraph
     # - ${..root}.C_3_essay_writer_agent
       
 
