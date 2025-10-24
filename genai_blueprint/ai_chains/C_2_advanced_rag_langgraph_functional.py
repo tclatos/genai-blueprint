@@ -70,7 +70,7 @@ def retriever() -> BaseRetriever:
 # Task: Retrieves documents relevant to the question from vector store
 @task
 def retrieve_documents(question: str) -> list[Document]:
-    return retriever().invoke("question", k=5)
+    return retriever().invoke(question, k=5)
 
 
 # Task: Grades whether a retrieved document is relevant to the question

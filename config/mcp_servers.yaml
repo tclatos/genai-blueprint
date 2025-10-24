@@ -60,19 +60,28 @@ mcpServers:
         - weather_server.py
       disabled: false
 
-  vizro-mcp:
-    command: uvx
-    args:
-    - vizro-mcp
-    disabled: false
+  # vizro-mcp:
+  #   command: uvx
+  #   args:
+  #   - vizro-mcp
+  #   disabled: false
 
-  yahoo-finance-mcp:
-    command: npx
-    args:
-    - "-y"
-    - "@smithery/cli@latest"
-    - run
-    - "@Alex2Yang97/yahoo-finance-mcp"
-    - "--key"
-    - 2b62c70d-e801-46fd-9c72-8aa538abaded
+  # yahoo-finance-mcp:
+  #   command: npx
+  #   args:
+  #   - "-y"
+  #   - "@smithery/cli@latest"
+  #   - run
+  #   - "@Alex2Yang97/yahoo-finance-mcp"
+  #   - "--key"
+  #   - 2b62c70d-e801-46fd-9c72-8aa538abaded
 
+  # kubernetes:
+  #   command: docker
+  #   args:
+  #   - run
+  #   - "-i"
+  #   - "--rm"
+  #   - "-v"
+  #   - "/Users/YOUR_USER_NAME/.kube:/home/appuser/.kube:ro"
+  #   - ghcr.io/alexei-led/k8s-mcp-server:latest

@@ -140,27 +140,13 @@ llm:
 - model:
   id: gpt_oss120
   providers:
-    - openrouter: openai/gpt-oss-120b
+    - openrouter: openai/gpt-oss-120b:exacto
   capabilities: ['structured_outputs']
 
 - model:
   id: liquid_lfm40
   providers:
     - openrouter: liquid/lfm-40b
-    - vllm:  # DEV ! NOT TESTED !
-        model: "bla bla vla"
-        trust_remote_code: True
-        max_new_tokens: 512
-        llm_kwargs:
-          quantization: awq
-  capabilities: ['structured_outputs']
-
-- model:
-  id: mistral_atos
-  providers:
-    - vllm:  # DEV ! NOT TESTED !
-        model: "bla bla vla"
- 
   capabilities: ['structured_outputs']
 
 - model:
@@ -195,7 +181,7 @@ llm:
 - model:
   id: mistral_medium31
   providers:
-    - mistral: mistral-medium-latest
+    - mistralai: mistral-medium-latest
     - openrouter: mistralai/mistral-medium-3.1
     - edenai: mistral/magistral-medium-2506
   capabilities: ['structured_outputs', 'vision']
@@ -213,16 +199,20 @@ llm:
   capabilities: ['structured_outputs']
 
 - model:
-  id: mixtral_7x8
+  id: mistral_7b
   providers:
-    - deepinfra: mistralai/Mixtral-8x7B-Instruct-v0.1
-    - groq: Mixtral-8x7b-32768
+    - openrouter: mistralai/mistral-7b-instruct:free
+    - custom:  # ChatOpenAI class parameters - see https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html
+        model: mistralai/Mistral-7B-Instruct-v0.3
+        base_url: https://gateway.cp4sc.platform.codex-platform.com/mistral/v1
+        default_headers:
+          X-Gravitee-Api-Key: ${oc.env:GRAVITEE_KEY, null } 
   capabilities: ['structured_outputs']
 
 - model:
   id: kimi_k2
   providers:
-    - openrouter: moonshotai/kimi-k2
+    - openrouter: moonshotai/kimi-k2-0905:exacto
     - groq: moonshotai/kimi-k2-instruct
   capabilities: ['structured_outputs']  
 
