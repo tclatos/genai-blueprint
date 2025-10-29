@@ -13,7 +13,7 @@ from genai_tk.utils.config_mngr import global_config, import_from_qualified
 from loguru import logger
 from typer.testing import CliRunner
 
-from genai_blueprint.main.cli import cli_app
+from genai_blueprint.main.cli_old import cli_app
 
 
 def load_cli_examples() -> list[dict]:

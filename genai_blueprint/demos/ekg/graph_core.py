@@ -33,7 +33,7 @@ def _get_kuzu_type(annotation: type) -> str:
         return "STRING"
 
 
-def _detect_parent_class(embedded_node: NodeInfo, all_nodes: list[NodeInfo]) -> type[BaseModel] | None:
+def _detect_parent_class(embedded_node, all_nodes: list) -> type[BaseModel] | None:
     """Auto-detect parent class for embedded node based on field path.
 
     Args:
@@ -43,18 +43,20 @@ def _detect_parent_class(embedded_node: NodeInfo, all_nodes: list[NodeInfo]) -> 
     Returns:
         Parent node class or None if not found
     """
-    if not embedded_node.field_path:
+    field_path = getattr(embedded_node, '_field_path', embedded_node.field_paths[0] if embedded_node.field_paths else None)
+    if not field_path:
         return None
 
     # Simple heuristic: find the node whose field_path is a prefix of this one
-    field_parts = embedded_node.field_path.split(".")
+    field_parts = field_path.split(".")
     if len(field_parts) <= 1:
         return None
 
     parent_path = ".".join(field_parts[:-1])
 
     for node in all_nodes:
-        if not node.embed_in_parent and node.field_path == parent_path:
+        node_field_path = getattr(node, '_field_path', node.field_paths[0] if node.field_paths else None)
+        if not node.embed_in_parent and node_field_path == parent_path:
             return node.baml_class
 
     return None
@@ -90,16 +92,44 @@ def _find_embedded_data_in_model(root_model: BaseModel, target_class: type[BaseM
 
 
 def _add_embedded_fields(
-    parent_data: dict[str, Any], root_model: BaseModel, all_nodes: list[NodeInfo], parent_node: NodeInfo
+    parent_data: dict[str, Any], root_model: BaseModel, all_nodes: list, parent_node
 ) -> None:
     """Add embedded node fields to parent record.
 
     Args:
         parent_data: Parent record dictionary to modify
         root_model: Root model instance for field path resolution
-        all_nodes: All node configurations
-        parent_node: Parent node configuration
+        all_nodes: All node configurations (GraphNodeConfig objects)
+        parent_node: Parent node configuration (GraphNodeConfig object)
     """
+    # New structure: handle embedded fields from parent_node.embedded
+    if hasattr(parent_node, 'embedded') and parent_node.embedded:
+        # Get the parent instance data
+        field_path = getattr(parent_node, '_field_path', parent_node.field_paths[0] if parent_node.field_paths else None)
+        parent_instance = get_field_by_path(root_model, field_path) if field_path else root_model
+        
+        for field_name, embedded_class in parent_node.embedded:
+            # Get the embedded data from the parent instance
+            embedded_data = getattr(parent_instance, field_name, None) if parent_instance else None
+            
+            if embedded_data is None:
+                continue
+
+            # Convert to dict if needed
+            if hasattr(embedded_data, "model_dump"):
+                embedded_dict = embedded_data.model_dump()
+            elif isinstance(embedded_data, dict):
+                embedded_dict = embedded_data
+            else:
+                continue
+
+            # Add embedded fields with prefix
+            prefix = f"{field_name}_"
+            for emb_field_name, field_value in embedded_dict.items():
+                embedded_field_name = f"{prefix}{emb_field_name}"
+                parent_data[embedded_field_name] = field_value
+
+    # Legacy: handle embed_in_parent nodes
     for embedded_node in all_nodes:
         if not embedded_node.embed_in_parent:
             continue
@@ -113,8 +143,8 @@ def _add_embedded_fields(
             continue
 
         # Extract embedded data - need to find it in the root model
-        # The embedded_node.field_path points to where the data is in the root model
-        embedded_data = get_field_by_path(root_model, embedded_node.field_path) if embedded_node.field_path else None
+        field_path = getattr(embedded_node, '_field_path', embedded_node.field_paths[0] if embedded_node.field_paths else None)
+        embedded_data = get_field_by_path(root_model, field_path) if field_path else None
         if embedded_data is None:
             # Try to find the embedded data by searching for the class type in root model
             embedded_data = _find_embedded_data_in_model(root_model, embedded_node.baml_class)
@@ -164,12 +194,17 @@ def create_synthetic_key(data: Dict[str, Any], base_name: str) -> str:
 # Schema
 
 
-def create_schema(conn: kuzu.Connection, nodes: list[NodeInfo], relations: list[RelationInfo]) -> None:
+def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
     """Create node and relationship tables in Kuzu database.
 
-    Creates CREATE NODE TABLE and CREATE REL TABLE statements based on NodeInfo
-    and RelationInfo configurations. Handles table drops and recreation for
+    Creates CREATE NODE TABLE and CREATE REL TABLE statements based on GraphNodeConfig
+    and GraphRelationConfig. Handles table drops and recreation for
     idempotency. Embedded nodes have their fields merged into parent tables.
+    
+    Args:
+        conn: Kuzu database connection
+        nodes: List of GraphNodeConfig objects
+        relations: List of GraphRelationConfig objects
     """
     # Drop existing rel tables first
     for relation in relations:
@@ -195,7 +230,21 @@ def create_schema(conn: kuzu.Connection, nodes: list[NodeInfo], relations: list[
     created_tables: set[str] = set()
     embedded_fields_by_parent: dict[str, list[tuple[str, str]]] = {}
 
-    # First, collect embedded fields for each parent
+    # First, collect embedded fields for each parent (new structure)
+    for node in nodes:
+        if hasattr(node, 'embedded') and node.embedded:
+            parent_name = node.baml_class.__name__
+            if parent_name not in embedded_fields_by_parent:
+                embedded_fields_by_parent[parent_name] = []
+
+            for field_name, embedded_class in node.embedded:
+                prefix = f"{field_name}_"
+                for emb_field_name, emb_field_info in embedded_class.model_fields.items():
+                    embedded_field_name = f"{prefix}{emb_field_name}"
+                    kuzu_type = _get_kuzu_type(emb_field_info.annotation)
+                    embedded_fields_by_parent[parent_name].append((embedded_field_name, kuzu_type))
+
+    # Legacy: handle embed_in_parent nodes
     for node in nodes:
         if node.embed_in_parent:
             # Find parent node class
@@ -227,6 +276,12 @@ def create_schema(conn: kuzu.Connection, nodes: list[NodeInfo], relations: list[
         key_field = node.key
         fields: list[str] = []
         model_fields = node.baml_class.model_fields
+
+        # Add metadata fields first
+        fields.append("id STRING")  # UUID primary key
+        fields.append("_name STRING")  # Human-readable name from name_from
+        fields.append("_created_at STRING")  # ISO timestamp
+        fields.append("_updated_at STRING")  # ISO timestamp
 
         # Add regular fields (excluding any specified excluded_fields)
         for field_name, field_info in model_fields.items():
@@ -418,34 +473,32 @@ def get_field_by_path(obj: Any, path: str) -> Any:
 
 
 def extract_graph_data(
-    model: BaseModel, nodes: list[NodeInfo], relations: list[RelationInfo]
+    model: BaseModel, nodes: list, relations: list
 ) -> Tuple[Dict[str, List[Dict]], List[Tuple]]:
     """Generic extraction of nodes and relationships from any Pydantic model.
 
     Args:
         model: Pydantic model instance
-        nodes: Node extraction configurations
-        relations: Relationship extraction configurations
+        nodes: List of GraphNodeConfig objects
+        relations: List of GraphRelationConfig objects
 
     Returns:
         nodes_dict: Mapping of node type to list of property dicts
-        relationships: Tuples of (from_type, from_key, to_type, to_key, rel_name)
+        relationships: Tuples of (from_type, from_id, to_type, to_id, rel_name)
     """
     nodes_dict: Dict[str, List[Dict]] = {}
     relationships: List[Tuple] = []
-    node_registry: Dict[str, set[str]] = {}
+    node_registry: Dict[str, set[str]] = {}  # For deduplication: node_type -> set of dedup values
+    id_registry: Dict[str, Dict[str, str]] = {}  # For relationships: node_type -> {dedup_value: _id}
 
-    # Auto-deduce field paths for nodes that don't have them
-    for node_info in nodes:
-        if node_info.field_path is None:
-            auto_path = _auto_deduce_node_field_path(node_info, model, nodes)
-            node_info.field_path = auto_path  # Update in place
+    # Field paths are already set as _field_path in create_graph
 
     # Init buckets
     for node_info in nodes:
         node_type = node_info.baml_class.__name__
         nodes_dict[node_type] = []
         node_registry[node_type] = set()
+        id_registry[node_type] = {}
 
     # Nodes
     for node_info in nodes:
@@ -453,10 +506,12 @@ def extract_graph_data(
             continue  # Handle embedded nodes separately
 
         node_type = node_info.baml_class.__name__
-        field_data = get_field_by_path(model, node_info.field_path) if node_info.field_path else model
+        field_path = getattr(node_info, '_field_path', node_info.field_paths[0] if node_info.field_paths else None)
+        field_data = get_field_by_path(model, field_path) if field_path else model
         if field_data is None:
             continue
-        items = field_data if node_info.is_list else [field_data]
+        is_list = getattr(node_info, '_is_list', False)
+        items = field_data if is_list else [field_data]
 
         for item in items:
             if item is None:
@@ -469,6 +524,16 @@ def extract_graph_data(
             else:
                 continue
 
+            # Generate metadata fields FIRST, before removing excluded fields
+            import uuid
+            from datetime import datetime
+            
+            # Generate UUID for id
+            item_data["id"] = str(uuid.uuid4())
+            
+            # Get _name from name_from using get_name_value
+            item_data["_name"] = node_info.get_name_value(item_data, node_type)
+
             # Filter out excluded fields to avoid complex data issues
             if node_info.excluded_fields:
                 for excluded_field in node_info.excluded_fields:
@@ -476,29 +541,32 @@ def extract_graph_data(
 
             # Add embedded fields to this parent record
             _add_embedded_fields(item_data, model, nodes, node_info)
+            
+            # Add timestamps
+            now = datetime.utcnow().isoformat() + "Z"
+            item_data["_created_at"] = now
+            item_data["_updated_at"] = now
 
-            # Primary key
-            if node_info.key_generator:
-                key_value = node_info.key_generator(item_data, node_type)
+            # Deduplication - use _name for deduplication if deduplication_key not specified
+            if node_info.deduplication_key:
+                dedup_value = item_data.get(node_info.deduplication_key)
             else:
-                key_value = item_data.get(node_info.key)
-
-            if key_value is None or key_value == "":
-                key_value = create_synthetic_key(item_data, node_type)
-                item_data[node_info.key] = key_value
-
-            # Dedup
-            dedup_key = node_info.deduplication_key or node_info.key
-            dedup_value = item_data.get(dedup_key)
+                # Use _name for deduplication by default
+                dedup_value = item_data.get("_name")
+            
             if dedup_value:
                 # Convert to string to handle unhashable types like dicts
                 dedup_str = str(dedup_value)
                 if dedup_str not in node_registry[node_type]:
                     nodes_dict[node_type].append(item_data)
                     node_registry[node_type].add(dedup_str)
+                    # Register id for relationship lookups
+                    id_registry[node_type][dedup_str] = item_data["id"]
             else:
-                # No dedup value, always add
+                # No dedup value, always add (but still register id)
                 nodes_dict[node_type].append(item_data)
+                # Use id itself as the registry key if no other dedup available
+                id_registry[node_type][item_data["id"]] = item_data["id"]
 
     # Relationships
     for relation_info in relations:
@@ -516,8 +584,9 @@ def extract_graph_data(
         if from_node_info.embed_in_parent or to_node_info.embed_in_parent:
             continue
 
-        # Auto-deduce field paths if not provided
-        from_field_path, to_field_path = _auto_deduce_relation_paths(relation_info, nodes, model)
+        # Get field paths from relation config
+        from_field_path = getattr(relation_info, '_from_field_path', None)
+        to_field_path = getattr(relation_info, '_to_field_path', None)
 
         from_data = get_field_by_path(model, from_field_path) if from_field_path else model
         to_data = get_field_by_path(model, to_field_path) if to_field_path else None
@@ -525,24 +594,41 @@ def extract_graph_data(
             # Skip if we couldn't find the target data
             continue
 
+        # Get dedup value for from_node to lookup id
         from_dict = from_data.model_dump() if hasattr(from_data, "model_dump") else from_data
-        from_key_field = relation_info.from_key_field or from_node_info.key
-        from_key = from_dict.get(from_key_field)
-        if from_node_info.key_generator and from_key is None:
-            from_key = from_node_info.key_generator(from_dict, from_type)
+        
+        # Get dedup value for from node
+        if from_node_info.deduplication_key:
+            from_dedup_value = from_dict.get(from_node_info.deduplication_key)
+        else:
+            # Use _name as dedup value (same logic as in node extraction)
+            from_dedup_value = from_node_info.get_name_value(from_dict, from_type)
+        
+        from_dedup_str = str(from_dedup_value) if from_dedup_value else None
+        from_id = id_registry[from_type].get(from_dedup_str) if from_dedup_str else None
+        
+        if not from_id:
+            continue  # Skip if we can't find the from node id
 
         to_items = to_data if isinstance(to_data, list) else [to_data]
         for to_item in to_items:
             if to_item is None:
                 continue
             to_dict = to_item.model_dump() if hasattr(to_item, "model_dump") else to_item
-            to_key_field = relation_info.to_key_field or to_node_info.key
-            to_key = to_dict.get(to_key_field)
-            if to_node_info.key_generator and to_key is None:
-                to_key = to_node_info.key_generator(to_dict, to_type)
-
-            if from_key and to_key:
-                relationships.append((from_type, str(from_key), to_type, str(to_key), relation_info.name))
+            
+            # Get dedup value for to node
+            if to_node_info.deduplication_key:
+                to_dedup_value = to_dict.get(to_node_info.deduplication_key)
+            else:
+                # Use _name as dedup value
+                to_dedup_value = to_node_info.get_name_value(to_dict, to_type)
+            
+            to_dedup_str = str(to_dedup_value) if to_dedup_value else None
+            to_id = id_registry[to_type].get(to_dedup_str) if to_dedup_str else None
+            
+            if to_id:
+                # Use id values for relationships
+                relationships.append((from_type, from_id, to_type, to_id, relation_info.name))
 
     return nodes_dict, relationships
 
@@ -551,11 +637,17 @@ def extract_graph_data(
 
 
 def load_graph_data(
-    conn: kuzu.Connection, nodes_dict: Dict[str, List[Dict]], relationships: List[Tuple], nodes: list[NodeInfo]
+    conn: kuzu.Connection, nodes_dict: Dict[str, List[Dict]], relationships: List[Tuple], nodes: list
 ) -> None:
     """Load nodes and relationships into Kuzu database.
 
     Uses CREATE statements to insert data.
+    
+    Args:
+        conn: Kuzu database connection
+        nodes_dict: Dictionary mapping node types to list of node data dicts
+        relationships: List of relationship tuples
+        nodes: List of GraphNodeConfig objects
     """
     # Nodes
     for node_type, node_list in nodes_dict.items():
@@ -616,19 +708,16 @@ def load_graph_data(
                     console.print(f"[red]Error creating {node_type} node:[/red] {e}")
                     console.print(f"[dim]SQL: {create_sql}[/dim]")
 
-    # Relationships
+    # Relationships - use _id for all node references
     console.print(f"[green]Loading {len(relationships)} relationships...[/green]")
-    for from_type, from_key, to_type, to_key, rel_name in relationships:
-        from_key_escaped = from_key.replace("'", "\\'")
-        to_key_escaped = to_key.replace("'", "\\'")
-
-        from_node_key = next(n.key for n in nodes if n.baml_class.__name__ == from_type)
-        to_node_key = next(n.key for n in nodes if n.baml_class.__name__ == to_type)
+    for from_type, from_id, to_type, to_id, rel_name in relationships:
+        from_id_escaped = from_id.replace("'", "\\'")
+        to_id_escaped = to_id.replace("'", "\\'")
 
         match_sql = f"""
         MATCH (from:{from_type}), (to:{to_type})
-        WHERE from.{from_node_key} = '{from_key_escaped}'
-          AND to.{to_node_key} = '{to_key_escaped}'
+        WHERE from.id = '{from_id_escaped}'
+          AND to.id = '{to_id_escaped}'
         CREATE (from)-[:{rel_name}]->(to)
         """
         try:
@@ -638,6 +727,7 @@ def load_graph_data(
             console.print(f"[dim]SQL: {match_sql}[/dim]")
 
 
+# Orchestration
 # Orchestration
 
 
@@ -672,43 +762,12 @@ def create_graph(
         console.print(f"[yellow]Schema with {len(schema.nodes)} nodes and {len(schema.relations)} relations[/yellow]")
 
     console.print("[bold]Creating database schema...[/bold]")
-
-    # Convert GraphSchema to legacy NodeInfo and RelationInfo for database operations
-    legacy_nodes = []
-    legacy_relations = []
-
-    # Convert nodes
+    
+    # Prepare nodes with computed is_list flags
     for node_config in schema.nodes:
-        # Create NodeInfo with auto-deduced values from GraphNodeConfig
         field_paths = node_config.field_paths or []
         field_path = field_paths[0] if field_paths else None
-
-        # Create legacy NodeInfo - we'll use a minimal class definition
-        class NodeInfo:
-            def __init__(
-                self,
-                baml_class,
-                key,
-                field_path=None,
-                excluded_fields=None,
-                is_list=None,
-                embed_in_parent=False,
-                parent_node_class=None,
-                embed_prefix=None,
-                key_generator=None,
-                deduplication_key=None,
-            ):
-                self.baml_class = baml_class
-                self.key = key
-                self.field_path = field_path
-                self.excluded_fields = excluded_fields or set()
-                self.is_list = is_list if is_list is not None else (field_path and field_paths and len(field_paths) > 1)
-                self.embed_in_parent = embed_in_parent
-                self.parent_node_class = parent_node_class
-                self.embed_prefix = embed_prefix
-                self.key_generator = key_generator
-                self.deduplication_key = deduplication_key
-
+        
         # Check if field is a list by looking at the model field annotation
         is_list = False
         if field_path and hasattr(model, "model_fields"):
@@ -731,61 +790,27 @@ def create_graph(
                         is_list = True
             except:
                 pass
+        
+        # Store is_list as a dynamic attribute
+        node_config._is_list = is_list
+        node_config._field_path = field_path
 
-        legacy_node = NodeInfo(
-            baml_class=node_config.baml_class,
-            key=node_config.key,
-            field_path=field_path,
-            excluded_fields=set(node_config.excluded_fields or []),
-            is_list=is_list,
-        )
-        legacy_nodes.append(legacy_node)
-
-    # Convert relations
+    # Prepare relations with field paths
     for relation_config in schema.relations:
-        # Create legacy RelationInfo - minimal class definition
-        class RelationInfo:
-            def __init__(
-                self,
-                name,
-                from_node,
-                to_node,
-                from_field_path=None,
-                to_field_path=None,
-                from_key_field=None,
-                to_key_field=None,
-            ):
-                self.name = name
-                self.from_node = from_node
-                self.to_node = to_node
-                self.from_field_path = from_field_path
-                self.to_field_path = to_field_path
-                self.from_key_field = from_key_field
-                self.to_key_field = to_key_field
-
-        # Extract field paths from the relation configuration
-        from_path = None
-        to_path = None
         if relation_config.field_paths:
-            # Get the first pair
             from_path, to_path = relation_config.field_paths[0]
+            relation_config._from_field_path = from_path
+            relation_config._to_field_path = to_path
+        else:
+            relation_config._from_field_path = None
+            relation_config._to_field_path = None
 
-        legacy_relation = RelationInfo(
-            name=relation_config.name,
-            from_node=relation_config.from_node,
-            to_node=relation_config.to_node,
-            from_field_path=from_path,
-            to_field_path=to_path,
-        )
-        legacy_relations.append(legacy_relation)
-
-    # Now use the existing database creation logic
     console.print("[cyan]Creating database tables...[/cyan]")
-    create_schema(conn, legacy_nodes, legacy_relations)
+    create_schema(conn, schema.nodes, schema.relations)
 
     console.print("[cyan]Extracting and loading data...[/cyan]")
-    nodes_dict, relationships = extract_graph_data(model, legacy_nodes, legacy_relations)
-    load_graph_data(conn, nodes_dict, relationships, legacy_nodes)
+    nodes_dict, relationships = extract_graph_data(model, schema.nodes, schema.relations)
+    load_graph_data(conn, nodes_dict, relationships, schema.nodes)
 
     console.print("\n[bold green]Graph creation complete![/bold green]")
     total_nodes = sum(len(node_list) for node_list in nodes_dict.values())

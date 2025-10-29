@@ -56,30 +56,28 @@ def create_configuration():
     Returns:
         GraphSchema with all auto-deduced configurations
     """
-    # Define nodes - just specify the class and key field
+    # Define nodes - just specify the class and name_from field
     nodes = [
         # Root node
-        GraphNodeConfig(baml_class=ReviewedOpportunity, key="start_date"),
+        GraphNodeConfig(baml_class=ReviewedOpportunity, name_from="start_date"),
         # Regular nodes - field paths auto-deduced
-        GraphNodeConfig(baml_class=Opportunity, key="name"),
-        GraphNodeConfig(baml_class=Customer, key="name"),
-        GraphNodeConfig(baml_class=Person, key="name", deduplication_key="name"),  # Handles both contacts and team
-        GraphNodeConfig(baml_class=Partner, key="name"),
-        GraphNodeConfig(baml_class=RiskAnalysis, key="risk_description"),
+        GraphNodeConfig(baml_class=Opportunity, name_from="name"),
+        GraphNodeConfig(baml_class=Customer, name_from="name"),
+        GraphNodeConfig(baml_class=Person, name_from="name", deduplication_key="name"),  # Handles both contacts and team
+        GraphNodeConfig(baml_class=Partner, name_from="name"),
+        GraphNodeConfig(baml_class=RiskAnalysis, name_from="risk_description"),
         GraphNodeConfig(
             baml_class=TechnicalApproach,
-            key="technical_stack",
-            key_generator=lambda data, base: data.get("technical_stack")
+            name_from=lambda data, base: data.get("technical_stack")
             or data.get("architecture")
             or f"{base}_default",
         ),
         GraphNodeConfig(
             baml_class=CompetitiveLandscape,
-            key="competitive_position",
-            key_generator=lambda data, base: data.get("competitive_position") or f"{base}_competitive_position",
+            name_from=lambda data, base: data.get("competitive_position") or f"{base}_competitive_position",
         ),
         # Embedded node - financials will be embedded in Opportunity table
-        GraphNodeConfig(baml_class=FinancialMetrics, key="tcv", embed_in_parent=True, embed_prefix="financial_"),
+        GraphNodeConfig(baml_class=FinancialMetrics, name_from="tcv", embed_in_parent=True, embed_prefix="financial_"),
     ]
 
     # Define relationships - just specify from/to classes and relationship name

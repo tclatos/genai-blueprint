@@ -43,7 +43,7 @@ class ProjectSubgraph(Subgraph, BaseModel):
 
         # Define nodes with descriptions
         nodes = [
-            GraphNodeConfig(baml_class=Project, key="name", description="Project information with status and budget"),
+            GraphNodeConfig(baml_class=Project, name_from="name", description="Project information with status and budget"),
             # Add more nodes as needed...
         ]
 

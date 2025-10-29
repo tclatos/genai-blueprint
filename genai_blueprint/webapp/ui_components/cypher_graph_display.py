@@ -73,7 +73,7 @@ def get_cytoscape_style() -> list[dict]:
                 "height": "label",
                 "padding": "10px",
                 "shape": "ellipse",
-                "font-size": "12px",
+                "font-size": "10px",
                 "border-width": 2,
                 "border-color": "#444",
             },

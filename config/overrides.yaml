@@ -68,11 +68,13 @@ ekg_local:
     default : PgVector
   cli:
     commands:  
-    - genai_tk.core.commands_core:register_commands
-    - genai_tk.extra.commands_extra:register_commands
-    - genai_tk.extra.agents.commands_agents:register_commands
+    - genai_tk.core.commands_core:CoreCommands
+    - genai_tk.core.commands_info:InfoCommands
+    - genai_tk.extra.commands_extra:ExtraCommands
+    - genai_tk.extra.agents.commands_agents:AgentCommands
     - genai_blueprint.demos.ekg.cli_commands.commands:register_commands
-    - genai_blueprint.demos.ekg.cli_commands.commands_ekg:register_ekg_commands
+    - genai_blueprint.demos.ekg.cli_commands.commands_ekg:EkgCommands
+    - genai_blueprint.demos.ekg.cli_commands.commands_baml:register_baml_commands
   kv_store: 
     file: 
       path: ${paths.data_root}/kv_store

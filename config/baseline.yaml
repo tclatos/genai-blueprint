@@ -40,16 +40,23 @@ embeddings_store:
     backend: Chroma 
     embeddings: default
     table_name_prefix: embeddings
+    config:
+      storage: ${paths.data_root}/vector_store  # Updated: was 'chroma_path'
+ 
+  chroma_indexed:
+    backend: Chroma 
+    embeddings: default
+    table_name_prefix: embeddings
     record_manager: sqlite:///${paths.data_root}/vector_store/record_manager_cache.sql
     config:
       storage: ${paths.data_root}/vector_store  # Updated: was 'chroma_path'
-  
+
   in_memory:
     backend: InMemory  
     embeddings: default
     table_name_prefix: embeddings
   
-  in_memory_chroma:
+  chroma_in_memory:
     backend: Chroma
     embeddings: default
     table_name_prefix: embeddings
@@ -70,7 +77,10 @@ embeddings_store:
     config:
       postgres_url: ${paths.postgres}
       postgres_schema: public
-  
+
+rag:
+  embeddings_store: default
+  chunker: 
 
 documents:
   base: ./use_case_data

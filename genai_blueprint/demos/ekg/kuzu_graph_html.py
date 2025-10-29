@@ -69,7 +69,13 @@ def _get_node_raw_name(node_dict: dict[str, Any], node_type: str) -> str:
     Returns:
         Raw name for the node (no truncation)
     """
-    # Common name fields to check in order of preference
+    # PRIORITY 1: Check for our custom _name field first
+    if "_name" in node_dict and node_dict["_name"] is not None:
+        value = str(node_dict["_name"]).strip()
+        if value:
+            return value
+    
+    # PRIORITY 2: Common name fields to check in order of preference
     name_fields = ["name", "title", "description", "label", "id"]
 
     for field in name_fields:
@@ -78,9 +84,9 @@ def _get_node_raw_name(node_dict: dict[str, Any], node_type: str) -> str:
             if value:
                 return value
 
-    # If no name field found, use the first non-empty string field
+    # PRIORITY 3: If no name field found, use the first non-empty string field
     for key, value in node_dict.items():
-        if isinstance(value, str) and value.strip() and key not in ["type", "id"]:
+        if isinstance(value, str) and value.strip() and key not in ["type", "id", "_name"]:
             return str(value)
 
     # Fallback to node type
@@ -209,7 +215,11 @@ def _fetch_graph_data(
                     if isinstance(node_obj, dict):
                         # Handle dictionary-based results (most common)
                         for key, val in node_obj.items():
-                            if not key.startswith("_") and val is not None:
+                            # Keep metadata fields like _name, _created_at, _updated_at
+                            # but skip Kuzu internal fields like _id, _label
+                            if key in ("_name", "_created_at", "_updated_at"):
+                                node_dict[key] = str(val).strip() if str(val).strip() else str(val)
+                            elif not key.startswith("_") and val is not None:
                                 node_dict[key] = str(val).strip() if str(val).strip() else str(val)
                     else:
                         # Handle object-based results (fallback)
@@ -463,7 +473,7 @@ def generate_kuzu_graph_html(
                 position: absolute;
                 text-align: left;
                 padding: 8px;
-                font-size: 12px;
+                font-size: 10px;
                 background: rgba(0, 0, 0, 0.9);
                 color: white;
                 border: 1px solid rgba(255, 255, 255, 0.3);
@@ -472,8 +482,10 @@ def generate_kuzu_graph_html(
                 opacity: 0;
                 transition: opacity 0.2s;
                 z-index: 1000;
-                max-width: 300px;
+                max-width: 500px;
                 word-wrap: break-word;
+                max-height: 80vh;
+                overflow-y: auto;
             }
         </style>
     </head>
@@ -595,8 +607,65 @@ def generate_kuzu_graph_html(
                 .attr("text-anchor", "middle")
                 .text(d => d.name);
 
-            node.append("title").text(d => JSON.stringify(d));
-
+            nodeGroup.on("mouseover", function(d) {
+                // Helper function to create tree-like HTML representation
+                function createTreeHTML(obj, indent = 0) {
+                    var html = "";
+                    var indentStr = "&nbsp;".repeat(indent * 4);
+                    
+                    for (var key in obj) {
+                        // Filter out unwanted properties
+                        if (key === 'color' || key === 'index' || key === 'id' || 
+                            key === 'x' || key === 'y' || key === 'vx' || key === 'vy' || 
+                            key === 'fx' || key === 'fy') {
+                            continue;
+                        }
+                        
+                        var value = obj[key];
+                        
+                        if (value === null || value === undefined) {
+                            continue;
+                        }
+                        
+                        if (typeof value === 'object' && !Array.isArray(value)) {
+                            // Nested object
+                            html += indentStr + "<strong>" + key + ":</strong><br/>";
+                            html += createTreeHTML(value, indent + 1);
+                        } else if (Array.isArray(value)) {
+                            // Array
+                            html += indentStr + "<strong>" + key + ":</strong> [" + value.length + " items]<br/>";
+                            value.forEach(function(item, idx) {
+                                if (typeof item === 'object') {
+                                    html += indentStr + "&nbsp;&nbsp;[" + idx + "]:<br/>";
+                                    html += createTreeHTML(item, indent + 2);
+                                } else {
+                                    html += indentStr + "&nbsp;&nbsp;[" + idx + "]: " + item + "<br/>";
+                                }
+                            });
+                        } else {
+                            // Simple value
+                            var displayValue = String(value);
+                            if (displayValue.length > 100) {
+                                displayValue = displayValue.substring(0, 100) + "...";
+                            }
+                            html += indentStr + "<strong>" + key + ":</strong> " + displayValue + "<br/>";
+                        }
+                    }
+                    
+                    return html;
+                }
+                
+                var content = "<strong style='font-size: 9px;'>" + d.type + "</strong><br/><br/>";
+                content += createTreeHTML(d);
+                
+                tooltip.html(content)
+                    .style("left", (d3.event.pageX + 10) + "px")
+                    .style("top", (d3.event.pageY - 10) + "px")
+                    .style("opacity", 1);
+            })
+            .on("mouseout", function(d) {
+                tooltip.style("opacity", 0);
+            });
             simulation.on("tick", function() {
                 link.attr("x1", d => d.source.x)
                     .attr("y1", d => d.source.y)
@@ -792,7 +861,7 @@ class KnowledgeGraphHTMLVisualizer:
             position: absolute;
             text-align: left;
             padding: 8px;
-            font-size: 12px;
+            font-size: 8px;
             background: rgba(0, 0, 0, 0.9);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -801,8 +870,10 @@ class KnowledgeGraphHTMLVisualizer:
             opacity: 0;
             transition: opacity 0.2s;
             z-index: 1000;
-            max-width: 300px;
+            max-width: 500px;
             word-wrap: break-word;
+            max-height: 80vh;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -891,20 +962,55 @@ class KnowledgeGraphHTMLVisualizer:
                 .on("drag", dragged)
                 .on("end", dragended))
             .on("mouseover", function(d) {
-                // Create tooltip content
-                var content = "<strong>Node Information</strong><br/>";
-                content += "Type: " + d.type + "<br/>";
-                content += "Name: " + d.name + "<br/>";
-                content += "ID: " + d.id + "<br/>";
-                
-                // Show all properties except system ones
-                for (let prop in d) {
-                    if (prop !== 'id' && prop !== 'name' && prop !== 'type' && prop !== 'color' && 
-                        prop !== 'x' && prop !== 'y' && prop !== 'vx' && prop !== 'vy' && 
-                        prop !== 'fx' && prop !== 'fy') {
-                        content += prop + ": " + d[prop] + "<br/>";
+                // Helper function to create tree-like HTML representation
+                function createTreeHTML(obj, indent = 0) {
+                    var html = "";
+                    var indentStr = "&nbsp;".repeat(indent * 4);
+                    
+                    for (var key in obj) {
+                        // Filter out unwanted properties
+                        if (key === 'color' || key === 'index' || key === 'id' || 
+                            key === 'x' || key === 'y' || key === 'vx' || key === 'vy' || 
+                            key === 'fx' || key === 'fy') {
+                            continue;
+                        }
+                        
+                        var value = obj[key];
+                        
+                        if (value === null || value === undefined) {
+                            continue;
+                        }
+                        
+                        if (typeof value === 'object' && !Array.isArray(value)) {
+                            // Nested object
+                            html += indentStr + "<strong>" + key + ":</strong><br/>";
+                            html += createTreeHTML(value, indent + 1);
+                        } else if (Array.isArray(value)) {
+                            // Array
+                            html += indentStr + "<strong>" + key + ":</strong> [" + value.length + " items]<br/>";
+                            value.forEach(function(item, idx) {
+                                if (typeof item === 'object') {
+                                    html += indentStr + "&nbsp;&nbsp;[" + idx + "]:<br/>";
+                                    html += createTreeHTML(item, indent + 2);
+                                } else {
+                                    html += indentStr + "&nbsp;&nbsp;[" + idx + "]: " + item + "<br/>";
+                                }
+                            });
+                        } else {
+                            // Simple value
+                            var displayValue = String(value);
+                            if (displayValue.length > 100) {
+                                displayValue = displayValue.substring(0, 100) + "...";
+                            }
+                            html += indentStr + "<strong>" + key + ":</strong> " + displayValue + "<br/>";
+                        }
                     }
+                    
+                    return html;
                 }
+                
+                var content = "<strong style='font-size: 10px;'>" + d.type + "</strong><br/><br/>";
+                content += createTreeHTML(d);
                 
                 tooltip.html(content)
                     .style("left", (d3.event.pageX + 10) + "px")
@@ -916,13 +1022,7 @@ class KnowledgeGraphHTMLVisualizer:
             });
 
         node.append("circle")
-            .attr("r", d => {
-                // Size based on node type or connections
-                if (d.type === "Opportunity") return 12;
-                if (d.type === "Person") return 8;
-                if (d.type === "Customer") return 10;
-                return 6;
-            })
+            .attr("r", 10)
             .attr("fill", d => d.color);
 
         node.append("text")

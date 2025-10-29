@@ -18,30 +18,75 @@ class GraphNodeConfig(BaseModel):
 
     Only requires the essential information that cannot be auto-deduced:
     - Which Pydantic class to create nodes for
-    - Which field to use as primary key
-    - Optional customizations like key generation and embedding
+    - Which field to use as primary key (name_from)
+    - Optional customizations like embedding
 
     All field paths, excluded fields, and list detection are automatically
     determined by introspecting the Pydantic model structure.
     """
 
     baml_class: Type[BaseModel]
-    key: str
+    name_from: str | Callable[[Dict[str, Any], str], str]
     description: str = ""
-    embed_in_parent: bool = False
-    embed_prefix: str = ""
-    key_generator: Optional[Callable[[Dict[str, Any], str], str]] = None
+    embedded: List[Tuple[str, Type[BaseModel]]] = []
     deduplication_key: Optional[str] = None
+    index_fields: List[str] = []
 
     # Auto-deduced attributes (populated during schema validation)
     field_paths: List[str] = []  # All paths where this class appears in the root model
     is_list_at_paths: Dict[str, bool] = {}  # Whether it's a list at each path
     excluded_fields: Set[str] = set()  # Auto-computed based on relationships
 
+    # Legacy fields for backward compatibility (deprecated)
+    embed_in_parent: bool = False
+    embed_prefix: str = ""
+    parent_node_class: Optional[Type[BaseModel]] = None
+
     def model_post_init(self, __context: Any) -> None:
         """Initialize auto-deduced fields after model creation."""
-        if self.embed_in_parent and not self.embed_prefix:
-            self.embed_prefix = f"{self.baml_class.__name__.lower()}_"
+        # Handle legacy embed_in_parent for backward compatibility
+        if self.embed_in_parent:
+            warnings.warn(
+                f"embed_in_parent is deprecated. Use 'embedded' field in parent node instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if not self.embed_prefix:
+                self.embed_prefix = f"{self.baml_class.__name__.lower()}_"
+
+    @property
+    def key(self) -> str:
+        """Get the primary key field name.
+        
+        All nodes use 'id' as the primary key (UUID).
+        """
+        return "id"
+    
+    def get_name_value(self, data: Dict[str, Any], node_type: str) -> str:
+        """Get the _name value for a node instance.
+        
+        Args:
+            data: Node data dictionary
+            node_type: Name of the node type
+            
+        Returns:
+            Name value as string
+        """
+        if isinstance(self.name_from, str):
+            value = data.get(self.name_from)
+            return str(value) if value is not None else f"{node_type}_unnamed"
+        else:
+            # name_from is a callable
+            value = self.name_from(data, node_type)
+            return str(value) if value is not None else f"{node_type}_unnamed"
+
+    def has_embedded_fields(self) -> bool:
+        """Check if this node has embedded fields."""
+        return len(self.embedded) > 0
+
+    def get_embedded_prefix(self, field_name: str) -> str:
+        """Get the prefix for an embedded field."""
+        return f"{field_name}_"
 
 
 class GraphRelationConfig(BaseModel):
@@ -112,12 +157,13 @@ class GraphSchema(BaseModel):
                         # Try to find the class by name in the model's module
                         try:
                             forward_name = inner_type.__forward_arg__
-                            if hasattr(model_class.__module__, "__dict__"):
-                                import sys
+                            import sys
 
-                                module = sys.modules.get(model_class.__module__)
-                                if module and hasattr(module, forward_name):
-                                    inner_type = getattr(module, forward_name)
+                            module = sys.modules.get(model_class.__module__)
+                            if module and hasattr(module, forward_name):
+                                resolved = getattr(module, forward_name)
+                                if hasattr(resolved, "model_fields"):
+                                    inner_type = resolved
                         except (AttributeError, KeyError):
                             pass
 
@@ -177,6 +223,47 @@ class GraphSchema(BaseModel):
                         }
                         explore_model(non_none_args[0], field_path)
                     else:
+                        self._model_field_map[model_class][field_name] = {
+                            "path": field_path,
+                            "type": annotation,
+                            "is_list": False,
+                            "annotation": annotation,
+                        }
+                # Handle ForwardRef annotations
+                elif hasattr(annotation, "__forward_arg__"):
+                    # Try to resolve ForwardRef to actual class
+                    try:
+                        forward_name = annotation.__forward_arg__
+                        import sys
+
+                        module = sys.modules.get(model_class.__module__)
+                        if module and hasattr(module, forward_name):
+                            resolved_type = getattr(module, forward_name)
+                            if hasattr(resolved_type, "model_fields"):
+                                self._model_field_map[model_class][field_name] = {
+                                    "path": field_path,
+                                    "type": resolved_type,
+                                    "is_list": False,
+                                    "annotation": annotation,
+                                }
+                                explore_model(resolved_type, field_path)
+                            else:
+                                # Resolved but not a model
+                                self._model_field_map[model_class][field_name] = {
+                                    "path": field_path,
+                                    "type": annotation,
+                                    "is_list": False,
+                                    "annotation": annotation,
+                                }
+                        else:
+                            # Could not resolve ForwardRef
+                            self._model_field_map[model_class][field_name] = {
+                                "path": field_path,
+                                "type": annotation,
+                                "is_list": False,
+                                "annotation": annotation,
+                            }
+                    except (AttributeError, KeyError):
                         self._model_field_map[model_class][field_name] = {
                             "path": field_path,
                             "type": annotation,
@@ -297,7 +384,11 @@ class GraphSchema(BaseModel):
                             if from_path == "":
                                 excluded_fields.add(to_path)
 
-            # Also exclude embedded fields
+            # Also exclude embedded fields (new structure)
+            for field_name, embedded_class in node_config.embedded:
+                excluded_fields.add(field_name)
+
+            # Legacy: handle embed_in_parent nodes
             for other_node in self.nodes:
                 if other_node.embed_in_parent and other_node.baml_class != node_config.baml_class:
                     # Find if this other node is embedded in our node
@@ -372,6 +463,91 @@ class GraphSchema(BaseModel):
     def get_warnings(self) -> List[str]:
         """Get all validation warnings."""
         return self._warnings.copy()
+
+    def index_fields_in_vector_store(self, model_instance: BaseModel, embeddings_store_config: str) -> None:
+        """Index specified fields from model instance in a vector store.
+
+        Args:
+            model_instance: Instance of the root model
+            embeddings_store_config: Config name for the EmbeddingsStore
+        """
+        from genai_tk.core.embeddings_store import EmbeddingsStore
+        from langchain_core.documents import Document
+
+        # Create embeddings store
+        embeddings_store = EmbeddingsStore.create_from_config(embeddings_store_config)
+        vector_store = embeddings_store.get()
+
+        documents: List[Document] = []
+
+        # Iterate through nodes with index_fields
+        for node_config in self.nodes:
+            if not node_config.index_fields:
+                continue
+
+            # Get the model instance data
+            for field_path in node_config.field_paths:
+                # Extract data at the field path
+                data = self._get_field_by_path(model_instance, field_path) if field_path else model_instance
+
+                if data is None:
+                    continue
+
+                # Handle list of instances
+                items = data if isinstance(data, list) else [data]
+
+                for item in items:
+                    if item is None:
+                        continue
+
+                    # Extract indexed fields
+                    for field_name in node_config.index_fields:
+                        if not hasattr(item, field_name):
+                            continue
+
+                        field_value = getattr(item, field_name)
+                        if field_value is None:
+                            continue
+
+                        # Convert to string for indexing
+                        content = str(field_value)
+
+                        # Get primary key for metadata
+                        primary_key = getattr(item, node_config.key, "unknown")
+
+                        # Create document
+                        doc = Document(
+                            page_content=content,
+                            metadata={
+                                "node_type": node_config.baml_class.__name__,
+                                "field_name": field_name,
+                                "primary_key": str(primary_key),
+                                "field_path": field_path or "root",
+                            },
+                        )
+                        documents.append(doc)
+
+        # Add documents to vector store
+        if documents:
+            vector_store.add_documents(documents)
+
+    def _get_field_by_path(self, obj: Any, path: str) -> Any:
+        """Get a field by dot-separated path."""
+        if not path:
+            return obj
+
+        try:
+            current = obj
+            for part in path.split("."):
+                if hasattr(current, part):
+                    current = getattr(current, part)
+                elif isinstance(current, dict) and part in current:
+                    current = current[part]
+                else:
+                    return None
+            return current
+        except (AttributeError, KeyError, TypeError):
+            return None
 
     def print_schema_summary(self) -> None:
         """Print a summary of the deduced schema configuration."""

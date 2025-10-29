@@ -95,6 +95,9 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
         Returns:
             GraphSchema with all node and relationship configurations
         """
+        # Define entity type nodes (for IS_A relationships)
+        from pydantic import Field
+
         from genai_blueprint.demos.ekg.baml_client.types import (
             CompetitiveLandscape,
             Customer,
@@ -112,52 +115,58 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
             create_simplified_schema,
         )
 
+        class EntityType(BaseModel):
+            """Entity type for taxonomy."""
+
+            type_name: str = Field(description="Name of the entity type")
+
         # Define nodes with descriptions
         nodes = [
             # Root node
             GraphNodeConfig(
                 baml_class=ReviewedOpportunity,
-                key="start_date",
+                name_from=lambda data, base: "Rainbow:" + str(data.get("start_date")),
                 description="Root node containing the complete reviewed opportunity",
+                embedded=[("financial_metrics", FinancialMetrics)],
             ),
             # Regular nodes - field paths auto-deduced
             GraphNodeConfig(
                 baml_class=Opportunity,
-                key="name",
+                name_from="name",
                 description="Core opportunity information with financial metrics embedded",
+                index_fields=["name", "status"],
             ),
-            GraphNodeConfig(baml_class=Customer, key="name", description="Customer organization details"),
+            GraphNodeConfig(
+                baml_class=Customer,
+                name_from="name",
+                description="Customer organization details",
+                index_fields=["name"],
+            ),
             GraphNodeConfig(
                 baml_class=Person,
-                key="name",
+                name_from="name",
                 deduplication_key="name",
                 description="Individual contacts and team members",
             ),
-            GraphNodeConfig(baml_class=Partner, key="name", description="Partner organization information"),
+            GraphNodeConfig(baml_class=Partner, name_from="name", description="Partner organization information"),
             GraphNodeConfig(
-                baml_class=RiskAnalysis, key="risk_description", description="Risk assessment and mitigation details"
+                baml_class=RiskAnalysis,
+                name_from="risk_caterory",
+                description="Risk assessment and mitigation details",
+                index_fields=["risk_description"],
             ),
             GraphNodeConfig(
                 baml_class=TechnicalApproach,
-                key="technical_stack",
-                description="Technical implementation approach and stack",
-                key_generator=lambda data, base: data.get("technical_stack")
+                name_from=lambda data, base: data.get("technical_stack")
                 or data.get("architecture")
                 or f"{base}_default",
+                description="Technical implementation approach and stack",
+                index_fields=["architecture", "technical_stack"],
             ),
             GraphNodeConfig(
                 baml_class=CompetitiveLandscape,
-                key="competitive_position",
+                name_from=lambda data, base: data.get("competitive_position") or f"{base}_competitive_position",
                 description="Competitive positioning and analysis",
-                key_generator=lambda data, base: data.get("competitive_position") or f"{base}_competitive_position",
-            ),
-            # Embedded node - financials will be embedded in Opportunity table
-            GraphNodeConfig(
-                baml_class=FinancialMetrics,
-                key="tcv",
-                embed_in_parent=True,
-                embed_prefix="financial_",
-                description="Financial metrics and projections",
             ),
         ]
 
@@ -214,7 +223,9 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
 
         # Create and validate the schema - this will auto-deduce all field paths
         schema = create_simplified_schema(root_model_class=ReviewedOpportunity, nodes=nodes, relations=relations)
+        from devtools import debug
 
+        debug(schema)
         return schema
 
     def get_sample_queries(self) -> list[str]:
