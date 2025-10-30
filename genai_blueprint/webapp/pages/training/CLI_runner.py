@@ -9,9 +9,8 @@ Provides a simple interface to:
 import shlex
 
 import streamlit as st
-from genai_blueprint.main.cli_old import cli_app
-from genai_tk.utils.config_mngr import global_config, import_from_qualified
-from loguru import logger
+from genai_tk.main.cli import cli_app, load_and_register_commands
+from genai_tk.utils.config_mngr import global_config
 from typer.testing import CliRunner
 
 
@@ -22,17 +21,9 @@ def load_cli_examples() -> list[dict]:
 
 @st.cache_resource()
 def get_cli_runner() -> CliRunner:
+    """Create and configure CLI runner with registered commands."""
     runner = CliRunner()
-
-    modules = global_config().get_list("cli.commands")
-    # Import and register commands from each module
-    for module in modules:
-        try:
-            register_commands = import_from_qualified(module)
-            register_commands(cli_app)
-        except Exception as ex:
-            logger.exception(f"Cannot load module {module}: {ex}")
-
+    load_and_register_commands(cli_app)
     return runner
 
 
