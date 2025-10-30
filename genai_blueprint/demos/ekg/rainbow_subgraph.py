@@ -12,6 +12,8 @@ from typing import Any
 from pydantic import BaseModel
 from rich.console import Console
 
+from genai_blueprint.demos.ekg.baml_client.types import Competitor
+
 console = Console()
 
 
@@ -127,7 +129,7 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
                 baml_class=ReviewedOpportunity,
                 name_from=lambda data, base: "Rainbow:" + str(data.get("start_date")),
                 description="Root node containing the complete reviewed opportunity",
-                embedded=[("financial_metrics", FinancialMetrics)],
+                embedded=[("financial_metrics", FinancialMetrics), ("competition", CompetitiveLandscape)],
             ),
             # Regular nodes - field paths auto-deduced
             GraphNodeConfig(
@@ -163,10 +165,15 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
                 description="Technical implementation approach and stack",
                 index_fields=["architecture", "technical_stack"],
             ),
+            # GraphNodeConfig(
+            #     baml_class=CompetitiveLandscape,
+            #     name_from=lambda data, base: data.get("competitive_position") or f"{base}_competitive_position",
+            #     description="Competitive positioning and analysis",
+            # ),
             GraphNodeConfig(
-                baml_class=CompetitiveLandscape,
-                name_from=lambda data, base: data.get("competitive_position") or f"{base}_competitive_position",
-                description="Competitive positioning and analysis",
+                baml_class=Competitor,
+                name_from=lambda data, base: data.get("knwon_as") or data.get("name") or f"{base}_competitor",
+                description="Competitor",
             ),
         ]
 
@@ -212,18 +219,23 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
                 name="HAS_TECH_STACK",
                 description="Technical implementation approach",
             ),
+            # GraphRelationConfig(
+            #     from_node=ReviewedOpportunity,
+            #     to_node=CompetitiveLandscape,
+            #     name="COMPETIIVE_LANDSCAPE",
+            #     description="Competitive analysis",
+            # ),
             GraphRelationConfig(
                 from_node=ReviewedOpportunity,
-                to_node=CompetitiveLandscape,
-                name="HAS_COMPETITION",
-                description="Competitive analysis",
+                to_node=Competitor,
+                name="HAS_COMPETITOR",
+                description="Known competitors",
             ),
             # Note: No relationship to FinancialMetrics because it's embedded in Opportunity
         ]
 
         # Create and validate the schema - this will auto-deduce all field paths
         schema = create_simplified_schema(root_model_class=ReviewedOpportunity, nodes=nodes, relations=relations)
-        from devtools import debug
 
         #        debug(schema)
         return schema

@@ -13,7 +13,7 @@ enum Industry {
     Health @alias("Health and Life Sciences")
 }
 
-enum Competitor {
+enum KnownCompetitor {
     Cap @description("Capgemini or subsidary is mentionned")
     Thales @description("Thales Group or subsidary is mentionned")
     IBM @description("IBM of subsidary is mentionned")
@@ -27,7 +27,7 @@ enum Competitor {
     CGI @description("CGI Inc. or subsidary is mentionned")
     Sopra @description("Sopra Steria or subsidaryis mentionned")
     CS @description("CS is mentionned" )
-    Other @description("Other Competitors are mentionned")
+   // Other @description("Other Competitors are mentionned")
 }
 
 enum SWProjectRisks {
@@ -59,6 +59,12 @@ enum SWProjectRisks {
         This risk can impact project quality, timelines, and costs, as experienced personnel are crucial for project success."#)
 }
 
+class Competitor {
+  name string @description("name of the competitor as mentionned in the text (don't confused with Partners)")
+  known_as KnownCompetitor? @description("Known competitor id matching competitor mentionned in the text")
+  comment string @description("What is said in the review about that competitor (strong points, etc...)")
+
+}
 class TechnicalApproach {
   architecture string? @description("General information on architecture")
   technical_stack string[]? @description("technical stack (platforms, frameworks, third-party softwares, programming language, ...)")
@@ -67,7 +73,7 @@ class TechnicalApproach {
 class Customer {
   name string  @description("Client organization name")
   segment string? @description("Industry vertical of the customer")
-  contacts Person[]?  @description("Contacts at the customer")
+  contacts Person[]?  @description("Customer's employees mentionned as contacts in the review. Do not include Atos ot other people")
 }
 
 class Partner {
@@ -119,7 +125,6 @@ class RiskAnalysis {
 }
 
 class CompetitiveLandscape {
-  competitors Competitor[]? @description("Identified competitors for that opportunity")
   competitive_position string? @description("Position vs competition")
   differentiators string[]? @description("Unique selling points vs competition")
 }
@@ -142,6 +147,7 @@ class ReviewedOpportunity {
   financials FinancialMetrics @description("Financial metrics")
   risks RiskAnalysis[] @description("Risk analysis")
   competition CompetitiveLandscape @description("Competitive landscape")
+  competitors Competitor[]? @description("Identified competitors for that opportunity")
   // bidding BiddingStrategy @description("Bidding strategy")
   partners Partner[]? @description("Third-party partners/subcontractors")
 
@@ -157,19 +163,19 @@ function ExtractRainbow(rainbow_file: string) -> ReviewedOpportunity {
   "#
 }
 
-// function GenerateFakeRainbowDoc(project_description: string) -> ReviewedOpportunity {
-//   client "GptOss120" 
+function GenerateFakeRainbowJson(project_description: string) -> ReviewedOpportunity {
+  client "GptOss120" 
   
-//   prompt #"
-//     Generate a fake proposal review for a project descrived as:
-//     {{ project_description }}
+  prompt #"
+    Generate a fake proposal review for a project descrived as:
+    {{ project_description }}
 
-//     Follow the format:
-//     {{ ctx.output_format }}
+    Follow the format:
+    {{ ctx.output_format }}
 
-//     JSON:
-//   "#
-// }
+    JSON:
+  "#
+}
 
 
 // test TestFake {
