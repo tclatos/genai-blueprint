@@ -22,7 +22,8 @@ from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders.web_base import WebBaseLoader
 from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
-#from langchain_core.output_parsers.enum import EnumOutputParser
+
+# from langchain_core.output_parsers.enum import EnumOutputParser
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import Runnable, RunnableLambda
 from langgraph.graph import END, StateGraph
@@ -450,7 +451,7 @@ def test_nodes() -> None:
 
 
 if __name__ == "__main__":
-    from langchain_core.globals set_debug, set_verbose
+    from langchain_core.globals import set_debug, set_verbose
 
     set_debug(True)
     set_verbose(True)

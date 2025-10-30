@@ -57,18 +57,18 @@ class GraphNodeConfig(BaseModel):
     @property
     def key(self) -> str:
         """Get the primary key field name.
-        
+
         All nodes use 'id' as the primary key (UUID).
         """
         return "id"
-    
+
     def get_name_value(self, data: Dict[str, Any], node_type: str) -> str:
         """Get the _name value for a node instance.
-        
+
         Args:
             data: Node data dictionary
             node_type: Name of the node type
-            
+
         Returns:
             Name value as string
         """

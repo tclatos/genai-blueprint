@@ -74,7 +74,7 @@ def _get_node_raw_name(node_dict: dict[str, Any], node_type: str) -> str:
         value = str(node_dict["_name"]).strip()
         if value:
             return value
-    
+
     # PRIORITY 2: Common name fields to check in order of preference
     name_fields = ["name", "title", "description", "label", "id"]
 

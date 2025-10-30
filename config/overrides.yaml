@@ -72,9 +72,9 @@ ekg_local:
     - genai_tk.core.commands_info:InfoCommands
     - genai_tk.extra.commands_extra:ExtraCommands
     - genai_tk.extra.agents.commands_agents:AgentCommands
- #   - genai_blueprint.demos.ekg.cli_commands.commands:BamlCommands
+    - genai_tk.extra.structured.commands_baml:BamlCommands
     - genai_blueprint.demos.ekg.cli_commands.commands_ekg:EkgCommands
-    - genai_blueprint.demos.ekg.cli_commands.commands_baml:BamlCommands
+
   kv_store: 
     file: 
       path: ${paths.data_root}/kv_store
@@ -82,3 +82,9 @@ ekg_local:
       path: ${paths.postgres}
   paths:
     ekg_data : ${oc.env:ONEDRIVE, null}/prj/atos-kg
+
+  structured:
+    default:
+      baml_client: genai_blueprint.demos.ekg.baml_client
+    rainbow: 
+      baml_client: genai_blueprint.demos.ekg.baml_client

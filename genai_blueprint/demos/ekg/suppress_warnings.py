@@ -5,7 +5,7 @@ import warnings
 
 def suppress_schema_warnings() -> None:
     """Suppress expected graph schema validation warnings.
-    
+
     These warnings occur when field names don't exactly match class names,
     which is common when using BAML-generated models with different naming conventions.
     The warnings are informational and don't affect functionality.

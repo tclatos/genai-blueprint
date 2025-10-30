@@ -276,11 +276,11 @@ def register_commands(cli_app: typer.Typer) -> None:
         Example:
            uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
         """
+        from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
         from loguru import logger
         from pydantic import BaseModel
 
         import genai_blueprint.demos.ekg.baml_client.types as baml_types
-        from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
 
         logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
 

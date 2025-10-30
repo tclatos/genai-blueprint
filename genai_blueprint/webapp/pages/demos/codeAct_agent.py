@@ -326,7 +326,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                     st.error(f"Failed to initialize LLM model: {e}")
                     logger.error(f"LLM initialization error: {e}")
                     return
-                
+
                 tools = demo.tools + mcp_tools + [my_final_answer]
                 authorized_imports_list = list(dict.fromkeys(COMMON_AUTHORIZED_IMPORTS + demo.authorized_imports))
                 agent = CodeAgent(
@@ -351,6 +351,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                         logger.error(f"Agent execution error: {e}")
                         # Display the full traceback for debugging
                         import traceback
+
                         st.code(traceback.format_exc(), language="python")
                     scroll_to_here()
     finally:

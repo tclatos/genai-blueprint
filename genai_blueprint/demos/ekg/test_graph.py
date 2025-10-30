@@ -63,14 +63,14 @@ def create_configuration():
         # Regular nodes - field paths auto-deduced
         GraphNodeConfig(baml_class=Opportunity, name_from="name"),
         GraphNodeConfig(baml_class=Customer, name_from="name"),
-        GraphNodeConfig(baml_class=Person, name_from="name", deduplication_key="name"),  # Handles both contacts and team
+        GraphNodeConfig(
+            baml_class=Person, name_from="name", deduplication_key="name"
+        ),  # Handles both contacts and team
         GraphNodeConfig(baml_class=Partner, name_from="name"),
         GraphNodeConfig(baml_class=RiskAnalysis, name_from="risk_description"),
         GraphNodeConfig(
             baml_class=TechnicalApproach,
-            name_from=lambda data, base: data.get("technical_stack")
-            or data.get("architecture")
-            or f"{base}_default",
+            name_from=lambda data, base: data.get("technical_stack") or data.get("architecture") or f"{base}_default",
         ),
         GraphNodeConfig(
             baml_class=CompetitiveLandscape,

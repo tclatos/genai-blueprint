@@ -225,7 +225,7 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
         schema = create_simplified_schema(root_model_class=ReviewedOpportunity, nodes=nodes, relations=relations)
         from devtools import debug
 
-        debug(schema)
+        #        debug(schema)
         return schema
 
     def get_sample_queries(self) -> list[str]:

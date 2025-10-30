@@ -35,8 +35,14 @@ Improve graph node identification and naming.  Add in the node a unique ID ("_id
 
 
 
+ Implement yet another generalisation : remove hard dependencies to the BAML generated package (here 'genai_blueprint.demos.ekg.baml_client'): 
+ -  Get generated BAML path from  the YAML config file (here in: override.yaml, key 'structured') using something like global_config().get_dict("structured.{name of the config}.baml_client"   ) " (use "default" by default)
+ -  remove hard coded imports (here 'import genai_blueprint.demos.ekg.baml_client.types as baml_types, from genai_blueprint.demos.ekg.baml_client.async_client import b as baml_async_client' ) and replace by dynamic loading
+
 
 
 
 # To Test :
 - ```cli kg delete -f ; cli kg add --key cnes-venus-tma ; cli kg export-html```
+
+- ```uv run cli baml extract $ONEDRIVE/prj/atos-kg/rainbow-md/cnes-venus-SHORT.md --baml ReviewedOpportunity:ExtractRainbow --force```
