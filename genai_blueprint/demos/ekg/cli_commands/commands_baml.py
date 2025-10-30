@@ -6,7 +6,7 @@ the BAML-generated client to extract structured data from markdown files into an
 Pydantic BaseModel provided at runtime.
 
 Key Features:
-    - Uses BAML's ExtractRainbow function for structured data extraction
+    - Uses any BAML-generated function for structured data extraction
     - Maintains the same CLI interface as the original version
     - Compatible with existing KV store and batch processing infrastructure
     - Supports any Pydantic BaseModel (validated at runtime)
@@ -14,23 +14,25 @@ Key Features:
 Usage Examples:
     ```bash
     # Extract structured data from Markdown files using BAML
-    uv run cli structured extract-baml "*.md" --class ReviewedOpportunity --force
+    uv run cli baml extract file.md --baml ReviewedOpportunity:ExtractRainbow --force
 
     # Process recursively with custom settings
-    uv run cli structured extract-baml ./reviews/ --recursive --batch-size 10 --force --class ReviewedOpportunity
+    uv run cli baml extract ./reviews/ --recursive --batch-size 10 --force --baml ReviewedOpportunity:ExtractRainbow
     ```
 
 Data Flow:
-    1. Markdown files → BAML ExtractRainbow → model instances
+    1. Markdown files → BAML function → model instances
     2. Model instances → KV Store → JSON structured data
     3. Processed data → Available for EKG agent querying
 """
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import Annotated, Generic, Type, TypeVar
+from typing import Annotated, Any, Generic, Type, TypeVar
 
 import typer
+from genai_tk.main.cli import CliTopCommand
 from loguru import logger
 from pydantic import BaseModel
 from upath import UPath
@@ -45,13 +47,23 @@ KV_STORE_ID = "file"
 T = TypeVar("T", bound=BaseModel)
 
 
-class BamlStructuredProcessor(Generic[T]):
-    """Processor that uses BAML for extracting structured data from documents."""
+class BamlStructuredProcessor(BaseModel, Generic[T]):
+    """Processor that uses BAML for extracting structured data from documents.
+    
+    Args:
+        model_cls: Pydantic model class to instantiate from BAML output
+        baml_function: Async callable BAML function that takes content string and returns model instance
+        kvstore_id: KV store identifier for caching
+        force: Whether to bypass cache and reprocess all documents
+    """
 
-    def __init__(self, model_cls: Type[T], kvstore_id: str | None = None, force: bool = False) -> None:
-        self.model_cls = model_cls
-        self.kvstore_id = kvstore_id or KV_STORE_ID
-        self.force = force
+    model_cls: Type[T]
+    baml_function: Callable[[str], Awaitable[Any]]
+    kvstore_id: str = KV_STORE_ID
+    force: bool = False
+
+    class Config:
+        arbitrary_types_allowed = True
 
     async def abatch_analyze_documents(self, document_ids: list[str], markdown_contents: list[str]) -> list[T]:
         """Process multiple documents asynchronously with caching using BAML."""
@@ -82,8 +94,8 @@ class BamlStructuredProcessor(Generic[T]):
         # Process uncached documents using BAML concurrent calls pattern
         logger.info(f"Processing {len(remaining_ids)} documents with BAML async client...")
 
-        # Create concurrent tasks for all remaining documents
-        tasks = [baml_async_client.ExtractRainbow(rainbow_file=content) for content in remaining_contents]
+        # Create concurrent tasks for all remaining documents using the provided BAML function
+        tasks = [self.baml_function(content) for content in remaining_contents]
 
         # Execute all tasks concurrently
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -158,105 +170,136 @@ class BamlStructuredProcessor(Generic[T]):
         _ = await self.abatch_analyze_documents(document_ids, markdown_contents)
 
 
-def register_baml_commands(cli_app: typer.Typer) -> None:
-    """Register BAML-based commands with the CLI application."""
+class BamlCommands(CliTopCommand):
+    def get_description(self) -> tuple[str, str]:
+        return "baml", "BAML (structured output) related commands."
 
-    # This command will be added to the main structured group in commands.py
-    # @cli_app.command("structured-baml-extract")
-    def structured_extract_baml(
-        file_or_dir: Annotated[
-            Path,
-            typer.Argument(
-                help="Markdown files or directories to process",
-                exists=True,
-                file_okay=True,
-                dir_okay=True,
-            ),
-        ],
-        recursive: bool = typer.Option(False, help="Search for files recursively"),
-        batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
-        force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
-        class_name: Annotated[
-            str, typer.Option("--class", help="Name of the Pydantic model class to instantiate")
-        ] = "ReviewedOpportunity",
-    ) -> None:
-        """Extract structured project data from Markdown files using BAML and save as JSON in a key-value store.
+    def register_sub_commands(self, cli_app: typer.Typer) -> None:
+        @cli_app.command("extract")
+        def extract(
+            file_or_dir: Annotated[
+                Path,
+                typer.Argument(
+                    help="Markdown files or directories to process",
+                    exists=True,
+                    file_okay=True,
+                    dir_okay=True,
+                ),
+            ],
+            recursive: bool = typer.Option(False, help="Search for files recursively"),
+            batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
+            force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
+            baml_spec: Annotated[
+                str,
+                typer.Option(
+                    "--baml",
+                    help="BAML specification in format 'ClassName:FunctionName' (e.g., ReviewedOpportunity:ExtractRainbow)",
+                ),
+            ] = "ReviewedOpportunity:ExtractRainbow",
+        ) -> None:
+            """Extract structured project data from Markdown files using BAML and save as JSON in a key-value store.
 
-        This command uses BAML's ExtractRainbow function to extract data from markdown files
-        and instantiate the provided Pydantic model class. It provides the same functionality
-        as structured_extract but uses BAML for structured output.
+            This command uses BAML-generated functions to extract data from markdown files
+            and instantiate the specified Pydantic model class.
 
-        Example:
-           uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
-           uv run cli structured extract-baml "**/*.md" --recursive --class ReviewedOpportunity
-        """
+            Example:
+            uv run cli baml extract file.md --baml ReviewedOpportunity:ExtractRainbow --force
+            uv run cli baml extract ./reviews/ --recursive --baml ReviewedOpportunity:ExtractRainbow
+            """
 
-        logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
+            logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
 
-        # Resolve model class from the BAML types module
-        try:
-            model_cls = getattr(baml_types, class_name)
-        except AttributeError as e:
-            logger.error(f"Unknown class '{class_name}' in baml_client.types: {e}")
-            return
+            # Parse BAML specification (format: ClassName:FunctionName)
+            try:
+                class_name, function_name = baml_spec.split(":", 1)
+            except ValueError:
+                logger.error(
+                    f"Invalid BAML specification '{baml_spec}'. Expected format: 'ClassName:FunctionName' "
+                    f"(e.g., 'ReviewedOpportunity:ExtractRainbow')"
+                )
+                return
 
-        if not isinstance(model_cls, type) or not issubclass(model_cls, BaseModel):
-            logger.error(f"Provided class '{class_name}' is not a Pydantic BaseModel")
-            return
+            # Resolve model class from the BAML types module
+            try:
+                model_cls = getattr(baml_types, class_name)
+            except AttributeError as e:
+                logger.error(f"Unknown class '{class_name}' in baml_client.types: {e}")
+                return
 
-        # Collect all Markdown files
-        all_files = []
+            if not isinstance(model_cls, type) or not issubclass(model_cls, BaseModel):
+                logger.error(f"Provided class '{class_name}' is not a Pydantic BaseModel")
+                return
 
-        if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
-            # Single Markdown file
-            all_files.append(file_or_dir)
-        elif file_or_dir.is_dir():
-            # Directory - find Markdown files inside
-            if recursive:
-                md_files = list(file_or_dir.rglob("*.[mM][dD]"))  # Case-insensitive match
-            else:
-                md_files = list(file_or_dir.glob("*.[mM][dD]"))
-            all_files.extend(md_files)
-        else:
-            logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
-            return
+            # Resolve BAML function from the async client
+            try:
+                baml_function_method = getattr(baml_async_client, function_name)
+            except AttributeError as e:
+                logger.error(f"Unknown BAML function '{function_name}' in async client: {e}")
+                return
 
-        md_files = all_files  # All files are already Markdown files at this point
+            # Create a wrapper function that matches the expected signature
+            async def baml_function_wrapper(content: str) -> Any:
+                # BAML functions typically take the content as the first positional argument
+                # The parameter name varies (e.g., 'rainbow_file' for ExtractRainbow)
+                return await baml_function_method(content)
 
-        if not md_files:
-            logger.warning("No Markdown files found matching the provided patterns.")
-            return
+            baml_function = baml_function_wrapper
 
-        logger.info(f"Found {len(md_files)} Markdown files to process")
+            # Collect all Markdown files
+            all_files = []
 
-        if force:
-            logger.info("Force option enabled - will reprocess all files and overwrite existing KV entries")
-
-        # Create BAML processor
-        processor = BamlStructuredProcessor(model_cls=model_cls, kvstore_id=KV_STORE_ID, force=force)
-
-        # Filter out files that already have JSON in KV unless forced
-        if not force:
-            from genai_tk.utils.pydantic.kv_store import PydanticStore
-
-            unprocessed_files = []
-            for md_file in md_files:
-                key = md_file.stem
-                cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=model_cls).load_object(key)
-                if not cached_doc:
-                    unprocessed_files.append(md_file)
+            if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
+                # Single Markdown file
+                all_files.append(file_or_dir)
+            elif file_or_dir.is_dir():
+                # Directory - find Markdown files inside
+                if recursive:
+                    md_files = list(file_or_dir.rglob("*.[mM][dD]"))  # Case-insensitive match
                 else:
-                    logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
-            md_files = unprocessed_files
+                    md_files = list(file_or_dir.glob("*.[mM][dD]"))
+                all_files.extend(md_files)
+            else:
+                logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
+                return
 
-        if not md_files:
-            logger.info("All files have already been processed. Use --force to reprocess.")
-            return
+            md_files = all_files  # All files are already Markdown files at this point
 
-        asyncio.run(processor.process_files(md_files, batch_size))
+            if not md_files:
+                logger.warning("No Markdown files found matching the provided patterns.")
+                return
 
-        logger.success(
-            f"BAML-based project extraction complete. {len(md_files)} files processed. Results saved to KV Store"
-        )
+            logger.info(f"Found {len(md_files)} Markdown files to process")
 
-    # BAML function will be called from commands.py structured group
+            if force:
+                logger.info("Force option enabled - will reprocess all files and overwrite existing KV entries")
+
+            # Create BAML processor
+            processor = BamlStructuredProcessor(
+                model_cls=model_cls, baml_function=baml_function, kvstore_id=KV_STORE_ID, force=force
+            )
+
+            # Filter out files that already have JSON in KV unless forced
+            if not force:
+                from genai_tk.utils.pydantic.kv_store import PydanticStore
+
+                unprocessed_files = []
+                for md_file in md_files:
+                    key = md_file.stem
+                    cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=model_cls).load_object(key)
+                    if not cached_doc:
+                        unprocessed_files.append(md_file)
+                    else:
+                        logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
+                md_files = unprocessed_files
+
+            if not md_files:
+                logger.info("All files have already been processed. Use --force to reprocess.")
+                return
+
+            asyncio.run(processor.process_files(md_files, batch_size))
+
+            logger.success(
+                f"BAML-based project extraction complete. {len(md_files)} files processed. Results saved to KV Store"
+            )
+
+        # BAML function will be called from commands.py structured group
