@@ -28,7 +28,7 @@ from loguru import logger
 
 load_dotenv(verbose=True)
 
-LLM_ID = None
+LLM_ID = "claude_haiku35_openrouter"
 
 
 class YesOrNo(Enum):
@@ -37,11 +37,11 @@ class YesOrNo(Enum):
 
 
 class DataRoute(Enum):
-    WEB_SEARCH = "web_search"
+    WEB_SEARCH = "websearch"
     VECTOR_STORE = "vectorstore"
 
 
-yesno_enum_parser = EnumOutputParser(enum=YesOrNo)
+# yesno_enum_parser = EnumOutputParser(enum=YesOrNo)
 to_lower = RunnableLambda(lambda x: getattr(x, "content", "").lower())
 
 
@@ -80,15 +80,16 @@ def retrieval_grader(question: str, document: str) -> YesOrNo:
         You are a grader assessing relevance of a retrieved document to a user question.
         If the document contains keywords related to the user question, grade it as relevant.
         It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-        Evaluate whether the document is relevant to the question. Answer only by 'yes' or 'no', without any other comment.
+        Evaluate whether the document is relevant to the question. 
+        Answser as JSON.
         """
     user_prompt = """
         Here is the retrieved document:
         --- \n {document} ---\n\n
-        Here is the user question: {question} \n,
-        Instructions: {instructions}"""
-    prompt = def_prompt(system_prompt, user_prompt).partial(instructions=yesno_enum_parser.get_format_instructions())
-    chain = prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser
+        Here is the user question: {question} \n"""
+
+    prompt = def_prompt(system_prompt, user_prompt)
+    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(YesOrNo)
     return chain.invoke({"question": question, "document": document})  # type: ignore
 
 
@@ -114,14 +115,13 @@ def hallucination_grader(documents: list[Document], generation: str) -> YesOrNo:
     system_prompt = """
         You are a grader assessing whether an answer is grounded in / supported by a set of facts.
         Evaluate  whether the answer is grounded in / supported by a set of facts.
-        Answer only by 'yes' or 'no', without any other comment.\n"""
+        Answser as JSON.\n"""
     user_prompt = """
         Here are the facts:
         --- \n {documents} ---\n
-        Here is the answer: {generation} \n
-        Instructions: {instructions} """
-    prompt = def_prompt(system_prompt, user_prompt).partial(instructions=yesno_enum_parser.get_format_instructions())
-    chain = prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser
+        Here is the answer: {generation} """
+    prompt = def_prompt(system_prompt, user_prompt)
+    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(YesOrNo)
     return chain.invoke({"documents": documents, "generation": generation})  # type: ignore
 
 
@@ -131,34 +131,31 @@ def answer_grader(question: str, generation: str) -> YesOrNo:
     system_prompt = """
         You are a grader assessing whether an answer is useful to resolve a question.
         Evaluate whether the answer is useful to resolve the question.
-        Answer only by 'yes' or 'no', without any other comment.\n"""
+        Answser as JSON.\n"""
     user_prompt = """
         Here are the answer:
         \n---  {generation} \n---
-        Here is the question: {question} \n
-        Instructions: {instructions}
+        Here is the question: {question}
         """
-    prompt = def_prompt(system_prompt, user_prompt).partial(instructions=yesno_enum_parser.get_format_instructions())
-    chain = prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser
+    prompt = def_prompt(system_prompt, user_prompt)
+    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(YesOrNo)
     return chain.invoke({"question": question, "generation": generation})  # type: ignore
 
 
 # Task: Routes question to either vector store or web search
 @task
 def question_router(question: str) -> DataRoute:
-    parser = EnumOutputParser(enum=DataRoute)
     system_prompt = """
         You are an expert at routing a user question to a vectorstore or web search.
         Use the vectorstore for questions on LLM agents, prompt engineering, and adversarial attacks.
         You do not need to be stringent with the keywords in the question related to these topics.
         Otherwise, use web-search.
-        Give a binary choice 'web_search' or 'vectorstore' based on the question with no preamble or explanation.
+        Answser as JSON.
         """
     user_prompt = """
-        Question to route: {question} \n
-        Instructions: {instructions} """
-    prompt = def_prompt(system_prompt, user_prompt).partial(instructions=parser.get_format_instructions())
-    chain = prompt | get_llm(llm_id=LLM_ID) | parser
+        Question to route: {question}  """
+    prompt = def_prompt(system_prompt, user_prompt)
+    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(DataRoute)
     return chain.invoke({"question": question})  # type: ignore
 
 
@@ -166,10 +163,10 @@ def question_router(question: str) -> DataRoute:
 @entrypoint(checkpointer=MemorySaver())
 def advanced_rag_workflow(question: str) -> dict:
     # Route question to appropriate source
-    route = question_router(question).result()
+    route = question_router(question)
 
     if route == DataRoute.WEB_SEARCH:
-        documents = [Document(page_content=basic_web_search(question))]
+        documents = [Document(page_content=basic_web_search.invoke(question))]
     else:
         # Retrieve and grade documents
         documents = retrieve_documents(question).result()
@@ -186,7 +183,7 @@ def advanced_rag_workflow(question: str) -> dict:
         ]
 
         if not filtered_docs:
-            documents = [Document(page_content=basic_web_search(question).result())]
+            documents = [Document(page_content=basic_web_search.invoke(question))]
         else:
             documents = filtered_docs
 
@@ -200,7 +197,7 @@ def advanced_rag_workflow(question: str) -> dict:
 
     # If answer is not satisfactory, try web search
     if route != DataRoute.WEB_SEARCH:
-        documents = [Document(page_content=basic_web_search(question))]
+        documents = [Document(page_content=basic_web_search.invoke(question))]
         generation = rag_chain(question, documents).result()
         return {"answer": generation, "documents": documents}
 

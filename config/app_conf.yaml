@@ -75,15 +75,11 @@ auth:
 cli:
   commands:  # List modules:functions to register CLI commands
     - genai_tk.core.commands_core:CoreCommands
-    - genai_tk.extra.commands_extra:register_commands
+    - genai_tk.core.commands_info:InfoCommands
+    - genai_tk.extra.commands_extra:ExtraCommands
     - genai_tk.extra.agents.commands_agents:AgentCommands
-
-   # - genai_tk.extra.rag.commands_rag:register_commands
-   # - genai_tk.main.cli:register_commands
-
-#     - genai_tk.extra.cli_commands_agents:register_commands
-#     - genai_blueprint.webapp.cli_commands:register_commands
-#     - genai_blueprint.main.cli:register_commands
+    - genai_tk.extra.structured.commands_baml:BamlCommands
+    - genai_tk.main.cli:register_commands
  
 logging:
   format: "<cyan>{time:HH:mm:ss}</cyan>-<level>{level: <7}</level> | <magenta>{file.name}</magenta>:<green>{line} <italic>{function}</italic></green>- <level>{message}</level>"

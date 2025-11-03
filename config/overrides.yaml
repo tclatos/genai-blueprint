@@ -11,6 +11,7 @@ training_adn:
       #default:  mistral_small_edenai
       default: gpt_41_azure
       azure: gpt_41_azure
+      openai: gpt_41mini_openai
       for_vision : gpt_41_azure
       openrouter: gpt_oss120_openrouter
       local: gemma3_4b_ollama
