@@ -8,18 +8,18 @@ dependencies = [
     # GenAI Toolkit - core AI components
     "genai_tk @ git+https://github.com/tclatos/genai-tk@main",
     # Application framework dependencies
-    "pydantic>=2.7.0,<3", # Data validation framework
-    "devtools>=0.12.2", # Development utilities
-    "loguru>=0.7.3", # Logging library
-    "typer>=0.13.0", # CLI framework
-    "omegaconf>=2.3.0", # Configuration management
+    "pydantic>=2.7.0,<3",         # Data validation framework
+    "devtools>=0.12.2",           # Development utilities
+    "loguru>=0.7.3",              # Logging library
+    "typer>=0.13.0",              # CLI framework
+    "omegaconf>=2.3.0",           # Configuration management
     "fastapi[standard]>=0.115.6", # Web framework
-    "rich[jupyter]>=13.9.4", # Terminal formatting
-    "universal-pathlib>=0.2.6", # Cross-platform paths
-    "pip>=25.1.1", # Package installer
-    "modal>=1.0.5", # Serverless cloud platform
-    "python-dotenv>=1.1.1", # Environment variables
-    "beartype>=0.21.0", # Run time type checking
+    "rich[jupyter]>=13.9.4",      # Terminal formatting
+    "universal-pathlib>=0.2.6",   # Cross-platform paths
+    "pip>=25.1.1",                # Package installer
+    "modal>=1.0.5",               # Serverless cloud platform
+    "python-dotenv>=1.1.1",       # Environment variables
+    "beartype>=0.21.0",           # Run time type checking
     "baml-py>=0.209.0",
     "langchain-classic>=1.0.0",
     "psycopg2-binary>=2.9.11",
@@ -47,10 +47,10 @@ extra = [
     "unidecode>=1.3.8",         # Unicode text processing
     "tavily-python>=0.7.12",    # LLM optimized search engine
     "langchain-tavily>=0.2.11",
-    "duckduckgo-search>=6.1.6", # DuckDuckGo search API
+    "ddgs>=9.7.0",              # DuckDuckGo search API
     "openpyxl>=3.1.5",          # Excel file handling
     "fuzzysearch>=0.8.0",       # Fuzzy string matching
-    "markpickle>=1.6.1",        # Markdown serialization
+    # "markpickle>=1.6.1",        # Markdown serialization
 ]
 
 ui = [
@@ -147,4 +147,4 @@ python_files = ["test_*.py", "*_test.py"]
 
 
 [project.scripts]
-cli = "genai_bp.main.cli:main"
+cli = "genai_tk.main.cli:main"

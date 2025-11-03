@@ -1,4 +1,4 @@
-# Ideas around evolition of the Tk and Bleuprint
+# Ideas around evolution of the Tk and Bleuprint
 
 ## Hybrid search extension to genai_tk/core/embeddings_store.py
 - use BM25S + Spacy (but configurable)
@@ -9,12 +9,28 @@
 - custom Loader ? 
 - "write a Markdown file chunker, inheriting LangChain Loader.  It takes a list of Markdown file as input, and chunk them using the Chonkie package https://docs.chonkie.ai/oss/chefs/markdownchef ,  https://pypi.org/project/chonkie/, https://docs.chonkie.ai/oss/chunkers/table-chunker, ... . Set filename in metadata.  Use Context7 to get Chonkie usage. Makes parameters such as cheun siez configurable, but provide common default values for that kind of file" 
 
-## Connect BAML 'dynamic LLM selection'  to LLM Factory
-- see https://docs.boundaryml.com/guide/baml-advanced/llm-client-registry 
 
-- "Write a utility in 'genai_tk/extra' to create a BAML ClientRegistry from the LLM Factory. Try to do the best to get provider, model, api key (when not default), end points (when non default), ... Input can be an LLM if or an LLM tag.  call cr.set_primary.
-ex usage : get_client_registry( llm = "coder" ) or get_client_registry( llm ="gpt_4o_openai" )
+# Add properties to edges
+We want to move some properties from nodes to edges.  For example, the property 'comment' of the BAML object 'Competitor' should not be in the 'Competitor' node, but as property of the edge between 'ReviewedOpportunity' and 'Competitor'.
+We we could implement someting like :
+    GraphRelationConfig(
+        from_node=ReviewedOpportunity,
+        to_node=Competitor,
+        name="HAS_COMPETITOR",
+        description="Known competitors",
+        dest_properties = ["comment"]
+    )
+dest_properties are fields of the destination (here Competitor) that should be removed from it, and set in the relationship.
 
+Same for property  'role' in relationship HAS_TEAM_MEMBER between ReviewedOpportunity and Person
+
+
+# Text2Cypher
+- Create a full KG schema  with BAML from 
+    - The BAML file (taken from /baml_client/inlinedbaml.py)
+    - The Pydantic model OR (better ?)  the Kuzu schema
+- generate text2qsl wit 
+- possibly Prune the schema with https://kuzudb.github.io/blog/post/improving-text2cypher-for-graphrag-via-schema-pruning/#pruned-graph-schema-results
 
 
 
@@ -23,22 +39,6 @@ ex usage : get_client_registry( llm = "coder" ) or get_client_registry( llm ="gp
 https://docs.chonkie.ai/oss/pipelines 
 
 ##  Better KG
-- in genai_blueprint/demos/ekg/rainbow_subgraph.py (and genai_blueprint/demos/ekg/graph_schema.py ): 
-1/  "Modify GraphNodeConfig  so there's a field "embedd" which allows to incorporate other BAML class within the node definition.  It replace the nodes with fields "  embed_in_parent and embed_prefix.  Ex: GraphNodeConfig (baml_class="ReviewedOpportunity", embedded =[("financial", "FinacialMetrics)], ... )  . Change graph nodes accordingly.  
-2/ Create edges "IS_A" between the nodes and new nodes (that you need to create) corresponding to their class.  For example, "CNES" - ["IS_A"] - "CUSTOMER".
-3/ In GraphNodeConfig, add a property "index_fields", with a list of the BAML generated pydatic object fieds to index with a vector store.  Add a method in GraphSchema that gather these fields and insert them a vector store (use an EmbeddingsStore whose config nale is given ).  Ex: GraphNodeConfig(baml_class="TechnicalApproach", indindex_fields=["architecture", "technical stack"], ..)
-4/ Last but nor leaset, intoduce an abstraction to support several graph database as backends. Today we use Kuzu, but we also need to support Neo4j, and possibly other backends.  No neo4j is present yet, so postpone the tests.
-5/ update  'uv cli kg info'  sub command .
-
-
-Improve graph node identification and naming.  Add in the node a unique ID ("_id"), a "node_name" ( to avoid confusion with possible field called 'name' in the BAML object) whose value is given by 'name_from',  and a creation / modification date (_created_at, _updated_at). Remove _generated_key and related stuff.  Display 'node_name' in the HTML graph. update  'uv cli kg info'  sub command  . 
-
-
-
- Implement yet another generalisation : remove hard dependencies to the BAML generated package (here 'genai_blueprint.demos.ekg.baml_client'): 
- -  Get generated BAML path from  the YAML config file (here in: override.yaml, key 'structured') using something like global_config().get_dict("structured.{name of the config}.baml_client"   ) " (use "default" by default)
- -  remove hard coded imports (here 'import genai_blueprint.demos.ekg.baml_client.types as baml_types, from genai_blueprint.demos.ekg.baml_client.async_client import b as baml_async_client' ) and replace by dynamic loading
-
 
 
 

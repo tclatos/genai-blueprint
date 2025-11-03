@@ -458,7 +458,7 @@ class GraphSchema(BaseModel):
 
         # Emit warnings
         for warning_msg in warnings_list:
-            warnings.warn(f"Graph schema validation: {warning_msg}", UserWarning)
+            warnings.warn(f"Graph schema validation: {warning_msg}", UserWarning, stacklevel=2)
 
     def get_warnings(self) -> List[str]:
         """Get all validation warnings."""

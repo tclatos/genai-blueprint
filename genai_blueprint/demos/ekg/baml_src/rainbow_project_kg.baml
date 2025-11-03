@@ -99,9 +99,10 @@ class Opportunity {
 
 class Person {
   name string? @description("Full name of involved person")
-  role string? @description("Formal role in project")
   organization string? @description("Affiliated organization")
   contact_type string? @description("Internal/External/Client/Partner")
+
+  role string? @description("Formal role in project")
 }
 
 // class DeliveryInfo {
@@ -150,6 +151,8 @@ class ReviewedOpportunity {
   competitors Competitor[]? @description("Identified competitors for that opportunity")
   // bidding BiddingStrategy @description("Bidding strategy")
   partners Partner[]? @description("Third-party partners/subcontractors")
+
+  //competitor_map map<string, Competitor> @description("Identified competitors for that opportunity")
 
 } 
 

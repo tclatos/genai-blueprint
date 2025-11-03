@@ -80,6 +80,7 @@ ekg_local:
       path: ${paths.data_root}/kv_store
     sql: 
       path: ${paths.postgres}
+      
   paths:
     ekg_data : ${oc.env:ONEDRIVE, null}/prj/atos-kg
 
