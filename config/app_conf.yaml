@@ -11,6 +11,7 @@ default_config: ${oc.env:BLUEPRINT_CONFIG,training_adn}
 # Note : configuration leverage OmegaConf solvers. See :
 # https://omegaconf.readthedocs.io/en/2.3_branch/usage.html#variable-interpolation
 
+
 paths:
   data_root : ${oc.env:HOME}
   project : ${oc.env:PWD}
@@ -27,6 +28,10 @@ merge:
   - ${paths.config}/overrides.yaml
   - ${paths.config}/mcp_servers.yaml
   - ${paths.config}/components/gpt_researcher.yaml
+
+# Overide envivonment variable (NOT IMPLEMENTED)
+.env:
+  BAML_LOG : "warn"
 
 
 

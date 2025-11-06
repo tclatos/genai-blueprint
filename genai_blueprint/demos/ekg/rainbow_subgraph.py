@@ -230,7 +230,6 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
                 to_node=Competitor,
                 name="HAS_COMPETITOR",
                 description="Known competitors",
-    #           dest_properties = ["comment"]
             ),
             # Note: No relationship to FinancialMetrics because it's embedded in Opportunity
         ]

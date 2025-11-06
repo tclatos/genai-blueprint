@@ -28,7 +28,9 @@ from loguru import logger
 
 load_dotenv(verbose=True)
 
-LLM_ID = "claude_haiku35_openrouter"
+# LLM_ID = "claude_haiku35_openrouter"
+
+LLM_ID = "gemma3_4b_ollama"
 
 
 class YesOrNo(Enum):
@@ -163,7 +165,7 @@ def question_router(question: str) -> DataRoute:
 @entrypoint(checkpointer=MemorySaver())
 def advanced_rag_workflow(question: str) -> dict:
     # Route question to appropriate source
-    route = question_router(question)
+    route = question_router(question).result()
 
     if route == DataRoute.WEB_SEARCH:
         documents = [Document(page_content=basic_web_search.invoke(question))]

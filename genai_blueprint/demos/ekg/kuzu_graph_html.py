@@ -281,8 +281,14 @@ def _fetch_graph_data(
 
                 # Get relationship type from relationship object (Kuzu returns dict)
                 rel_type = "RELATED_TO"
-                if isinstance(rel_obj, dict) and "_label" in rel_obj:
-                    rel_type = rel_obj["_label"]
+                edge_props = {}
+                if isinstance(rel_obj, dict):
+                    if "_label" in rel_obj:
+                        rel_type = rel_obj["_label"]
+                    # Extract edge properties (non-internal fields)
+                    for key, value in rel_obj.items():
+                        if not key.startswith("_") and value is not None:
+                            edge_props[key] = value
                 elif hasattr(rel_obj, "__class__"):
                     rel_type = rel_obj.__class__.__name__.replace("Relationship", "").replace("Record", "")
                     if not rel_type or rel_type == "object":
@@ -351,7 +357,7 @@ def _fetch_graph_data(
 
                 # Only add if we have valid UUIDs for both nodes
                 if src_uuid and dst_uuid:
-                    edges.append((src_uuid, dst_uuid, rel_type, {}))
+                    edges.append((src_uuid, dst_uuid, rel_type, edge_props))
 
         except Exception as e:
             print(f"Error fetching relationships: {e}")

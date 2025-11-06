@@ -362,6 +362,12 @@ class GraphSchema(BaseModel):
         for node_config in self.nodes:
             excluded_fields = set()
 
+            # Exclude fields with p_*_ pattern (these become edge properties)
+            if hasattr(node_config.baml_class, "model_fields"):
+                for field_name in node_config.baml_class.model_fields.keys():
+                    if field_name.startswith("p_") and field_name.endswith("_"):
+                        excluded_fields.add(field_name)
+
             # Find all fields that are handled by relationships
             for relation_config in self.relations:
                 if relation_config.from_node == node_config.baml_class:

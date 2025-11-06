@@ -253,195 +253,195 @@ def register_commands(cli_app: typer.Typer) -> None:
             f"Successfully generated {total_generated} fake project reviews from {len(all_files)} templates in {output_dir}"
         )
 
-    @structured_app.command("extract-baml")
-    def structured_extract_baml(
-        file_or_dir: Annotated[
-            Path,
-            typer.Argument(
-                help="Markdown files or directories to process",
-                exists=True,
-                file_okay=True,
-                dir_okay=True,
-            ),
-        ],
-        recursive: bool = typer.Option(False, help="Search for files recursively"),
-        batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
-        force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
-        class_name: Annotated[
-            str, typer.Option("--class", help="Name of the Pydantic model class to instantiate")
-        ] = "ReviewedOpportunity",
-    ) -> None:
-        """Extract structured project data from Markdown files using BAML.
+    # @structured_app.command("extract-baml")
+    # def structured_extract_baml(
+    #     file_or_dir: Annotated[
+    #         Path,
+    #         typer.Argument(
+    #             help="Markdown files or directories to process",
+    #             exists=True,
+    #             file_okay=True,
+    #             dir_okay=True,
+    #         ),
+    #     ],
+    #     recursive: bool = typer.Option(False, help="Search for files recursively"),
+    #     batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
+    #     force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
+    #     class_name: Annotated[
+    #         str, typer.Option("--class", help="Name of the Pydantic model class to instantiate")
+    #     ] = "ReviewedOpportunity",
+    # ) -> None:
+    #     """Extract structured project data from Markdown files using BAML.
 
-        Example:
-           uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
-        """
-        from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
-        from loguru import logger
-        from pydantic import BaseModel
+    #     Example:
+    #        uv run cli structured extract-baml "*.md" --force --class ReviewedOpportunity
+    #     """
+    #     from genai_blueprint.demos.ekg.cli_commands.commands_baml import BamlStructuredProcessor
+    #     from loguru import logger
+    #     from pydantic import BaseModel
 
-        import genai_blueprint.demos.ekg.baml_client.types as baml_types
+    #     import genai_blueprint.demos.ekg.baml_client.types as baml_types
 
-        logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
+    #     logger.info(f"Starting BAML-based project extraction with: {file_or_dir}")
 
-        # Resolve model class from the BAML types module
-        try:
-            model_cls = getattr(baml_types, class_name)
-        except AttributeError as e:
-            logger.error(f"Unknown class '{class_name}' in baml_client.types: {e}")
-            return
+    #     # Resolve model class from the BAML types module
+    #     try:
+    #         model_cls = getattr(baml_types, class_name)
+    #     except AttributeError as e:
+    #         logger.error(f"Unknown class '{class_name}' in baml_client.types: {e}")
+    #         return
 
-        if not isinstance(model_cls, type) or not issubclass(model_cls, BaseModel):
-            logger.error(f"Provided class '{class_name}' is not a Pydantic BaseModel")
-            return
+    #     if not isinstance(model_cls, type) or not issubclass(model_cls, BaseModel):
+    #         logger.error(f"Provided class '{class_name}' is not a Pydantic BaseModel")
+    #         return
 
-        # Collect all Markdown files
-        all_files = []
-        KV_STORE_ID = "file"
+    #     # Collect all Markdown files
+    #     all_files = []
+    #     KV_STORE_ID = "file"
 
-        if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
-            all_files.append(file_or_dir)
-        elif file_or_dir.is_dir():
-            if recursive:
-                md_files = list(file_or_dir.rglob("*.[mM][dD]"))
-            else:
-                md_files = list(file_or_dir.glob("*.[mM][dD]"))
-            all_files.extend(md_files)
-        else:
-            logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
-            return
+    #     if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
+    #         all_files.append(file_or_dir)
+    #     elif file_or_dir.is_dir():
+    #         if recursive:
+    #             md_files = list(file_or_dir.rglob("*.[mM][dD]"))
+    #         else:
+    #             md_files = list(file_or_dir.glob("*.[mM][dD]"))
+    #         all_files.extend(md_files)
+    #     else:
+    #         logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
+    #         return
 
-        if not all_files:
-            logger.warning("No Markdown files found matching the provided patterns.")
-            return
+    #     if not all_files:
+    #         logger.warning("No Markdown files found matching the provided patterns.")
+    #         return
 
-        logger.info(f"Found {len(all_files)} Markdown files to process")
+    #     logger.info(f"Found {len(all_files)} Markdown files to process")
 
-        if force:
-            logger.info("Force option enabled - will reprocess all files and overwrite existing KV entries")
+    #     if force:
+    #         logger.info("Force option enabled - will reprocess all files and overwrite existing KV entries")
 
-        # Create BAML processor
-        processor = BamlStructuredProcessor(model_cls=model_cls, kvstore_id=KV_STORE_ID, force=force)
+    #     # Create BAML processor
+    #     processor = BamlStructuredProcessor(model_cls=model_cls, kvstore_id=KV_STORE_ID, force=force)
 
-        # Filter out files that already have JSON in KV unless forced
-        if not force:
-            from genai_tk.utils.pydantic.kv_store import PydanticStore
+    #     # Filter out files that already have JSON in KV unless forced
+    #     if not force:
+    #         from genai_tk.utils.pydantic.kv_store import PydanticStore
 
-            unprocessed_files = []
-            for md_file in all_files:
-                key = md_file.stem
-                cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=model_cls).load_object(key)
-                if not cached_doc:
-                    unprocessed_files.append(md_file)
-                else:
-                    logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
-            all_files = unprocessed_files
+    #         unprocessed_files = []
+    #         for md_file in all_files:
+    #             key = md_file.stem
+    #             cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=model_cls).load_object(key)
+    #             if not cached_doc:
+    #                 unprocessed_files.append(md_file)
+    #             else:
+    #                 logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
+    #         all_files = unprocessed_files
 
-        if not all_files:
-            logger.info("All files have already been processed. Use --force to reprocess.")
-            return
+    #     if not all_files:
+    #         logger.info("All files have already been processed. Use --force to reprocess.")
+    #         return
 
-        asyncio.run(processor.process_files(all_files, batch_size))
-        logger.success(f"BAML-based project extraction complete. {len(all_files)} files processed.")
+    #     asyncio.run(processor.process_files(all_files, batch_size))
+    #     logger.success(f"BAML-based project extraction complete. {len(all_files)} files processed.")
 
-    # This agent command will be moved to kg group in commands_ekg.py
-    # @ekg_app.command("agent")
-    def ekg_agent_shell_moved(
-        input: Annotated[str | None, typer.Option(help="Input query or '-' to read from stdin")] = None,
-        cache: Annotated[str, typer.Option(help="Cache strategy: 'sqlite', 'memory' or 'no_cache'")] = "memory",
-        mcp: Annotated[
-            list[str], typer.Option(help="MCP server names to connect to (e.g. playwright, filesystem, ..)")
-        ] = [],
-        lc_verbose: Annotated[bool, Option("--verbose", "-v", help="Enable LangChain verbose mode")] = False,
-        lc_debug: Annotated[bool, Option("--debug", "-d", help="Enable LangChain debug mode")] = False,
-        llm: Annotated[Optional[str], Option("--llm", "-m", help="LLM identifier (ID or tag from config)")] = None,
-        chat: Annotated[bool, Option("--chat", help="Start an interactive shell to send prompts")] = False,
-    ) -> None:
-        """Run a ReAct agent to query the Enterprise Knowledge Graph (EKG).
+    # # This agent command will be moved to kg group in commands_ekg.py
+    # # @ekg_app.command("agent")
+    # def ekg_agent_shell_moved(
+    #     input: Annotated[str | None, typer.Option(help="Input query or '-' to read from stdin")] = None,
+    #     cache: Annotated[str, typer.Option(help="Cache strategy: 'sqlite', 'memory' or 'no_cache'")] = "memory",
+    #     mcp: Annotated[
+    #         list[str], typer.Option(help="MCP server names to connect to (e.g. playwright, filesystem, ..)")
+    #     ] = [],
+    #     lc_verbose: Annotated[bool, Option("--verbose", "-v", help="Enable LangChain verbose mode")] = False,
+    #     lc_debug: Annotated[bool, Option("--debug", "-d", help="Enable LangChain debug mode")] = False,
+    #     llm: Annotated[Optional[str], Option("--llm", "-m", help="LLM identifier (ID or tag from config)")] = None,
+    #     chat: Annotated[bool, Option("--chat", help="Start an interactive shell to send prompts")] = False,
+    # ) -> None:
+    #     """Run a ReAct agent to query the Enterprise Knowledge Graph (EKG).
 
-        Can either start an interactive shell or execute a single query directly.
-        The agent can query processed project data using semantic search across the
-        vector store and has access to project information extracted from Markdown files.
+    #     Can either start an interactive shell or execute a single query directly.
+    #     The agent can query processed project data using semantic search across the
+    #     vector store and has access to project information extracted from Markdown files.
 
-        The agent integrates with MCP (Model Context Protocol) servers for extended
-        capabilities like file system access, web browsing, or other external tools.
+    #     The agent integrates with MCP (Model Context Protocol) servers for extended
+    #     capabilities like file system access, web browsing, or other external tools.
 
-        Examples:
-            ```bash
-            # Basic interactive shell
-            uv run cli ekg agent
+    #     Examples:
+    #         ```bash
+    #         # Basic interactive shell
+    #         uv run cli ekg agent
 
-            # Execute a single query
-            uv run cli ekg agent --input "Find all projects using Python"
+    #         # Execute a single query
+    #         uv run cli ekg agent --input "Find all projects using Python"
 
-            # Read query from stdin
-            echo "Which projects had budgets over $1M?" | uv run cli ekg agent
+    #         # Read query from stdin
+    #         echo "Which projects had budgets over $1M?" | uv run cli ekg agent
 
-            # With custom LLM and cache
-            uv run cli ekg agent --llm gpt-4o-mini --cache sqlite
+    #         # With custom LLM and cache
+    #         uv run cli ekg agent --llm gpt-4o-mini --cache sqlite
 
-            # With MCP servers for extended capabilities
-            uv run cli ekg agent --mcp filesystem --mcp playwright --input "List files and analyze project data"
+    #         # With MCP servers for extended capabilities
+    #         uv run cli ekg agent --mcp filesystem --mcp playwright --input "List files and analyze project data"
 
-            # Force interactive shell even with input
-            uv run cli ekg agent --shell --input "This will be ignored"
+    #         # Force interactive shell even with input
+    #         uv run cli ekg agent --shell --input "This will be ignored"
 
-            # Debug mode for troubleshooting
-            uv run cli ekg agent --debug --verbose
-            ```
+    #         # Debug mode for troubleshooting
+    #         uv run cli ekg agent --debug --verbose
+    #         ```
 
-        Usage modes:
-            - No --input parameter: Start interactive shell (default behavior)
-            - With --input: Execute single query and exit
-            - With --chat: Force interactive shell mode (ignores --input)
-            - Reading from stdin: Pipe input directly to the agent
+    #     Usage modes:
+    #         - No --input parameter: Start interactive shell (default behavior)
+    #         - With --input: Execute single query and exit
+    #         - With --chat: Force interactive shell mode (ignores --input)
+    #         - Reading from stdin: Pipe input directly to the agent
 
-        Interactive Usage:
-            Once started, you can ask questions like:
-            - "Find all projects using Python"
-            - "Which projects had budgets over $1M?"
-            - "List team members who worked on healthcare projects"
-            - "Compare project delivery times across different technologies"
-        """
+    #     Interactive Usage:
+    #         Once started, you can ask questions like:
+    #         - "Find all projects using Python"
+    #         - "Which projects had budgets over $1M?"
+    #         - "List team members who worked on healthcare projects"
+    #         - "Compare project delivery times across different technologies"
+    #     """
 
-        from genai_blueprint.demos.ekg.struct_rag_tool_factory import create_structured_rag_tool
-        from genai_tk.core.llm_factory import LlmFactory
-        from genai_tk.utils.cli.langchain_setup import setup_langchain
-        from genai_tk.utils.cli.langgraph_agent_shell import run_langgraph_agent_shell
+    #     from genai_blueprint.demos.ekg.struct_rag_tool_factory import create_structured_rag_tool
+    #     from genai_tk.core.llm_factory import LlmFactory
+    #     from genai_tk.utils.cli.langchain_setup import setup_langchain
+    #     from genai_tk.utils.cli.langgraph_agent_shell import run_langgraph_agent_shell
 
-        # Resolve LLM identifier if provided
-        llm_id = None
-        if llm:
-            resolved_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm)
-            if error_msg:
-                print(error_msg)
-                return
-            llm_id = resolved_id
+    #     # Resolve LLM identifier if provided
+    #     llm_id = None
+    #     if llm:
+    #         resolved_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm)
+    #         if error_msg:
+    #             print(error_msg)
+    #             return
+    #         llm_id = resolved_id
 
-        if not setup_langchain(llm_id, lc_debug, lc_verbose, cache):
-            return
+    #     if not setup_langchain(llm_id, lc_debug, lc_verbose, cache):
+    #         return
 
-        rainbow_schema = "Rainbow File"
-        rainbow_tool = create_structured_rag_tool(rainbow_schema, llm_id=LLM_ID, kvstore_id=KV_STORE_ID)
+    #     rainbow_schema = "Rainbow File"
+    #     rainbow_tool = create_structured_rag_tool(rainbow_schema, llm_id=LLM_ID, kvstore_id=KV_STORE_ID)
 
-        if chat:
-            # Force interactive shell mode (ignores input parameter)
-            asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
-        else:
-            # Handle input parameter or stdin
-            if not input and not sys.stdin.isatty():
-                input = sys.stdin.read()
+    #     if chat:
+    #         # Force interactive shell mode (ignores input parameter)
+    #         asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+    #     else:
+    #         # Handle input parameter or stdin
+    #         if not input and not sys.stdin.isatty():
+    #             input = sys.stdin.read()
 
-            if input and len(input.strip()) >= 5:
-                # Execute single query and exit
-                asyncio.run(call_ekg_agent(input.strip(), llm_id=llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
-            else:
-                # No input provided or input too short, start interactive shell (default behavior)
-                if input and len(input.strip()) < 5:
-                    print("Warning: Input too short (minimum 5 characters), starting interactive shell instead")
-                asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+    #         if input and len(input.strip()) >= 5:
+    #             # Execute single query and exit
+    #             asyncio.run(call_ekg_agent(input.strip(), llm_id=llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+    #         else:
+    #             # No input provided or input too short, start interactive shell (default behavior)
+    #             if input and len(input.strip()) < 5:
+    #                 print("Warning: Input too short (minimum 5 characters), starting interactive shell instead")
+    #             asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
 
-    # Mount sub-apps on root app
-    cli_app.add_typer(structured_app, name="structured")
-    # generate_app merged into structured_app
-    # ekg_app removed - agent command moved to kg group
+    # # Mount sub-apps on root app
+    # cli_app.add_typer(structured_app, name="structured")
+    # # generate_app merged into structured_app
+    # # ekg_app removed - agent command moved to kg group

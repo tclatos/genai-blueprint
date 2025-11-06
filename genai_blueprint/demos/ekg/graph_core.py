@@ -304,12 +304,28 @@ def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
         conn.execute(create_sql)
         created_tables.add(table_name)
 
-    # Create relationship tables
+    # Create relationship tables with properties from p_*_ fields
     for relation in relations:
         from_table = relation.from_node.__name__
         to_table = relation.to_node.__name__
         rel_name = relation.name
-        create_rel_sql = f"CREATE REL TABLE {rel_name}(FROM {from_table} TO {to_table})"
+        
+        # Find p_*_ properties from the to_node class
+        rel_properties = []
+        if hasattr(relation.to_node, "model_fields"):
+            for field_name, field_info in relation.to_node.model_fields.items():
+                if field_name.startswith("p_") and field_name.endswith("_"):
+                    # Extract the property name without p_ prefix and _ suffix
+                    prop_name = field_name[2:-1]
+                    kuzu_type = _get_kuzu_type(field_info.annotation)
+                    rel_properties.append(f"{prop_name} {kuzu_type}")
+        
+        if rel_properties:
+            props_str = ", ".join(rel_properties)
+            create_rel_sql = f"CREATE REL TABLE {rel_name}(FROM {from_table} TO {to_table}, {props_str})"
+        else:
+            create_rel_sql = f"CREATE REL TABLE {rel_name}(FROM {from_table} TO {to_table})"
+        
         console.print(f"[cyan]Creating relationship table:[/cyan] {create_rel_sql}")
         conn.execute(create_rel_sql)
 
@@ -486,7 +502,7 @@ def extract_graph_data(model: BaseModel, nodes: list, relations: list) -> Tuple[
 
     Returns:
         nodes_dict: Mapping of node type to list of property dicts
-        relationships: Tuples of (from_type, from_id, to_type, to_id, rel_name)
+        relationships: Tuples of (from_type, from_id, to_type, to_id, rel_name, rel_properties)
     """
     nodes_dict: Dict[str, List[Dict]] = {}
     relationships: List[Tuple] = []
@@ -637,8 +653,18 @@ def extract_graph_data(model: BaseModel, nodes: list, relations: list) -> Tuple[
             to_id = id_registry[to_type].get(to_dedup_str) if to_dedup_str else None
 
             if to_id:
-                # Use id values for relationships
-                relationships.append((from_type, from_id, to_type, to_id, relation_info.name))
+                # Extract p_*_ properties from to_item for edge properties
+                edge_properties = {}
+                if hasattr(relation_info.to_node, "model_fields"):
+                    for field_name in relation_info.to_node.model_fields.keys():
+                        if field_name.startswith("p_") and field_name.endswith("_"):
+                            prop_name = field_name[2:-1]  # Remove p_ prefix and _ suffix
+                            prop_value = to_dict.get(field_name)
+                            if prop_value is not None:
+                                edge_properties[prop_name] = prop_value
+                
+                # Use id values for relationships with properties
+                relationships.append((from_type, from_id, to_type, to_id, relation_info.name, edge_properties))
 
     return nodes_dict, relationships
 
@@ -720,15 +746,44 @@ def load_graph_data(
 
     # Relationships - use _id for all node references
     console.print(f"[green]Loading {len(relationships)} relationships...[/green]")
-    for from_type, from_id, to_type, to_id, rel_name in relationships:
+    edge_props_count = sum(1 for r in relationships if len(r) == 6 and r[5])
+    if edge_props_count > 0:
+        console.print(f"[cyan]  {edge_props_count} relationships have properties[/cyan]")
+    
+    for rel_tuple in relationships:
+        # Handle both old format (5 elements) and new format (6 elements with properties)
+        if len(rel_tuple) == 6:
+            from_type, from_id, to_type, to_id, rel_name, edge_properties = rel_tuple
+        else:
+            from_type, from_id, to_type, to_id, rel_name = rel_tuple
+            edge_properties = {}
+        
         from_id_escaped = from_id.replace("'", "\\'")
         to_id_escaped = to_id.replace("'", "\\'")
+
+        # Build properties string for edge
+        props_str = ""
+        if edge_properties:
+            prop_parts = []
+            for key, value in edge_properties.items():
+                if value is None:
+                    prop_parts.append(f"{key}: NULL")
+                elif isinstance(value, str):
+                    escaped = value.replace("'", "\\'")
+                    prop_parts.append(f"{key}: '{escaped}'")
+                elif isinstance(value, (int, float)):
+                    prop_parts.append(f"{key}: {value}")
+                else:
+                    escaped = str(value).replace("'", "\\'")
+                    prop_parts.append(f"{key}: '{escaped}'")
+            if prop_parts:
+                props_str = " {" + ", ".join(prop_parts) + "}"
 
         match_sql = f"""
         MATCH (from:{from_type}), (to:{to_type})
         WHERE from.id = '{from_id_escaped}'
           AND to.id = '{to_id_escaped}'
-        CREATE (from)-[:{rel_name}]->(to)
+        CREATE (from)-[:{rel_name}{props_str}]->(to)
         """
         try:
             conn.execute(match_sql)

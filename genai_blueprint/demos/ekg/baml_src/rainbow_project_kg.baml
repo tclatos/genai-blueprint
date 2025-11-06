@@ -19,14 +19,14 @@ enum KnownCompetitor {
     IBM @description("IBM of subsidary is mentionned")
     Accenture @description("Accenture or subsidary is mentionned")
     DXC @description("DXC Technology or subsidary is mentionned")
-    TCS @description("Tata Consultancy Services or subsidary is mentionned")
+    TCS @description("Tata Consultancy Services (commonly abreaviated as TCS) or subsidary is mentionned")
     Infosys @description("Infosys Limited or subsidary is mentionned")
     Wipro @description("Wipro Limited or subsidary is mentionned")
     Cognizant @description("Cognizant Technology or subsidary is mentionned")
     HCL @description("HCL Technologies or subsidary is mentionned")
     CGI @description("CGI Inc. or subsidary is mentionned")
     Sopra @description("Sopra Steria or subsidaryis mentionned")
-    CS @description("CS is mentionned" )
+    CS @description("CS GROUP (commonly abreaviated as CS) or subsidary  is mentionned" )
    // Other @description("Other Competitors are mentionned")
 }
 
@@ -62,8 +62,15 @@ enum SWProjectRisks {
 class Competitor {
   name string @description("name of the competitor as mentionned in the text (don't confused with Partners)")
   known_as KnownCompetitor? @description("Known competitor id matching competitor mentionned in the text")
-  comment string @description("What is said in the review about that competitor (strong points, etc...)")
 
+  // Link properties 
+  p_comment_ string? @alias("comment") @description("What is said in the review about that competitor (strong points, etc...)")
+
+}
+
+class References {
+  @@description ("Atos projects, products and solution referenced in the project")
+  name string[] @description("Name of the Atos projects, products and solution referenced in the project")
 }
 class TechnicalApproach {
   architecture string? @description("General information on architecture")
@@ -78,7 +85,7 @@ class Customer {
 
 class Partner {
   name string
-  role string? @description("role in the project")
+  p_role_ string? @description("role in the project")
 }
 
 class Opportunity {
@@ -102,7 +109,7 @@ class Person {
   organization string? @description("Affiliated organization")
   contact_type string? @description("Internal/External/Client/Partner")
 
-  role string? @description("Formal role in project")
+  p_role_ string? @description("Formal role in project")
 }
 
 // class DeliveryInfo {
@@ -121,8 +128,8 @@ class RiskAnalysis {
   risk_description string? @description("Nature of the risk")
   risk_caterory SWProjectRisks? @description("classification of the risk")
   impact_level string? @description("High/Medium/Low impact")
-  mitigation_strategy string? @description("Planned mitigation approach")
-  status string? @description("Current status of risk mitigation")
+
+  p_mitigation_strategy_ string? @description("Planned mitigation approach")
 }
 
 class CompetitiveLandscape {
