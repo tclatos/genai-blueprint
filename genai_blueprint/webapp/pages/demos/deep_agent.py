@@ -19,7 +19,6 @@ from genai_tk.tools.smolagents.config_loader import process_tools_from_config
 from genai_tk.tools.smolagents.deep_config_loader import (
     load_all_deep_agent_demos_from_config,
 )
-from genai_tk.utils.tracing import tracing_context
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -226,31 +225,28 @@ async def handle_agent_execution(placeholder: DeltaGenerator, demo, query: str) 
 
             response = "A problem occurred"
 
-            with tracing_context() as cb:
-                try:
-                    result = await run_deep_agent(
-                        agent=sss.current_agent, messages=messages, files=sss.get("agent_files", {}), stream=False
-                    )
+            try:
+                result = await run_deep_agent(
+                    agent=sss.current_agent, messages=messages, files=sss.get("agent_files", {}), stream=False
+                )
 
-                    # Update files if changed
-                    if "files" in result:
-                        sss.agent_files = result["files"]
+                # Update files if changed
+                if "files" in result:
+                    sss.agent_files = result["files"]
 
-                    # Extract response
-                    if "messages" in result and result["messages"]:
-                        response_content = result["messages"][-1].content
-                        response = AIMessage(content=response_content)
-                        st.chat_message("ai").write(response_content)
-                    else:
-                        response = AIMessage(content=str(result))
-                        st.chat_message("ai").write(str(result))
+                # Extract response
+                if "messages" in result and result["messages"]:
+                    response_content = result["messages"][-1].content
+                    response = AIMessage(content=response_content)
+                    st.chat_message("ai").write(response_content)
+                else:
+                    response = AIMessage(content=str(result))
+                    st.chat_message("ai").write(str(result))
 
-                except Exception as e:
-                    error_msg = f"Error running Deep Agent: {str(e)}"
-                    response = AIMessage(content=error_msg)
-                    st.chat_message("ai").error(error_msg)
-
-                url = cb.get_run_url()
+            except Exception as e:
+                error_msg = f"Error running Deep Agent: {str(e)}"
+                response = AIMessage(content=error_msg)
+                st.chat_message("ai").error(error_msg)
 
             status.update(label="Done", state="complete", expanded=False)
 
@@ -261,8 +257,7 @@ async def handle_agent_execution(placeholder: DeltaGenerator, demo, query: str) 
             if response:
                 sss.messages.append(response)
 
-            if url:
-                st.link_button("Trace", url)
+            st.link_button("View Traces", "https://smith.langchain.com/")
 
             # Show files if any were created/modified
             if sss.get("agent_files"):

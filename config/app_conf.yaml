@@ -29,8 +29,9 @@ merge:
   - ${paths.config}/mcp_servers.yaml
   - ${paths.config}/components/gpt_researcher.yaml
 
+
 # Overide envivonment variable (NOT IMPLEMENTED)
-.env:
+:env:
   BAML_LOG : "warn"
 
 

@@ -14,7 +14,12 @@
 
 # Text2Cypher
 
-- warp: Create a command that returns a Markdown string with information of nodes (including Embedded fields, indexex fields, .. ) and edges 
+- warp: Create a function that returns a Markdown string with information of nodes (including node type, fields name and their type, embedded fields,  .. ) and edges (name, spurce/destibation, properties), and a CLI command name 'schema' that call it and print the string. The purpose is to provide context information to an LLM so it can genere correct Cypher code.
+
+The content should include information gathered from the graph database  (you can use content from CLI command 'show_info' in genai_tk/extra/structured/commands_baml.py ), and/or from the parameters passed to create_simplified_schema and/or , and, for missing descriptions, from class / fields description  extracted from the BAML file (to do so, import dynamically the BAML generated file ekg/baml_client/inlinedbaml.py and search using regexp in all keys of _file_map (except clients.baml and generators.baml)).  
+Avoid code duplication. 
+Return also, in another section, the list of fields that are indexed.
+Test with command 'uv run cli kg schema'
 
 - Create a full KG schema  with BAML from 
     - The BAML file (taken from /baml_client/inlinedbaml.py)

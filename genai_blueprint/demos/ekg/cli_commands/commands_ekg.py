@@ -638,6 +638,29 @@ class EkgCommands(CliTopCommand):
                 console.print(f"[red]❌ Error generating visualization: {e}[/red]")
                 raise typer.Exit(1)
 
+        @cli_app.command("schema")
+        def show_schema(
+            subgraph: Annotated[
+                str, typer.Option("--subgraph", "-g", help="Subgraph type to display schema for")
+            ] = "opportunity",
+        ) -> None:
+            """Display knowledge graph schema in Markdown format for LLM context.
+
+            Generates a comprehensive Markdown description of the graph schema including
+            node types, relationships, properties, and indexed fields. This output is
+            designed to provide context to LLMs for generating correct Cypher queries.
+            """
+            from genai_blueprint.demos.ekg.schema_markdown_generator import generate_schema_markdown
+
+            console.print(Panel("[bold cyan]Knowledge Graph Schema[/bold cyan]"))
+
+            try:
+                markdown = generate_schema_markdown(subgraph)
+                console.print(markdown)
+            except ValueError as e:
+                console.print(f"[red]❌ {e}[/red]")
+                raise typer.Exit(1)
+
         # @cli_app.command("agent")
         def ekg_agent_shell(
             input: Annotated[str | None, typer.Option(help="Input query or '-' to read from stdin")] = None,

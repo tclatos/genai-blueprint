@@ -19,7 +19,6 @@ from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.mcp_client import get_mcp_servers_dict
 from genai_tk.core.prompts import dedent_ws
 from genai_tk.tools.langchain.shared_config_loader import LangChainAgentConfig, load_all_langchain_agent_configs
-from genai_tk.utils.tracing import tracing_context
 from langchain.agents import create_agent
 from langchain_core.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import AIMessage, HumanMessage
@@ -90,8 +89,6 @@ def initialize_session_state() -> None:
         sss.messages = [AIMessage(content="Hello! I'm your ReAct agent. How can I help you today?")]
     if "tool_calls" not in sss:
         sss.tool_calls = []
-    if "last_trace_url" not in sss:
-        sss.last_trace_url = None
     if "agent" not in sss:
         sss.agent = None
     if "agent_config" not in sss:
@@ -108,8 +105,6 @@ def clear_chat_history() -> None:
         sss.messages = [AIMessage(content="Hello! I'm your ReAct agent. How can I help you today?")]
     if "tool_calls" in sss:
         sss.tool_calls = []
-    if "last_trace_url" in sss:
-        sss.last_trace_url = None
     # Don't clear agent/config - let them persist to avoid recreation
 
 
@@ -269,12 +264,8 @@ def handle_command(command: str) -> bool:
         return True
 
     elif command == "/trace":
-        if sss.last_trace_url:
-            st.success(f"Opening trace: {sss.last_trace_url}")
-            # Note: webbrowser.open() doesn't work in Streamlit, so we show a link
-            st.link_button("🔗 Open Trace", sss.last_trace_url)
-        else:
-            st.warning("No trace URL available yet. Send a message first!")
+        st.info("Opening LangSmith traces...")
+        st.link_button("🔗 Open Traces", "https://smith.langchain.com/")
         return True
 
     elif command == "/clear":
@@ -358,35 +349,31 @@ async def process_user_input(
             final_response = None
 
             # Stream the response
-            with tracing_context() as cb:
-                astream = agent.astream(inputs, config | {"callbacks": callbacks})
-                async for step in astream:
-                    status.write(f"Processing step: {type(step).__name__}")
+            astream = agent.astream(inputs, config | {"callbacks": callbacks})
+            async for step in astream:
+                status.write(f"Processing step: {type(step).__name__}")
 
-                    # Handle different step formats
-                    if isinstance(step, tuple):
-                        step = step[1]
+                # Handle different step formats
+                if isinstance(step, tuple):
+                    step = step[1]
 
-                    # Process each node in the step
-                    if isinstance(step, dict):
-                        for node, update in step.items():
-                            status.write(f"Node: {node}")
+                # Process each node in the step
+                if isinstance(step, dict):
+                    for node, update in step.items():
+                        status.write(f"Node: {node}")
 
-                            if "messages" in update and update["messages"]:
-                                latest_message = update["messages"][-1]
+                        if "messages" in update and update["messages"]:
+                            latest_message = update["messages"][-1]
 
-                                if isinstance(latest_message, AIMessage):
-                                    if latest_message.content:
-                                        response_content = latest_message.content
-                                        final_response = latest_message
-                                        status.write(f"Got AI response: {len(response_content)} chars")
+                            if isinstance(latest_message, AIMessage):
+                                if latest_message.content:
+                                    response_content = latest_message.content
+                                    final_response = latest_message
+                                    status.write(f"Got AI response: {len(response_content)} chars")
 
-                                # Also check for HumanMessages (tool calls)
-                                elif isinstance(latest_message, HumanMessage):
-                                    status.write(f"Tool interaction: {latest_message.content[:100]}...")
-
-                # Get trace URL
-                sss.last_trace_url = cb.get_run_url()
+                            # Also check for HumanMessages (tool calls)
+                            elif isinstance(latest_message, HumanMessage):
+                                status.write(f"Tool interaction: {latest_message.content[:100]}...")
 
             status.update(label="✅ Complete!", state="complete", expanded=False)
 
@@ -470,11 +457,10 @@ async def main() -> None:
         st.header("🔧 Activity")
         display_tool_calls_sidebar(sss.tool_calls)
 
-        # Show trace link if available (persistent after interactions)
-        if sss.last_trace_url:
-            st.divider()
-            st.link_button("🔗 View Trace", sss.last_trace_url)
-            st.caption("Latest interaction trace")
+        # Link to view traces
+        st.divider()
+        st.link_button("🔗 View Traces", "https://smith.langchain.com/")
+        st.caption("View all traces in LangSmith")
 
     # Right column: Chat interface
     with col_chat:

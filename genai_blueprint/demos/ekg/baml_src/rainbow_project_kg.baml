@@ -105,6 +105,7 @@ class Opportunity {
 // }
 
 class Person {
+  @@description("persoon involved in the project")
   name string? @description("Full name of involved person")
   organization string? @description("Affiliated organization")
   contact_type string? @description("Internal/External/Client/Partner")

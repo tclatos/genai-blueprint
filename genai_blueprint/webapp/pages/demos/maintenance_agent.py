@@ -21,7 +21,6 @@ import pandas as pd
 import streamlit as st
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, dict_input_message
-from genai_tk.utils.tracing import tracing_context
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -202,17 +201,16 @@ async def main() -> None:
     config["configurable"].update({"st_container": status})
 
     try:
-        # Run agent with tracing
-        with tracing_context() as cb:
-            astream = agent.astream(
-                inputs,
-                config | {"callbacks": [st_callback, status_callback]},
-            )
+        # Run agent
+        astream = agent.astream(
+            inputs,
+            config | {"callbacks": [st_callback, status_callback]},
+        )
 
-            async for step in astream:
-                for node, update in step.items():
-                    if node == "agent":
-                        response = update["messages"][-1]
+        async for step in astream:
+            for node, update in step.items():
+                if node == "agent":
+                    response = update["messages"][-1]
                         assert isinstance(response, AIMessage)
                         st.chat_message("ai", avatar="🛠️").write(response.content)
 
