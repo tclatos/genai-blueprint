@@ -28,6 +28,8 @@
 
 #cSpell: disable
 
+AZURE_API_VERSION: 2024-10-01-preview   # Dont work.  @TODO: use AZURE_OPENAI_API_VERSION in code 
+
 llm:
 - model:
   id: claude_haiku35
@@ -113,7 +115,7 @@ llm:
   providers:
     - openrouter: openai/gpt-4.1
     - edenai: gpt-4.1-2025-04-14
-    - azure: gpt-4.1/2024-02-15-preview
+    - azure: gpt-4.1/2024-10-01-preview
   capabilities: ['structured_outputs', 'vision']
 
 - model:
@@ -121,7 +123,7 @@ llm:
   providers:
     - openai: gpt-4o
     - edenai: openai/gpt-4o
-    - azure: gpt-4o/2024-02-15-preview
+    - azure: gpt-4o/2024-10-01-preview
   capabilities: ['vision', 'structured_outputs']
 
 - model:
@@ -183,7 +185,7 @@ llm:
   providers:
     - mistralai: mistral-medium-latest
     - openrouter: mistralai/mistral-medium-3.1
-    - edenai: mistral/magistral-medium-2506
+    - edenai: mistral/mistral-small-latest
   capabilities: ['structured_outputs', 'vision']
 
 - model:

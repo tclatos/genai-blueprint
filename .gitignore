@@ -188,7 +188,7 @@ package_load_time.txt
 
 # Project specific files
 test_graph.png
-.blueprint.input.history
+.*.input.history
 use_case_data/maintenance/demo.db
 test_db*/
 

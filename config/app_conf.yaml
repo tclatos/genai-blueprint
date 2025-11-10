@@ -30,7 +30,7 @@ merge:
   - ${paths.config}/components/gpt_researcher.yaml
 
 
-# Overide envivonment variable (NOT IMPLEMENTED)
+# Overide envivonment variable 
 :env:
   BAML_LOG : "warn"
 
