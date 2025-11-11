@@ -59,6 +59,10 @@ container:
   external_data: ${paths.data_root}/external
 
 ekg_local:
+# Overide envivonment variable 
+  :env:
+    BAML_LOG : "warn"
+
   llm:
     models:
       default: kimi_k2_openrouter

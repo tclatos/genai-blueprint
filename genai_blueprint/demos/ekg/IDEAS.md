@@ -11,19 +11,29 @@
 
 
 
+# Merging
+We want to add several documents in the Knowledge Graph, with merging of duplicated nodes. So the goal 
+is to improve the 'add' CLI command in /home/tcl/prj/genai-blueprint/genai_blueprint/demos/ekg/cli_commands/commands_ekg.py.  For now, we focus on adding document in the same sub-graph (ie same schemas).
+You'll notably need to refactor genai_blueprint/demos/ekg/graph_backend.py so it allows incremental addition of nodes and edges (replace CREATE NODE TABLE by CREATE NODE TABLE IF NOT EXISTS, use MERGE  instead or CREATE NODE, etc).
+Use the 'name' property to check that 2 nodes of same type can be merged.
+Do not use APOC ! (so you need to call pure Cy^her code to move relationships and delete duplicated).
+For test, use : .... 
+
+
+
+
+
+
+
+
+
+1/  first,  refactor to get usage close than other commands : replace 'subgraph' parameter by the name of the top level BAML class. Refactor ReviewedOpportunitySubgraph accordingly, simplify ()
 
 # Text2Cypher
 
-- warp: Create a function that returns a Markdown string with information of nodes (including node type, fields name and their type, embedded fields,  .. ) and edges (name, spurce/destibation, properties), and a CLI command name 'schema' that call it and print the string. The purpose is to provide context information to an LLM so it can genere correct Cypher code.
-
-The content should include information gathered from the graph database  (you can use content from CLI command 'show_info' in genai_tk/extra/structured/commands_baml.py ), and/or from the parameters passed to create_simplified_schema and/or , and, for missing descriptions, from class / fields description  extracted from the BAML file (to do so, import dynamically the BAML generated file ekg/baml_client/inlinedbaml.py and search using regexp in all keys of _file_map (except clients.baml and generators.baml)).  
-Avoid code duplication. 
-Return also, in another section, the list of fields that are indexed.
-Test with command 'uv run cli kg schema'
 
 - Create a full KG schema  with BAML from 
-    - The BAML file (taken from /baml_client/inlinedbaml.py)
-    - The Pydantic model OR (better ?)  the Kuzu schema
+    - the Kuzu schema
 - generate text2qsl wit 
 - possibly Prune the schema with https://kuzudb.github.io/blog/post/improving-text2cypher-for-graphrag-via-schema-pruning/#pruned-graph-schema-results
 
@@ -41,3 +51,10 @@ https://docs.chonkie.ai/oss/pipelines
 - ```uv run cli kg delete -f ; uv run cli kg add --key cnes-venus-tma ; uv run cli kg export-html```
 
 - ```uv run cli baml extract $ONEDRIVE/prj/atos-kg/rainbow-md/cnes-venus-tma.md --function ExtractRainbow --force```
+
+- ```cli kg schema```
+
+
+# Misc
+
+Use https://github.com/GrahamDumpleton/wrapt for @once

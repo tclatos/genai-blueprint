@@ -60,113 +60,113 @@ def register_commands(cli_app: typer.Typer) -> None:
     # Create structured sub-app for extraction and generation commands
     structured_app = typer.Typer(no_args_is_help=True, help="Structured extraction and data generation commands.")
 
-    @structured_app.command("extract")
-    def structured_extract(
-        file_or_dir: Annotated[
-            Path,
-            typer.Argument(
-                help="Markdown files or directories to process",
-                exists=True,
-                file_okay=True,
-                dir_okay=True,
-            ),
-        ],
-        schema: str = typer.Argument(help="name of he schcme dict to use to extract information"),
-        llm: Annotated[Optional[str], Option("--llm", "-m", help="LLM identifier (ID or tag from config)")] = None,
-        recursive: bool = typer.Option(False, help="Search for files recursively"),
-        batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
-        force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
-    ) -> None:
-        """Extract structured project data from Markdown files and save as JSON in a key-value store.
+    # @structured_app.command("extract")
+    # def structured_extract(
+    #     file_or_dir: Annotated[
+    #         Path,
+    #         typer.Argument(
+    #             help="Markdown files or directories to process",
+    #             exists=True,
+    #             file_okay=True,
+    #             dir_okay=True,
+    #         ),
+    #     ],
+    #     schema: str = typer.Argument(help="name of he schcme dict to use to extract information"),
+    #     llm: Annotated[Optional[str], Option("--llm", "-m", help="LLM identifier (ID or tag from config)")] = None,
+    #     recursive: bool = typer.Option(False, help="Search for files recursively"),
+    #     batch_size: int = typer.Option(5, help="Number of files to process in each batch"),
+    #     force: bool = typer.Option(False, "--force", help="Overwrite existing KV entries"),
+    # ) -> None:
+    #     """Extract structured project data from Markdown files and save as JSON in a key-value store.
 
-        Example:
-           uv run cli structured extract "*.md" "projects/*.md" --output-dir=./json_output --llm-id gpt-4o
-           uv run cli structured extract "**/*.md" --recursive --output-dir=./data
-        """
+    #     Example:
+    #        uv run cli structured extract "*.md" "projects/*.md" --output-dir=./json_output --llm-id gpt-4o
+    #        uv run cli structured extract "**/*.md" --recursive --output-dir=./data
+    #     """
 
-        from genai_blueprint.demos.ekg.struct_rag_doc_processing import (
-            StructuredRagConfig,
-            StructuredRagDocProcessor,
-            get_schema,
-        )
-        from genai_tk.core.llm_factory import LlmFactory
-        from genai_tk.utils.pydantic.kv_store import PydanticStore
-        from loguru import logger
+    #     from genai_blueprint.demos.ekg.struct_rag_doc_processing import (
+    #         StructuredRagConfig,
+    #         StructuredRagDocProcessor,
+    #         get_schema,
+    #     )
+    #     from genai_tk.core.llm_factory import LlmFactory
+    #     from genai_tk.utils.pydantic.kv_store import PydanticStore
+    #     from loguru import logger
 
-        # Resolve LLM identifier if provided
-        llm_id = None
-        if llm:
-            resolved_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm)
-            if error_msg:
-                print(error_msg)
-                return
-            llm_id = resolved_id
+    #     # Resolve LLM identifier if provided
+    #     llm_id = None
+    #     if llm:
+    #         resolved_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm)
+    #         if error_msg:
+    #             print(error_msg)
+    #             return
+    #         llm_id = resolved_id
 
-        schema_dict = get_schema(schema)
+    #     schema_dict = get_schema(schema)
 
-        if schema_dict is None:
-            logger.error(f"Invalid schema_name: {schema}")
-            return
-        top_class: str | None = schema_dict.get("top_class")
-        if top_class is None:
-            logger.error(f"Incorrect schema: {schema}")
-            return
+    #     if schema_dict is None:
+    #         logger.error(f"Invalid schema_name: {schema}")
+    #         return
+    #     top_class: str | None = schema_dict.get("top_class")
+    #     if top_class is None:
+    #         logger.error(f"Incorrect schema: {schema}")
+    #         return
 
-        logger.info(f"Starting project extraction with: {file_or_dir} and schema {schema} (class: {top_class})")
+    #     logger.info(f"Starting project extraction with: {file_or_dir} and schema {schema} (class: {top_class})")
 
-        # Collect all Markdown files
-        all_files = []
+    #     # Collect all Markdown files
+    #     all_files = []
 
-        if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
-            # Single Markdown file
-            all_files.append(file_or_dir)
-        elif file_or_dir.is_dir():
-            # Directory - find Markdown files inside
-            if recursive:
-                md_files = list(file_or_dir.rglob("*.[mM][dD]"))  # Case-insensitive match
-            else:
-                md_files = list(file_or_dir.glob("*.[mM][dD]"))
-            all_files.extend(md_files)
-        else:
-            logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
-            return
+    #     if file_or_dir.is_file() and file_or_dir.suffix.lower() in [".md", ".markdown"]:
+    #         # Single Markdown file
+    #         all_files.append(file_or_dir)
+    #     elif file_or_dir.is_dir():
+    #         # Directory - find Markdown files inside
+    #         if recursive:
+    #             md_files = list(file_or_dir.rglob("*.[mM][dD]"))  # Case-insensitive match
+    #         else:
+    #             md_files = list(file_or_dir.glob("*.[mM][dD]"))
+    #         all_files.extend(md_files)
+    #     else:
+    #         logger.error(f"Invalid path: {file_or_dir} - must be a Markdown file or directory")
+    #         return
 
-        md_files = all_files  # All files are already Markdown files at this point
+    #     md_files = all_files  # All files are already Markdown files at this point
 
-        if not md_files:
-            logger.warning("No Markdown files found matching the provided patterns.")
-            return
+    #     if not md_files:
+    #         logger.warning("No Markdown files found matching the provided patterns.")
+    #         return
 
-        logger.info(f"Found {len(md_files)} Markdown files to process")
+    #     logger.info(f"Found {len(md_files)} Markdown files to process")
 
-        embeddings_store = StructuredRagConfig.get_vector_store_factory()
-        struct_rag_conf = StructuredRagConfig(
-            model_definition=schema_dict,
-            embeddings_store=embeddings_store,
-            llm_id=None,
-            kvstore_id=KV_STORE_ID,
-        )
-        rag_processor = StructuredRagDocProcessor(rag_conf=struct_rag_conf)
-        # Filter out files that already have JSON in KV unless forced
-        if not force:
-            unprocessed_files = []
-            for md_file in md_files:
-                key = md_file.stem
-                cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=struct_rag_conf.get_top_class()).load_object(
-                    key
-                )
-                if not cached_doc:
-                    unprocessed_files.append(md_file)
-                else:
-                    logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
-            md_files = unprocessed_files
+    #     embeddings_store = StructuredRagConfig.get_vector_store_factory()
+    #     struct_rag_conf = StructuredRagConfig(
+    #         model_definition=schema_dict,
+    #         embeddings_store=embeddings_store,
+    #         llm_id=None,
+    #         kvstore_id=KV_STORE_ID,
+    #     )
+    #     rag_processor = StructuredRagDocProcessor(rag_conf=struct_rag_conf)
+    #     # Filter out files that already have JSON in KV unless forced
+    #     if not force:
+    #         unprocessed_files = []
+    #         for md_file in md_files:
+    #             key = md_file.stem
+    #             cached_doc = PydanticStore(kvstore_id=KV_STORE_ID, model=struct_rag_conf.get_top_class()).load_object(
+    #                 key
+    #             )
+    #             if not cached_doc:
+    #                 unprocessed_files.append(md_file)
+    #             else:
+    #                 logger.info(f"Skipping {md_file.name} - JSON already exists (use --force to overwrite)")
+    #         md_files = unprocessed_files
 
-        if not md_files:
-            logger.info("All files have already been processed. Use --force to reprocess.")
-            return
-        asyncio.run(rag_processor.process_files(md_files, batch_size))
+    #     if not md_files:
+    #         logger.info("All files have already been processed. Use --force to reprocess.")
+    #         return
+    #     asyncio.run(rag_processor.process_files(md_files, batch_size))
 
-        logger.success(f"Project extraction complete. {len(md_files)} files processed. Results saved to KV Store")
+    #     logger.success(f"Project extraction complete. {len(md_files)} files processed. Results saved to KV Store")
 
     @structured_app.command("gen-fake")
     def rainbow_generate_fake(

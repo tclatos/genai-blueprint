@@ -39,7 +39,7 @@ class ProjectSubgraph(Subgraph, BaseModel):
 
     def build_schema(self) -> Any:
         """Build the graph schema configuration for project data."""
-        from genai_blueprint.demos.ekg.graph_schema import GraphNodeConfig, create_simplified_schema
+        from genai_blueprint.demos.ekg.graph_schema import GraphNodeConfig, create_schema
 
         # Define nodes with descriptions
         nodes = [
@@ -55,7 +55,7 @@ class ProjectSubgraph(Subgraph, BaseModel):
         ]
 
         # Create and validate the schema
-        schema = create_simplified_schema(root_model_class=Project, nodes=nodes, relations=relations)
+        schema = create_schema(root_model_class=Project, nodes=nodes, relations=relations)
 
         return schema
 

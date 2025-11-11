@@ -601,7 +601,7 @@ class GraphSchema(BaseModel):
                 console.print(f"⚠️  {warning}")
 
 
-def create_simplified_schema(
+def create_schema(
     root_model_class: Type[BaseModel], nodes: List[GraphNodeConfig], relations: List[GraphRelationConfig]
 ) -> GraphSchema:
     """Create and validate a simplified graph schema.

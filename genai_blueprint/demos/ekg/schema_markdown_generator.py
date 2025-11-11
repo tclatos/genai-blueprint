@@ -26,7 +26,7 @@ def generate_schema_markdown(subgraph_name: str) -> str:
         ```python
         from genai_blueprint.demos.ekg.schema_markdown_generator import generate_schema_markdown
         
-        markdown = generate_schema_markdown("opportunity")
+        markdown = generate_schema_markdown("ReviewedOpportunity")
         print(markdown)
         ```
     """

@@ -107,7 +107,7 @@ class EkgCommands(CliTopCommand):
         @cli_app.command("add")
         def add_data(
             key: Annotated[str, typer.Option("--key", "-k", help="Data key to add to the EKG database")],
-            subgraph: Annotated[str, typer.Option("--subgraph", "-g", help="Subgraph type to use")] = "opportunity",
+            subgraph: Annotated[str, typer.Option("--subgraph", "-g", help="Subgraph type to use")] = "ReviewedOpportunity",
         ) -> None:
             """Add data to the shared EKG database.
 
@@ -270,7 +270,7 @@ class EkgCommands(CliTopCommand):
             query: Annotated[str | None, typer.Option("--query", "-q", help="Cypher query to execute")] = None,
             subgraph: Annotated[
                 str, typer.Option("--subgraph", "-g", help="Subgraph type for sample queries")
-            ] = "opportunity",
+            ] = "ReviewedOpportunity",
         ) -> None:
             """Execute Cypher queries on the EKG database.
 
@@ -379,7 +379,7 @@ class EkgCommands(CliTopCommand):
         def show_info(
             subgraph: Annotated[
                 str, typer.Option("--subgraph", "-g", help="Subgraph type to display info for")
-            ] = "opportunity",
+            ] = "ReviewedOpportunity",
         ) -> None:
             """Display EKG database information, schema, and entity mapping.
 
@@ -642,7 +642,7 @@ class EkgCommands(CliTopCommand):
         def show_schema(
             subgraph: Annotated[
                 str, typer.Option("--subgraph", "-g", help="Subgraph type to display schema for")
-            ] = "opportunity",
+            ] = "ReviewedOpportunity",
         ) -> None:
             """Display knowledge graph schema in Markdown format for LLM context.
 

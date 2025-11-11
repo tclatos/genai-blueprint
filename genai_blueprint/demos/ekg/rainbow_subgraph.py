@@ -7,89 +7,21 @@ This is the only module that imports BAML client types.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from asyncio import TaskGroup
+from typing import Any, Type, TypeVar
 
+from genai_blueprint.demos.ekg.baml_client.types import ReviewedOpportunity
+from genai_tk.utils.pydantic.kv_store import PydanticStore
+from genai_blueprint.demos.ekg.subgraph import PydanticSubgraph
 from pydantic import BaseModel
 from rich.console import Console
 
-from genai_blueprint.demos.ekg.baml_client.types import Competitor
 
-console = Console()
-
-
-class Subgraph(ABC):
-    """Abstract base class for subgraph implementations."""
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Name of the subgraph."""
-        ...
-
-    @abstractmethod
-    def load_data(self, key: str) -> Any | None:
-        """Load data for the given key."""
-        ...
-
-    @abstractmethod
-    def build_schema(self) -> Any:
-        """Build and return the graph schema configuration."""
-        ...
-
-    def get_node_labels(self) -> dict[str, str]:
-        """Get mapping of node types to human-readable descriptions from schema."""
-        schema = self.build_schema()
-        return {node.baml_class.__name__: node.description for node in schema.nodes}
-
-    def get_relationship_labels(self) -> dict[str, tuple[str, str]]:
-        """Get mapping of relationship types to (direction, meaning) tuples from schema."""
-        schema = self.build_schema()
-        result = {}
-        for relation in schema.relations:
-            direction = f"{relation.from_node.__name__} → {relation.to_node.__name__}"
-            result[relation.name] = (direction, relation.description)
-        return result
-
-    @abstractmethod
-    def get_sample_queries(self) -> list[str]:
-        """Get list of sample Cypher queries for this subgraph."""
-        ...
-
-    def get_entity_name_from_data(self, data: Any) -> str:
-        """Extract a human-readable entity name from loaded data."""
-        return "Unknown Entity"
-
-
-class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
+class ReviewedOpportunitySubgraph(PydanticSubgraph, BaseModel):
     """Opportunity data subgraph implementation."""
 
+    top_class: Type[BaseModel] = ReviewedOpportunity
     kv_store_id: str = "file"
-
-    @property
-    def name(self) -> str:
-        """Name of the subgraph."""
-        return "opportunity"
-
-    def load_data(self, opportunity_key: str) -> Any | None:
-        """Load opportunity data from the key-value store.
-
-        Args:
-            opportunity_key: The opportunity identifier to load
-
-        Returns:
-            ReviewedOpportunity instance or None if not found
-        """
-        try:
-            from genai_tk.utils.pydantic.kv_store import PydanticStore
-
-            from genai_blueprint.demos.ekg.baml_client.types import ReviewedOpportunity
-
-            store = PydanticStore(kvstore_id=self.kv_store_id, model=ReviewedOpportunity)
-            opportunity = store.load_object(opportunity_key)
-            return opportunity
-        except Exception as e:
-            console.print(f"[red]Error loading opportunity data: {e}[/red]")
-            return None
 
     def build_schema(self) -> Any:
         """Build the graph schema configuration for opportunity data.
@@ -110,23 +42,20 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
             ReviewedOpportunity,
             RiskAnalysis,
             TechnicalApproach,
+            Competitor
         )
         from genai_blueprint.demos.ekg.graph_schema import (
             GraphNodeConfig,
             GraphRelationConfig,
-            create_simplified_schema,
+            create_schema,
         )
 
-        class EntityType(BaseModel):
-            """Entity type for taxonomy."""
-
-            type_name: str = Field(description="Name of the entity type")
 
         # Define nodes with descriptions
         nodes = [
             # Root node
             GraphNodeConfig(
-                baml_class=ReviewedOpportunity,
+                baml_class=self.top_class,
                 name_from=lambda data, base: "Rainbow:" + str(data.get("start_date")),
                 description="Root node containing the complete reviewed opportunity",
                 embedded=[("financial_metrics", FinancialMetrics), ("competition", CompetitiveLandscape)],
@@ -231,11 +160,10 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
                 name="HAS_COMPETITOR",
                 description="Known competitors",
             ),
-            # Note: No relationship to FinancialMetrics because it's embedded in Opportunity
         ]
 
         # Create and validate the schema - this will auto-deduce all field paths
-        schema = create_simplified_schema(root_model_class=ReviewedOpportunity, nodes=nodes, relations=relations)
+        schema = create_schema(root_model_class=self.top_class, nodes=nodes, relations=relations)
 
         #        debug(schema)
         return schema
@@ -253,14 +181,14 @@ class ReviewedOpportunitySubgraph(Subgraph, BaseModel):
 
     def get_entity_name_from_data(self, data: Any) -> str:
         """Extract a human-readable entity name from loaded data."""
-        if hasattr(data, "opportunity") and hasattr(data.opportunity, "name"):
+        if hasattr(data, "ReviewedOpportunity") and hasattr(data.opportunity, "name"):
             return data.opportunity.name
         return "Unknown Entity"
 
 
 # Registry for available subgraphs
 SUBGRAPH_REGISTRY = {
-    "opportunity": ReviewedOpportunitySubgraph(),
+    "ReviewedOpportunity": ReviewedOpportunitySubgraph(),
 }
 
 

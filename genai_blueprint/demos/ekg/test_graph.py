@@ -33,7 +33,7 @@ from genai_blueprint.demos.ekg.baml_client.types import (
     TechnicalApproach,
 )
 from genai_blueprint.demos.ekg.graph_core import create_graph, restart_database
-from genai_blueprint.demos.ekg.graph_schema import GraphNodeConfig, GraphRelationConfig, create_simplified_schema
+from genai_blueprint.demos.ekg.graph_schema import GraphNodeConfig, GraphRelationConfig, create_schema
 from genai_blueprint.demos.ekg.kuzu_graph_html import generate_html_visualization
 
 console = Console()
@@ -96,7 +96,7 @@ def create_configuration():
 
     # Create and validate the schema - this will auto-deduce all field paths
     # and validate consistency with the Pydantic model structure
-    schema = create_simplified_schema(root_model_class=ReviewedOpportunity, nodes=nodes, relations=relations)
+    schema = create_schema(root_model_class=ReviewedOpportunity, nodes=nodes, relations=relations)
 
     return schema
 
