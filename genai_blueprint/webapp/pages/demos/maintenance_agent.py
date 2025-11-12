@@ -211,8 +211,8 @@ async def main() -> None:
             for node, update in step.items():
                 if node == "agent":
                     response = update["messages"][-1]
-                        assert isinstance(response, AIMessage)
-                        st.chat_message("ai", avatar="🛠️").write(response.content)
+                    assert isinstance(response, AIMessage)
+                    st.chat_message("ai", avatar="🛠️").write(response.content)
 
             url = cb.get_run_url()
             st.session_state.messages.append(response)

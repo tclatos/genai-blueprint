@@ -1,15 +1,16 @@
 
 enum Industry {
-    Ressources_and_services @alias("Resources and Services")
-    PSD @alias("Public Sector and Defense")
-    FSI @alias("Financial Services and Insurance")
-    Manuf @alias("Manufacturing, MRT") @description("Manufacturing, abreviated as MRT. Include Spatial sector")
-    Telco @alias("Telecom, Media and Technology")
-    Health @alias("Health and Life Sciences")
+    Ressources_and_services @alias("i1") @description("Resources and Services")
+    PSD @alias("i2") @description("Public Sector and Defense")
+    FSI @alias("i3") @description("Financial Services and Insurance")
+    Manuf @alias("i4") @description("Manufacturing, abreviated as MRT. Include Spatial sector")
+    Telco @alias("i5") @description("Telecom, Media and Technology")
+    Health @alias("i6") @description("Health and Life Sciences")
 }
 
+// see https://docs.boundaryml.com/examples/prompt-engineering/symbol-tuning not verified
 enum KnownCompetitor {
-    Cap @description("Capgemini or subsidary is mentionned")
+    Capgemini @alias("c1") @description("Capgemini (abreviated CAP) or subsidary is mentionned")
     Thales @description("Thales Group or subsidary is mentionned")
     IBM @description("IBM of subsidary is mentionned")
     Accenture @description("Accenture or subsidary is mentionned")

@@ -199,36 +199,21 @@ def create_synthetic_key(data: Dict[str, Any], base_name: str) -> str:
 
 
 def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
-    """Create node and relationship tables in Kuzu database.
+    """Create node and relationship tables in Kuzu database (idempotent).
 
-    Creates CREATE NODE TABLE and CREATE REL TABLE statements based on GraphNodeConfig
-    and GraphRelationConfig. Handles table drops and recreation for
-    idempotency. Embedded nodes have their fields merged into parent tables.
+    Creates CREATE NODE TABLE IF NOT EXISTS and CREATE REL TABLE IF NOT EXISTS statements
+    based on GraphNodeConfig and GraphRelationConfig. This function is safe to call
+    multiple times - it will not drop existing tables, allowing incremental additions.
+    Embedded nodes have their fields merged into parent tables.
 
     Args:
         conn: Kuzu database connection
         nodes: List of GraphNodeConfig objects
         relations: List of GraphRelationConfig objects
     """
-    # Drop existing rel tables first
-    for relation in relations:
-        table_name = relation.name
-        try:
-            conn.execute(f"DROP TABLE {table_name};")
-        except Exception:
-            pass
-
-    # Drop node tables
-    dropped_tables: set[str] = set()
-    for node in nodes:
-        table_name = node.baml_class.__name__
-        if table_name in dropped_tables:
-            continue
-        try:
-            conn.execute(f"DROP TABLE {table_name};")
-            dropped_tables.add(table_name)
-        except Exception:
-            pass
+    # TODO: Handle schema evolution by detecting new node or relationship types dynamically
+    # and creating missing tables on the fly. This would allow adding new document types
+    # with extended schemas without requiring database restarts.
 
     # Create node tables (skip embedded ones)
     created_tables: set[str] = set()
@@ -299,7 +284,7 @@ def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
                 fields.append(f"{embedded_field_name} {kuzu_type}")
 
         fields_str = ", ".join(fields)
-        create_sql = f"CREATE NODE TABLE {table_name}({fields_str}, PRIMARY KEY({key_field}))"
+        create_sql = f"CREATE NODE TABLE IF NOT EXISTS {table_name}({fields_str}, PRIMARY KEY({key_field}))"
         console.print(f"[cyan]Creating node table:[/cyan] {create_sql}")
         conn.execute(create_sql)
         created_tables.add(table_name)
@@ -309,7 +294,7 @@ def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
         from_table = relation.from_node.__name__
         to_table = relation.to_node.__name__
         rel_name = relation.name
-        
+
         # Find p_*_ properties from the to_node class
         rel_properties = []
         if hasattr(relation.to_node, "model_fields"):
@@ -319,13 +304,13 @@ def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
                     prop_name = field_name[2:-1]
                     kuzu_type = _get_kuzu_type(field_info.annotation)
                     rel_properties.append(f"{prop_name} {kuzu_type}")
-        
+
         if rel_properties:
             props_str = ", ".join(rel_properties)
-            create_rel_sql = f"CREATE REL TABLE {rel_name}(FROM {from_table} TO {to_table}, {props_str})"
+            create_rel_sql = f"CREATE REL TABLE IF NOT EXISTS {rel_name}(FROM {from_table} TO {to_table}, {props_str})"
         else:
-            create_rel_sql = f"CREATE REL TABLE {rel_name}(FROM {from_table} TO {to_table})"
-        
+            create_rel_sql = f"CREATE REL TABLE IF NOT EXISTS {rel_name}(FROM {from_table} TO {to_table})"
+
         console.print(f"[cyan]Creating relationship table:[/cyan] {create_rel_sql}")
         conn.execute(create_rel_sql)
 
@@ -662,7 +647,7 @@ def extract_graph_data(model: BaseModel, nodes: list, relations: list) -> Tuple[
                             prop_value = to_dict.get(field_name)
                             if prop_value is not None:
                                 edge_properties[prop_name] = prop_value
-                
+
                 # Use id values for relationships with properties
                 relationships.append((from_type, from_id, to_type, to_id, relation_info.name, edge_properties))
 
@@ -675,9 +660,10 @@ def extract_graph_data(model: BaseModel, nodes: list, relations: list) -> Tuple[
 def load_graph_data(
     conn: kuzu.Connection, nodes_dict: Dict[str, List[Dict]], relationships: List[Tuple], nodes: list
 ) -> None:
-    """Load nodes and relationships into Kuzu database.
+    """Load nodes and relationships into Kuzu database using MERGE semantics.
 
-    Uses CREATE statements to insert data.
+    Uses MERGE statements to insert or update nodes, preserving _created_at timestamps
+    and updating _updated_at on matches. Relationships are created using MATCH + CREATE.
 
     Args:
         conn: Kuzu database connection
@@ -685,71 +671,29 @@ def load_graph_data(
         relationships: List of relationship tuples
         nodes: List of GraphNodeConfig objects
     """
-    # Nodes
-    for node_type, node_list in nodes_dict.items():
-        if not node_list:
-            continue
-        console.print(f"[green]Loading {len(node_list)} {node_type} nodes...[/green]")
-        for node_data in node_list:
-            # Find the node configuration to get the primary key field
-            node_info = next((n for n in nodes if n.baml_class.__name__ == node_type), None)
-            primary_key_field = node_info.key if node_info else None
+    from genai_blueprint.demos.ekg.graph_merge import merge_nodes_batch
 
-            cleaned_data: Dict[str, str] = {}
-            for key, value in node_data.items():
-                if value is None:
-                    # Skip NULL primary keys to avoid constraint violations
-                    if key == primary_key_field:
-                        console.print(f"[yellow]Warning: Skipping {node_type} node with NULL primary key[/yellow]")
-                        break
-                    cleaned_data[key] = "NULL"
-                elif isinstance(value, str):
-                    escaped = value.replace("'", "\\'")
-                    cleaned_data[key] = f"'{escaped}'"
-                elif isinstance(value, list):
-                    str_list: list[str] = []
-                    for v in value:
-                        # Handle enums and complex objects in lists
-                        if hasattr(v, "value"):  # Enum
-                            clean_v = str(v.value)
-                        elif hasattr(v, "__dict__") or isinstance(v, dict):  # Complex object
-                            clean_v = str(v).replace("'", "\\'").replace('"', '\\"')
-                        else:
-                            clean_v = str(v)
-                        escaped_v = clean_v.replace("'", "\\'")
-                        str_list.append(f"'{escaped_v}'")
-                    cleaned_data[key] = f"[{','.join(str_list)}]"
-                elif hasattr(value, "value"):  # Handle Enum types
-                    escaped = str(value.value).replace("'", "\\'")
-                    cleaned_data[key] = f"'{escaped}'"
-                elif hasattr(value, "__dict__") or isinstance(value, dict):  # Handle complex objects
-                    # Convert complex objects to JSON-like strings, but clean them
-                    clean_str = str(value).replace("'", "\\'").replace('"', '\\"')
-                    # Remove any enum representations like <EnumName.VALUE: 'value'>
-                    import re
+    # Merge nodes using MERGE statements (creates new or updates existing)
+    console.print("[bold]Merging nodes into graph...[/bold]")
+    merge_stats, id_mapping = merge_nodes_batch(
+        conn=conn,
+        nodes_dict=nodes_dict,
+        schema_config=None,
+        merge_on_field="_name",
+    )
 
-                    clean_str = re.sub(
-                        r"<[^>]+>", lambda m: m.group(0).split("'")[1] if "'" in m.group(0) else m.group(0), clean_str
-                    )
-                    cleaned_data[key] = f"'{clean_str}'"
-                else:
-                    cleaned_data[key] = str(value)
-            else:
-                # This else clause is executed only if the for loop completes without break
-                fields = ", ".join([f"{k}: {v}" for k, v in cleaned_data.items()])
-                create_sql = f"CREATE (:{node_type} {{{fields}}})"
-                try:
-                    conn.execute(create_sql)
-                except Exception as e:
-                    console.print(f"[red]Error creating {node_type} node:[/red] {e}")
-                    console.print(f"[dim]SQL: {create_sql}[/dim]")
+    # Relationships - use merged IDs for all node references
+    # TODO: Implement relationship deduplication to avoid duplicate edges between same node pairs.
+    # Currently, relationships are created even if they already exist. A future enhancement
+    # could use MERGE for relationships as well, matching on (from_node, to_node, rel_type)
+    # and optionally updating edge properties.
 
-    # Relationships - use _id for all node references
-    console.print(f"[green]Loading {len(relationships)} relationships...[/green]")
+    console.print(f"[bold]Creating {len(relationships)} relationships...[/bold]")
     edge_props_count = sum(1 for r in relationships if len(r) == 6 and r[5])
     if edge_props_count > 0:
         console.print(f"[cyan]  {edge_props_count} relationships have properties[/cyan]")
-    
+
+    relationships_created = 0
     for rel_tuple in relationships:
         # Handle both old format (5 elements) and new format (6 elements with properties)
         if len(rel_tuple) == 6:
@@ -757,9 +701,13 @@ def load_graph_data(
         else:
             from_type, from_id, to_type, to_id, rel_name = rel_tuple
             edge_properties = {}
-        
-        from_id_escaped = from_id.replace("'", "\\'")
-        to_id_escaped = to_id.replace("'", "\\'")
+
+        # Translate original IDs to merged IDs using id_mapping
+        merged_from_id = id_mapping.get((from_type, from_id), from_id)
+        merged_to_id = id_mapping.get((to_type, to_id), to_id)
+
+        from_id_escaped = merged_from_id.replace("'", "\\'")
+        to_id_escaped = merged_to_id.replace("'", "\\'")
 
         # Build properties string for edge
         props_str = ""
@@ -787,9 +735,12 @@ def load_graph_data(
         """
         try:
             conn.execute(match_sql)
+            relationships_created += 1
         except Exception as e:
             console.print(f"[red]Error creating {rel_name} relationship:[/red] {e}")
             console.print(f"[dim]SQL: {match_sql}[/dim]")
+
+    console.print(f"[green]✓ Created {relationships_created} relationships[/green]")
 
 
 # Orchestration

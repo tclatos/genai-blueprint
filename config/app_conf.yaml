@@ -29,8 +29,6 @@ paths:
   - ${paths.config}/mcp_servers.yaml
   - ${paths.config}/components/gpt_researcher.yaml
 
-:env:
-  BAML_LOG : "info"
 
 #### 
 # User Interface Configuration : list of Streamlit pages, authentication, ... 

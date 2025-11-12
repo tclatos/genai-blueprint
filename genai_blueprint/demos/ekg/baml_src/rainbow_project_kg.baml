@@ -36,8 +36,9 @@ enum SWProjectRisks {
 }
 
 class Competitor {
+  @@description("Atos competitor mentionned in the documents. Don't confused with Partners")
   // isa ACompetitor @description("Competitor mentionned in the review")
-  name string @description("name of the competitor (don't confused with Partners)")
+  name string @description("name of the competitor ")
   known_as KnownCompetitor? @description("Competitor id (short name)")
 
   // Link properties 
@@ -85,11 +86,11 @@ class FinancialMetrics {
 }
 
 class RiskAnalysis {
-  risk_description string? @description("Nature of the risk")
-  risk_caterory SWProjectRisks? @description("classification of the risk")
-  impact_level string? @description("High/Medium/Low impact")
+
+  risk_category SWProjectRisks? @description("classification of the risk")
 
   p_mitigation_strategy_ string? @description("Planned mitigation approach")
+  p_risk_description_ string @description("Risk description in the document")
 }
 
 class CompetitiveLandscape {
@@ -133,7 +134,7 @@ function ExtractRainbow(rainbow_file: string) -> ReviewedOpportunity {
   "#
 }
 
-function GenerateFakeRainbowJson(project_description: string) -> ReviewedOpportunity {
+function FakeRainbow(project_description: string) -> ReviewedOpportunity {
   client "GptOss120" 
   
   prompt #"

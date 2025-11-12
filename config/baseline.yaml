@@ -80,8 +80,10 @@ documents:
 monitoring: 
   langsmith : true
   project: GenAI_demo
-kv_store:
-  file:
+
+kv_store: 
+  default:
+    type: LocalFileStore
     path: ${paths.data_root}/kv_store
 
 external_data: ${oc.env:ONEDRIVE, null}/_ongoing/training_GenAI

@@ -25,7 +25,7 @@ def generate_schema_markdown(subgraph_name: str) -> str:
     Example:
         ```python
         from genai_blueprint.demos.ekg.schema_markdown_generator import generate_schema_markdown
-        
+
         markdown = generate_schema_markdown("ReviewedOpportunity")
         print(markdown)
         ```
@@ -56,7 +56,7 @@ def _load_schema(subgraph_name: str) -> GraphSchema:
 @lru_cache(maxsize=1)
 def _parse_baml_descriptions() -> dict[str, Any]:
     """Parse descriptions from BAML files.
-    
+
     Returns dictionary with:
         - classes: dict[str, str] - Class name to description
         - fields: dict[str, dict[str, str]] - Class to field descriptions
@@ -138,7 +138,7 @@ def _parse_baml_content(
             if current_block_type == "class":
                 # Parse field with optional @description
                 # Match field_name type_annotation and capture @description if present
-                field_match = re.match(r'([A-Za-z_]\w*)\s+([^@\n]+)', stripped)
+                field_match = re.match(r"([A-Za-z_]\w*)\s+([^@\n]+)", stripped)
                 if field_match:
                     field_name = field_match.group(1)
                     # Look for @description in the line
@@ -167,18 +167,18 @@ def _build_node_sections(schema: GraphSchema, baml_docs: dict[str, Any]) -> list
     sections = []
     # Track embedded classes to exclude from main type listing
     embedded_classes = set()
-    
+
     for node in schema.nodes:
         for _, embedded_class in node.embedded:
             embedded_classes.add(embedded_class.__name__)
 
     for node in schema.nodes:
         node_name = node.baml_class.__name__
-        
+
         # Skip embedded classes from main listing
         if node_name in embedded_classes:
             continue
-        
+
         # Prefer schema description, fallback to BAML
         description = node.description or baml_docs["classes"].get(node_name, "")
 
@@ -198,11 +198,9 @@ def _build_node_sections(schema: GraphSchema, baml_docs: dict[str, Any]) -> list
             for emb_field_name, emb_field_info in embedded_class.model_fields.items():
                 emb_field_type = _humanize_type(emb_field_info.annotation)
                 emb_field_desc = baml_docs["fields"].get(embedded_class.__name__, {}).get(emb_field_name, "")
-                embedded_fields.append({
-                    "name": f"{field_name}.{emb_field_name}",
-                    "type": emb_field_type,
-                    "description": emb_field_desc
-                })
+                embedded_fields.append(
+                    {"name": f"{field_name}.{emb_field_name}", "type": emb_field_type, "description": emb_field_desc}
+                )
             embedded_list.extend(embedded_fields)
 
         sections.append(
@@ -261,10 +259,9 @@ def _build_indexed_fields_section(schema: GraphSchema) -> list[str]:
     return indexed
 
 
-
 def _humanize_type(annotation: Any) -> str:
     """Convert Python type annotation to LLM-friendly string.
-    
+
     Converts Pydantic and typing annotations to simplified, readable strings.
     """
     # Handle None/NoneType
@@ -323,12 +320,12 @@ def _unwrap_optional(annotation: Any) -> tuple[Any, bool]:
     """Unwrap Optional/Union types to get base type and optionality."""
     import types
     from typing import Union
-    
+
     origin = get_origin(annotation)
-    
+
     # Check for Union (including Optional which is Union[T, None])
     # Handle both Union (typing.Union) and UnionType (| syntax)
-    if origin is Union or (hasattr(types, 'UnionType') and origin is types.UnionType):
+    if origin is Union or (hasattr(types, "UnionType") and origin is types.UnionType):
         args = get_args(annotation)
         # Filter out NoneType
         non_none_args = [arg for arg in args if arg is not type(None)]
@@ -336,7 +333,7 @@ def _unwrap_optional(annotation: Any) -> tuple[Any, bool]:
             return non_none_args[0], True
         # Multiple non-None types - return first
         return non_none_args[0] if non_none_args else annotation, True
-    
+
     return annotation, False
 
 

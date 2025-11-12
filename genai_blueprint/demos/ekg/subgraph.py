@@ -1,17 +1,13 @@
-"""
-"""
+""" """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from asyncio import TaskGroup
-from typing import Any, Type, TypeVar
+from typing import Any, Type
 
-from genai_blueprint.demos.ekg.baml_client.types import ReviewedOpportunity
 from genai_tk.utils.pydantic.kv_store import PydanticStore
 from pydantic import BaseModel
 from rich.console import Console
-
 
 console = Console()
 
@@ -59,20 +55,14 @@ class Subgraph(ABC):
         return "Unknown Entity"
 
 
-
-#TOP_CLASS:type = ReviewedOpportunity
-T = TypeVar("T", bound=BaseModel)
-
 class PydanticSubgraph(Subgraph, BaseModel):
-    
     top_class: Type[BaseModel]
-    kv_store_id: str 
+    kv_store_id: str
 
     @property
     def name(self) -> str:
         """Name of the subgraph."""
-        return self.top_class.__class__.__name__
-
+        return self.top_class.__name__
 
     def load_data(self, key: str) -> Any | None:
         """Load graph data from the key-value store.
@@ -84,7 +74,6 @@ class PydanticSubgraph(Subgraph, BaseModel):
             Top class instance or None if not found
         """
         try:
-
             store = PydanticStore(kvstore_id=self.kv_store_id, model=self.top_class)
             opportunity = store.load_object(key)
             return opportunity

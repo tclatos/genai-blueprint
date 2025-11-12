@@ -93,7 +93,7 @@ def _get_node_raw_name(node_dict: dict[str, Any], node_type: str) -> str:
     return node_type
 
 
-def _get_node_display_name(node_dict: dict[str, Any], node_type: str, max_length: int = 15) -> str:
+def _get_node_display_name(node_dict: dict[str, Any], node_type: str, max_length: int = 30) -> str:
     """Generate a display name for a node based on its properties.
 
     Args:

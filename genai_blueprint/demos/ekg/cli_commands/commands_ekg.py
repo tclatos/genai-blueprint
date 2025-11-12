@@ -106,13 +106,33 @@ class EkgCommands(CliTopCommand):
 
         @cli_app.command("add")
         def add_data(
-            key: Annotated[str, typer.Option("--key", "-k", help="Data key to add to the EKG database")],
-            subgraph: Annotated[str, typer.Option("--subgraph", "-g", help="Subgraph type to use")] = "ReviewedOpportunity",
+            keys: Annotated[
+                list[str],
+                typer.Option(
+                    "--key", "-k", help="Data key(s) to add to the EKG database (can be specified multiple times)"
+                ),
+            ],
+            subgraph: Annotated[
+                str, typer.Option("--subgraph", "-g", help="Subgraph type to use")
+            ] = "ReviewedOpportunity",
         ) -> None:
-            """Add data to the shared EKG database.
+            """Add one or more documents to the shared EKG database.
 
             Loads data from the key-value store and adds it to the
             shared EKG database, creating the database if it doesn't exist.
+            Supports incremental additions - nodes with the same _name will be merged,
+            preserving creation timestamps and updating modification timestamps.
+
+            Examples:
+                # Add single document
+                cli kg add --key fake_cnes_1
+
+                # Add multiple documents in one command
+                cli kg add --key fake_cnes_1 --key cnes-venus-tma
+
+                # Add documents sequentially (without deleting DB in between)
+                cli kg add --key fake_cnes_1
+                cli kg add --key cnes-venus-tma
             """
             from genai_blueprint.demos.ekg.graph_core import create_graph
 
@@ -123,18 +143,12 @@ class EkgCommands(CliTopCommand):
                 console.print(f"[red]❌ {e}[/red]")
                 raise typer.Exit(1)
 
-            console.print(Panel(f"[bold cyan]Adding {subgraph.title()} Data: {key}[/bold cyan]"))
-
-            # Check if data exists
-            console.print("📁 Loading data...")
-            data = subgraph_impl.load_data(key)
-            if not data:
-                console.print(f"[red]❌ No {subgraph} data found for key: {key}[/red]")
-                console.print("[yellow]💡 Use structured extraction commands to create data first[/yellow]")
+            # Validate that we have at least one key
+            if not keys:
+                console.print("[red]❌ At least one --key must be provided[/red]")
                 raise typer.Exit(1)
 
-            entity_name = subgraph_impl.get_entity_name_from_data(data)
-            console.print(f"[green]✓[/green] Loaded {subgraph}: [bold]{entity_name}[/bold]")
+            console.print(Panel(f"[bold cyan]Adding {len(keys)} Document(s) to EKG[/bold cyan]"))
 
             # Get database path
             db_path = get_ekg_db_path()
@@ -146,37 +160,87 @@ class EkgCommands(CliTopCommand):
                 db_path.parent.mkdir(parents=True, exist_ok=True)
                 console.print("[green]✓[/green] New EKG database will be created")
             else:
-                console.print("[green]✓[/green] Adding to existing EKG database")
+                console.print("[green]✓[/green] Adding to existing EKG database (incremental merge)")
 
-            # Create graph configuration
+            # Create graph configuration once
             console.print("⚙️  Creating graph schema...")
             schema = subgraph_impl.build_schema()
             console.print(
-                f"[green]✓[/green] Schema created with {len(schema.nodes)} node types and {len(schema.relations)} relationships"
+                f"[green]✓[/green] Schema: {len(schema.nodes)} node types, {len(schema.relations)} relationships"
             )
 
-            # Initialize or connect to database
+            # Initialize or connect to database once
             console.print("🔧 Connecting to EKG database...")
             db = kuzu.Database(str(db_path))
             conn = kuzu.Connection(db)
 
-            # Add data to the knowledge graph
-            console.print(f"🚀 Adding {subgraph} data: {key}...")
-            with console.status("[bold green]Processing graph data..."):
-                nodes_dict, relationships = create_graph(conn, data, schema)
+            # Track aggregate statistics across all documents
+            total_docs_processed = 0
+            total_docs_failed = 0
+            aggregate_stats = {"nodes_created": 0, "nodes_matched": 0, "relationships_created": 0}
 
-            # Display addition summary
-            total_nodes = sum(len(node_list) for node_list in nodes_dict.values())
-            console.print(Panel(f"[bold green]✅ {subgraph.title()} Data Added Successfully![/bold green]"))
+            # Process each key sequentially
+            for idx, key in enumerate(keys, 1):
+                console.print(f"\n[bold cyan]═══ Processing document {idx}/{len(keys)}: {key} ═══[/bold cyan]")
 
-            summary_table = Table(title="Addition Summary")
+                try:
+                    # Load data
+                    console.print("📁 Loading data...")
+                    data = subgraph_impl.load_data(key)
+                    if not data:
+                        console.print(f"[red]❌ No {subgraph} data found for key: {key}[/red]")
+                        total_docs_failed += 1
+                        continue
+
+                    entity_name = subgraph_impl.get_entity_name_from_data(data)
+                    console.print(f"[green]✓[/green] Loaded: [bold]{entity_name}[/bold]")
+
+                    # Add data to the knowledge graph
+                    console.print(f"🚀 Merging into graph...")
+                    nodes_dict, relationships = create_graph(conn, data, schema)
+
+                    # Accumulate statistics
+                    # Note: create_graph now uses merge_nodes_batch internally which tracks created vs matched
+                    # For now, we'll estimate from the nodes_dict and relationships returned
+                    doc_nodes = sum(len(node_list) for node_list in nodes_dict.values())
+                    doc_rels = len(relationships)
+
+                    aggregate_stats["relationships_created"] += doc_rels
+                    # Note: We'd need to refactor create_graph to return merge stats for accurate counts
+                    # For now, count all nodes as "created" (the merge happens internally)
+                    aggregate_stats["nodes_created"] += doc_nodes
+
+                    total_docs_processed += 1
+                    console.print(
+                        f"[green]✓[/green] Document {idx} processed: {doc_nodes} nodes, {doc_rels} relationships"
+                    )
+
+                except Exception as e:
+                    console.print(f"[red]❌ Error processing {key}: {e}[/red]")
+                    total_docs_failed += 1
+                    continue
+
+            # Display final summary
+            console.print(f"\n{'═' * 60}")
+            if total_docs_processed > 0:
+                console.print(
+                    Panel(
+                        f"[bold green]✅ Successfully processed {total_docs_processed}/{len(keys)} documents![/bold green]"
+                    )
+                )
+            else:
+                console.print(Panel(f"[bold red]❌ Failed to process any documents[/bold red]"))
+                raise typer.Exit(1)
+
+            summary_table = Table(title="Final Summary")
             summary_table.add_column("Metric", style="cyan", no_wrap=True)
-            summary_table.add_column("Count", justify="right", style="magenta")
+            summary_table.add_column("Value", justify="right", style="magenta")
 
-            summary_table.add_row(f"{subgraph.title()} Added", key)
-            summary_table.add_row("Nodes Added", str(total_nodes))
-            summary_table.add_row("Relationships Added", str(len(relationships)))
-            summary_table.add_row("Node Types", str(len([k for k, v in nodes_dict.items() if v])))
+            summary_table.add_row("Documents Processed", f"{total_docs_processed}/{len(keys)}")
+            if total_docs_failed > 0:
+                summary_table.add_row("Documents Failed", str(total_docs_failed))
+            summary_table.add_row("Total Nodes Processed", str(aggregate_stats["nodes_created"]))
+            summary_table.add_row("Total Relationships Created", str(aggregate_stats["relationships_created"]))
             summary_table.add_row("Database Path", str(db_path))
 
             console.print(summary_table)
@@ -650,7 +714,7 @@ class EkgCommands(CliTopCommand):
             node types, relationships, properties, and indexed fields. This output is
             designed to provide context to LLMs for generating correct Cypher queries.
             """
-            from genai_blueprint.demos.ekg.schema_markdown_generator import generate_schema_markdown
+            from genai_blueprint.demos.ekg.schema_doc_generator import generate_schema_markdown
 
             console.print(Panel("[bold cyan]Knowledge Graph Schema[/bold cyan]"))
 

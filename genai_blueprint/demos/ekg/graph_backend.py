@@ -154,9 +154,9 @@ class KuzuBackend(GraphBackend):
         fields: dict[str, str],
         primary_key: str,
     ) -> None:
-        """Create a node table in Kuzu."""
+        """Create a node table in Kuzu (idempotent)."""
         fields_str = ", ".join([f"{name} {type_}" for name, type_ in fields.items()])
-        create_sql = f"CREATE NODE TABLE {table_name}({fields_str}, PRIMARY KEY({primary_key}))"
+        create_sql = f"CREATE NODE TABLE IF NOT EXISTS {table_name}({fields_str}, PRIMARY KEY({primary_key}))"
         self.execute(create_sql)
 
     def create_relationship_table(
@@ -166,12 +166,12 @@ class KuzuBackend(GraphBackend):
         to_table: str,
         properties: dict[str, str] | None = None,
     ) -> None:
-        """Create a relationship table in Kuzu."""
+        """Create a relationship table in Kuzu (idempotent)."""
         if properties:
             props_str = ", " + ", ".join([f"{name} {type_}" for name, type_ in properties.items()])
         else:
             props_str = ""
-        create_rel_sql = f"CREATE REL TABLE {rel_name}(FROM {from_table} TO {to_table}{props_str})"
+        create_rel_sql = f"CREATE REL TABLE IF NOT EXISTS {rel_name}(FROM {from_table} TO {to_table}{props_str})"
         self.execute(create_rel_sql)
 
     def drop_table(self, table_name: str) -> None:
@@ -182,7 +182,11 @@ class KuzuBackend(GraphBackend):
             pass
 
     def insert_node(self, table_name: str, data: dict[str, Any]) -> None:
-        """Insert a node in Kuzu."""
+        """Insert a node in Kuzu.
+
+        DEPRECATED: Use merge_node() instead for incremental graph construction.
+        This method creates duplicate nodes and should only be used for initial loads.
+        """
         cleaned_data: dict[str, str] = {}
         for key, value in data.items():
             if value is None:
@@ -242,6 +246,30 @@ class KuzuBackend(GraphBackend):
         CREATE (from)-[:{rel_name}]->(to)
         """
         self.execute(match_sql)
+
+    def merge_node(
+        self, node_type: str, node_data: dict[str, Any], schema_config: Any | None = None
+    ) -> tuple[bool, str]:
+        """Merge a node into the graph database using MERGE semantics.
+
+        Wrapper around graph_merge.merge_node_in_graph that uses this backend's connection.
+
+        Args:
+            node_type: Node label/type
+            node_data: Node properties dictionary
+            schema_config: Optional schema configuration
+
+        Returns:
+            Tuple of (was_created: bool, node_id: str)
+        """
+        from genai_blueprint.demos.ekg.graph_merge import merge_node_in_graph
+
+        return merge_node_in_graph(
+            conn=self.conn,
+            node_type=node_type,
+            node_data=node_data,
+            schema_config=schema_config,
+        )
 
     def close(self) -> None:
         """Close Kuzu connection."""

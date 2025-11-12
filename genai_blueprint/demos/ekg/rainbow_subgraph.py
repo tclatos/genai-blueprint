@@ -6,22 +6,19 @@ This is the only module that imports BAML client types.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from asyncio import TaskGroup
-from typing import Any, Type, TypeVar
+from typing import Any, Type
+
+from pydantic import BaseModel
 
 from genai_blueprint.demos.ekg.baml_client.types import ReviewedOpportunity
-from genai_tk.utils.pydantic.kv_store import PydanticStore
-from genai_blueprint.demos.ekg.subgraph import PydanticSubgraph
-from pydantic import BaseModel
-from rich.console import Console
+from genai_blueprint.demos.ekg.subgraph import PydanticSubgraph, Subgraph
 
 
 class ReviewedOpportunitySubgraph(PydanticSubgraph, BaseModel):
     """Opportunity data subgraph implementation."""
 
     top_class: Type[BaseModel] = ReviewedOpportunity
-    kv_store_id: str = "file"
+    kv_store_id: str = "default"
 
     def build_schema(self) -> Any:
         """Build the graph schema configuration for opportunity data.
@@ -30,10 +27,10 @@ class ReviewedOpportunitySubgraph(PydanticSubgraph, BaseModel):
             GraphSchema with all node and relationship configurations
         """
         # Define entity type nodes (for IS_A relationships)
-        from pydantic import Field
 
         from genai_blueprint.demos.ekg.baml_client.types import (
             CompetitiveLandscape,
+            Competitor,
             Customer,
             FinancialMetrics,
             Opportunity,
@@ -42,14 +39,12 @@ class ReviewedOpportunitySubgraph(PydanticSubgraph, BaseModel):
             ReviewedOpportunity,
             RiskAnalysis,
             TechnicalApproach,
-            Competitor
         )
         from genai_blueprint.demos.ekg.graph_schema import (
             GraphNodeConfig,
             GraphRelationConfig,
             create_schema,
         )
-
 
         # Define nodes with descriptions
         nodes = [
@@ -82,7 +77,7 @@ class ReviewedOpportunitySubgraph(PydanticSubgraph, BaseModel):
             GraphNodeConfig(baml_class=Partner, name_from="name", description="Partner organization information"),
             GraphNodeConfig(
                 baml_class=RiskAnalysis,
-                name_from="risk_caterory",
+                name_from=lambda data, _: data.get("risk_category") or data.get("p_risk_description_") or "other_risk",
                 description="Risk assessment and mitigation details",
                 index_fields=["risk_description"],
             ),
@@ -101,7 +96,8 @@ class ReviewedOpportunitySubgraph(PydanticSubgraph, BaseModel):
             # ),
             GraphNodeConfig(
                 baml_class=Competitor,
-                name_from=lambda data, base: data.get("knwon_as") or data.get("name") or f"{base}_competitor",
+                name_from=lambda data, base: data.get("known_as") or data.get("name") or f"{base}_competitor",
+                # name_from="known_as",
                 description="Competitor",
             ),
         ]

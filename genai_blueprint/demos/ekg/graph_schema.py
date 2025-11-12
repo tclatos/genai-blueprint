@@ -8,6 +8,7 @@ to derive field paths and relationships, reducing boilerplate and errors.
 from __future__ import annotations
 
 import warnings
+from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union, get_args, get_origin
 
 from pydantic import BaseModel, model_validator
@@ -47,7 +48,7 @@ class GraphNodeConfig(BaseModel):
         # Handle legacy embed_in_parent for backward compatibility
         if self.embed_in_parent:
             warnings.warn(
-                f"embed_in_parent is deprecated. Use 'embedded' field in parent node instead.",
+                "embed_in_parent is deprecated. Use 'embedded' field in parent node instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -72,13 +73,18 @@ class GraphNodeConfig(BaseModel):
         Returns:
             Name value as string
         """
+
         if isinstance(self.name_from, str):
             value = data.get(self.name_from)
-            return str(value) if value is not None else f"{node_type}_unnamed"
         else:
             # name_from is a callable
             value = self.name_from(data, node_type)
-            return str(value) if value is not None else f"{node_type}_unnamed"
+        if not value:
+            return f"{node_type}_unnamed"
+        if isinstance(value, Enum):
+            return value.name
+        else:
+            return str(value)
 
     def has_embedded_fields(self) -> bool:
         """Check if this node has embedded fields."""

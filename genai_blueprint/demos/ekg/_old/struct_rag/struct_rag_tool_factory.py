@@ -9,14 +9,13 @@ configuration.
 
 from typing import List, Optional, TypeVar
 
+from genai_blueprint.demos.ekg.struct_rag.struct_rag_doc_processing import StructuredRagConfig, get_schema
 from genai_tk.core.prompts import dedent_ws
 from langchain_core.documents import Document
 from langchain_core.tools import BaseTool
 from langchain_core.tools.base import ArgsSchema
 from loguru import logger
 from pydantic import BaseModel, Field
-
-from genai_blueprint.demos.ekg.struct_rag.struct_rag_doc_processing import StructuredRagConfig, get_schema
 
 T = TypeVar("T", bound=BaseModel)
 
