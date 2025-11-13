@@ -12,7 +12,7 @@ function Text2Cypher(question: string, schema: string) -> Query {
 
     <SYNTAX>
     - Relationship directions are VERY important to the success of a query. Here's an example: If
-    the relationship `hasCreator` is marked as `from` A `to` B, it means that B created A.
+    the relationship `HAS_CREATOR` is marked as `from` A `to` B, it means that B created A.
     - Use short, concise alphanumeric strings as names of variable bindings (e.g., `a1`, `r1`, etc.)    
     - When comparing string properties, ALWAYS do the following:
       - Lowercase the property values before comparison

@@ -14,12 +14,13 @@ Features the simplified GraphSchema API that:
 
 # Add the src directory to Python path for imports
 
-import kuzu
 from genai_tk.utils.pydantic.kv_store import PydanticStore
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+
+from genai_blueprint.demos.ekg.graph_backend import GraphBackend
 
 from genai_blueprint.demos.ekg.baml_client.types import (
     CompetitiveLandscape,
@@ -169,11 +170,11 @@ def display_schema_configuration(schema):
             console.print(f"  └─ Excluded fields: {', '.join(sorted(node.excluded_fields))}")
 
 
-def create_statistics_table(conn: kuzu.Connection, config=None) -> None:
+def create_statistics_table(backend: GraphBackend, config=None) -> None:
     """Display comprehensive statistics about the created graph.
 
     Args:
-        conn: The Kuzu database connection
+        backend: Graph database backend
         config: Either GraphSchema, tuple of (nodes, relations), or None
     """
     console.print(Panel("[bold cyan]Graph Statistics[/bold cyan]"))
@@ -207,7 +208,7 @@ def create_statistics_table(conn: kuzu.Connection, config=None) -> None:
         if node_type not in unique_node_types:
             unique_node_types.add(node_type)
             try:
-                result = conn.execute(f"MATCH (n:{node_type}) RETURN count(n) as count")
+                result = backend.execute(f"MATCH (n:{node_type}) RETURN count(n) as count")
                 count = result.get_as_df().iloc[0]["count"]
                 node_table.add_row(node_type, str(count))
             except Exception as e:
@@ -223,7 +224,7 @@ def create_statistics_table(conn: kuzu.Connection, config=None) -> None:
     for relation in relations:
         rel_name = relation.name
         try:
-            result = conn.execute(f"MATCH ()-[r:{rel_name}]->() RETURN count(r) as count")
+            result = backend.execute(f"MATCH ()-[r:{rel_name}]->() RETURN count(r) as count")
             count = result.get_as_df().iloc[0]["count"]
             rel_table.add_row(rel_name, str(count))
         except Exception as e:
@@ -232,11 +233,11 @@ def create_statistics_table(conn: kuzu.Connection, config=None) -> None:
     console.print(rel_table)
 
 
-def run_sample_queries(conn: kuzu.Connection) -> None:
+def run_sample_queries(backend: GraphBackend) -> None:
     """Run sample queries to demonstrate the graph functionality.
 
     Args:
-        conn: The Kuzu database connection
+        backend: Graph database backend
     """
     console.print(Panel("[bold cyan]Sample Query Results[/bold cyan]"))
 
@@ -244,7 +245,7 @@ def run_sample_queries(conn: kuzu.Connection) -> None:
     console.print("[bold]Opportunity Details:[/bold]")
     query = "MATCH (o:Opportunity) RETURN o.name as name, o.opportunity_id as id, o.status as status"
     console.print(f"[dim]Query: {query}[/dim]")
-    result = conn.execute(query)
+    result = backend.execute(query)
     df = result.get_as_df()
     if not df.empty:
         table = Table()
@@ -264,7 +265,7 @@ def run_sample_queries(conn: kuzu.Connection) -> None:
         RETURN c.name as customer, p.name as contact, p.role as role
         """
     console.print(f"[dim]Query: {query.strip()}[/dim]")
-    result = conn.execute(query)
+    result = backend.execute(query)
     df = result.get_as_df()
     if not df.empty:
         table = Table()
@@ -285,7 +286,7 @@ def run_sample_queries(conn: kuzu.Connection) -> None:
         LIMIT 5
         """
     console.print(f"[dim]Query: {query.strip()}[/dim]")
-    result = conn.execute(query)
+    result = backend.execute(query)
     df = result.get_as_df()
     if not df.empty:
         table = Table()
@@ -306,7 +307,7 @@ def run_sample_queries(conn: kuzu.Connection) -> None:
         LIMIT 3
         """
     console.print(f"[dim]Query: {query.strip()}[/dim]")
-    result = conn.execute(query)
+    result = backend.execute(query)
     df = result.get_as_df()
     if not df.empty:
         table = Table()
@@ -323,11 +324,11 @@ def run_sample_queries(conn: kuzu.Connection) -> None:
         console.print("[yellow]No risks found[/yellow]")
 
 
-def run_advanced_graph_queries(conn: kuzu.Connection) -> None:
+def run_advanced_graph_queries(backend: GraphBackend) -> None:
     """Run advanced graph queries to showcase graph capabilities.
 
     Args:
-        conn: The Kuzu database connection
+        backend: Graph database backend
     """
     console.print(Panel("[bold cyan]Advanced Graph Analysis[/bold cyan]"))
 
@@ -340,7 +341,7 @@ def run_advanced_graph_queries(conn: kuzu.Connection) -> None:
         LIMIT 5
         """
     console.print(f"[dim]Query: {query.strip()}[/dim]")
-    result = conn.execute(query)
+    result = backend.execute(query)
     df = result.get_as_df()
     if not df.empty:
         table = Table(title="Customer-Team Connections")
@@ -361,7 +362,7 @@ def run_advanced_graph_queries(conn: kuzu.Connection) -> None:
         ORDER BY risk_count DESC
         """
     console.print(f"[dim]Query: {query.strip()}[/dim]")
-    result = conn.execute(query)
+    result = backend.execute(query)
     df = result.get_as_df()
     if not df.empty:
         table = Table(title="Risk Impact Levels")
@@ -395,27 +396,27 @@ def main() -> None:
         display_schema_configuration(schema)
 
         # Initialize database
-        db, conn = restart_database()
+        backend = restart_database()
 
         # Create the knowledge graph
         console.print(Panel("[bold cyan]Creating Knowledge Graph[/bold cyan]"))
-        nodes_dict, relationships = create_graph(conn, opportunity, schema)
+        nodes_dict, relationships = create_graph(backend, opportunity, schema)
 
         # Display statistics
-        create_statistics_table(conn, schema)
+        create_statistics_table(backend, schema)
 
         # Run sample queries
         console.print(Panel("[bold cyan]Sample Queries[/bold cyan]"))
-        run_sample_queries(conn)
+        run_sample_queries(backend)
 
         # Run advanced queries
         console.print(Panel("[bold cyan]Advanced Analysis[/bold cyan]"))
-        run_advanced_graph_queries(conn)
+        run_advanced_graph_queries(backend)
 
         # Generate visualization
         console.print(Panel("[bold cyan]Generating Visualization[/bold cyan]"))
         try:
-            generate_html_visualization(conn, "ekg_visu.html", title="Enhanced Knowledge Graph")
+            generate_html_visualization(backend, "ekg_visu.html", title="Enhanced Knowledge Graph")
             console.print("[green]✓[/green] Graph visualization saved to ekg_visu.html")
         except ImportError as e:
             console.print(f"[yellow]Warning: Could not generate visualization: {e}[/yellow]")

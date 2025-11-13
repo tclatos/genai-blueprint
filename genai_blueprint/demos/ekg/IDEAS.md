@@ -4,6 +4,8 @@
 - User can 
   - select the types of nodes and relationsips
 
+- Use G.V()
+
 ## Hybrid search extension to genai_tk/core/embeddings_store.py
 - use BM25S + Spacy (but configurable)
 - call it RAG store ? 
@@ -20,33 +22,20 @@ graph_db:
     default:
       type: 
 
-## Merging
-We want to add several documents in the Knowledge Graph, with merging of duplicated nodes. So the goal 
-is to improve the 'add' CLI command in /home/tcl/prj/genai-blueprint/genai_blueprint/demos/ekg/cli_commands/commands_ekg.py.  For now, we focus on adding document with the same schemas.
-You'll notably :
-- allow 'add' CLI command to have several 'key' parameter, to load several document from the KV store
-- refactor genai_blueprint/demos/ekg/graph_backend.py so it allows incremental addition of nodes and edges (replace CREATE NODE TABLE by CREATE NODE TABLE IF NOT EXISTS, use MERGE  instead or CREATE NODE, etc).
-Use the 'name' property to check that 2 nodes of same type can be merged.
-Do not use APOC ! (so you need to call pure Cypher code to move relationships and delete duplicated).
-Update fields _created_at and/or _updated_at  with current time stamp.
-- possibly modify related files, notably ekg/graph_core.py. 
-- I suggest you create a new file 'graph_merge.py, with reusability in mind for when will merge differents graphs. 
-- Make code as generic as possible.  Never create hard coded dependencies to the given schema here (class OpportunityReview, etc) but use nodes / edges descriptions
-
-For test, you can use :   ``` uv run cli kg delete -f ; uv run cli kg add --key fake_cnes_1 --key cnes-venus-tma ; uv run cli kg export-html ```
-It loads 2 documents with several nodes in common
 
 
+# Import tables
+- rename cli kg add  -> kg add-doc
+- new command add-table
+   - 
+- new command relink
 
-
-
-
-
-
-
-1/  first,  refactor to get usage close than other commands : replace 'subgraph' parameter by the name of the top level BAML class. Refactor ReviewedOpportunitySubgraph accordingly, simplify ()
 
 # Text2Cypher
+
+Complete method
+
+generate_schema_markdown
 
 
 - Create a full KG schema  with BAML from 
@@ -69,7 +58,7 @@ https://docs.chonkie.ai/oss/pipelines
 
 - ```uv run cli baml extract $ONEDRIVE/prj/atos-kg/rainbow-md/cnes-venus-tma.md --function ExtractRainbow --force```
 
-- ```uv run cli baml run FakeRainbow -i "Project for CNES; Marc Ferrer as sales lead" --kvstore-key fake_cnes_1 --force```
+- ```uv run cli baml run FakeRainbow -i "Project for CNES; Marc Ferrer as sales lead in Atos team" --kvstore-key fake_cnes_1 --force```
 
 - ```cli kg schema```
 

@@ -7,12 +7,26 @@ implementations for different backends (Kuzu, Neo4j, etc.).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
 
 
-class GraphBackend(ABC):
+class QueryExecutor(ABC):
+    """Thin abstraction for anything that can execute Cypher-like queries.
+
+    Implemented by GraphBackend and can be satisfied by raw connections that
+    expose a compatible ``execute`` method.
+    """
+
+    @abstractmethod
+    def execute(self, query: str, parameters: dict[str, Any] | None = None) -> Any:
+        """Execute a query and return backend-specific results."""
+        ...
+
+
+class GraphBackend(QueryExecutor, ABC):
     """Abstract base class for graph database backends."""
 
     @abstractmethod
@@ -362,5 +376,91 @@ def create_backend(backend_type: str = "kuzu") -> GraphBackend:
     backend_class = backends.get(backend_type.lower())
     if not backend_class:
         raise ValueError(f"Unknown backend type: {backend_type}. Available: {list(backends.keys())}")
-
     return backend_class()
+
+
+def create_in_memory_backend() -> GraphBackend:
+    """Create an in-memory graph backend for temporary graphs/tests.
+
+    Currently returns a Kuzu-based backend connected to an in-memory database.
+    """
+    backend = KuzuBackend()
+    backend.connect(":memory:")
+    return backend
+
+
+def create_backend_from_config(config_key: str = "default") -> GraphBackend:
+    """Create a graph backend from YAML configuration.
+
+    Reads configuration from global_config()["graph_db"][config_key] and creates
+    the appropriate backend with connection parameters.
+
+    Args:
+        config_key: Key in graph_db config section
+
+    Returns:
+        Connected GraphBackend instance
+    """
+    from genai_tk.utils.config_mngr import global_config
+
+    config = global_config()
+    graph_db_config = config.get("graph_db", {})
+
+    if config_key not in graph_db_config:
+        raise ValueError(f"Graph database config '{config_key}' not found. Available: {list(graph_db_config.keys())}")
+
+    db_config = graph_db_config[config_key]
+    backend_type = db_config.get("type")
+    connection_path = db_config.get("path")
+
+    if not backend_type:
+        raise ValueError(f"Missing 'type' in graph_db config for '{config_key}'")
+    if not connection_path:
+        raise ValueError(f"Missing 'path' in graph_db config for '{config_key}'")
+
+    # Create backend instance
+    backend = create_backend(backend_type)
+
+    # Handle different backend types
+    if backend_type.lower() == "kuzu":
+        # Ensure parent directory exists for Kuzu
+        db_path = Path(connection_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        backend.connect(connection_path)
+    elif backend_type.lower() == "neo4j":
+        # Neo4j connection with credentials
+        username = db_config.get("username")
+        password = db_config.get("password")
+        # Note: Neo4j backend not yet implemented, but config structure is ready
+        backend.connect(connection_path)
+    else:
+        # Generic connection
+        backend.connect(connection_path)
+
+    return backend
+
+
+def get_db_path_from_config(config_key: str = "default") -> Path:
+    """Get database path from configuration.
+
+    Args:
+        config_key: Key in graph_db config section
+
+    Returns:
+        Path to the database
+    """
+    from genai_tk.utils.config_mngr import global_config
+
+    config = global_config()
+    graph_db_config = config.get("graph_db", {})
+
+    if config_key not in graph_db_config:
+        raise ValueError(f"Graph database config '{config_key}' not found. Available: {list(graph_db_config.keys())}")
+
+    db_config = graph_db_config[config_key]
+    connection_path = db_config.get("path")
+
+    if not connection_path:
+        raise ValueError(f"Missing 'path' in graph_db config for '{config_key}'")
+
+    return Path(connection_path)

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
-import kuzu
 from pydantic import BaseModel
 from rich.console import Console
+
+from genai_blueprint.demos.ekg.graph_backend import GraphBackend, KuzuBackend
 
 # Import new schema types
 
@@ -170,16 +171,17 @@ def _add_embedded_fields(parent_data: dict[str, Any], root_model: BaseModel, all
             parent_data[embedded_field_name] = field_value
 
 
-def restart_database() -> tuple[kuzu.Database, kuzu.Connection]:
-    """Restart the database connection to clear all tables.
+def restart_database() -> GraphBackend:
+    """Restart the database by creating a fresh in-memory backend.
 
     Returns:
-        Tuple of (Database, Connection)
+        GraphBackend instance connected to an in-memory database
     """
-    db = kuzu.Database(":memory:")
-    conn = kuzu.Connection(db)
+    from genai_blueprint.demos.ekg.graph_backend import create_in_memory_backend
+
+    backend = create_in_memory_backend()
     console.print("[yellow]🔄 Database restarted - all tables cleared[/yellow]")
-    return db, conn
+    return backend
 
 
 def create_synthetic_key(data: Dict[str, Any], base_name: str) -> str:
@@ -198,8 +200,8 @@ def create_synthetic_key(data: Dict[str, Any], base_name: str) -> str:
 # Schema
 
 
-def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
-    """Create node and relationship tables in Kuzu database (idempotent).
+def create_schema(backend: GraphBackend, nodes: list, relations: list) -> None:
+    """Create node and relationship tables in the graph database (idempotent).
 
     Creates CREATE NODE TABLE IF NOT EXISTS and CREATE REL TABLE IF NOT EXISTS statements
     based on GraphNodeConfig and GraphRelationConfig. This function is safe to call
@@ -286,7 +288,7 @@ def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
         fields_str = ", ".join(fields)
         create_sql = f"CREATE NODE TABLE IF NOT EXISTS {table_name}({fields_str}, PRIMARY KEY({key_field}))"
         console.print(f"[cyan]Creating node table:[/cyan] {create_sql}")
-        conn.execute(create_sql)
+        backend.execute(create_sql)
         created_tables.add(table_name)
 
     # Create relationship tables with properties from p_*_ fields
@@ -312,7 +314,7 @@ def create_schema(conn: kuzu.Connection, nodes: list, relations: list) -> None:
             create_rel_sql = f"CREATE REL TABLE IF NOT EXISTS {rel_name}(FROM {from_table} TO {to_table})"
 
         console.print(f"[cyan]Creating relationship table:[/cyan] {create_rel_sql}")
-        conn.execute(create_rel_sql)
+        backend.execute(create_rel_sql)
 
 
 # Extraction helpers
@@ -658,9 +660,9 @@ def extract_graph_data(model: BaseModel, nodes: list, relations: list) -> Tuple[
 
 
 def load_graph_data(
-    conn: kuzu.Connection, nodes_dict: Dict[str, List[Dict]], relationships: List[Tuple], nodes: list
+    backend: GraphBackend, nodes_dict: Dict[str, List[Dict]], relationships: List[Tuple], nodes: list
 ) -> None:
-    """Load nodes and relationships into Kuzu database using MERGE semantics.
+    """Load nodes and relationships into the graph database using MERGE semantics.
 
     Uses MERGE statements to insert or update nodes, preserving _created_at timestamps
     and updating _updated_at on matches. Relationships are created using MATCH + CREATE.
@@ -676,7 +678,7 @@ def load_graph_data(
     # Merge nodes using MERGE statements (creates new or updates existing)
     console.print("[bold]Merging nodes into graph...[/bold]")
     merge_stats, id_mapping = merge_nodes_batch(
-        conn=conn,
+        conn=backend,
         nodes_dict=nodes_dict,
         schema_config=None,
         merge_on_field="_name",
@@ -734,7 +736,7 @@ def load_graph_data(
         CREATE (from)-[:{rel_name}{props_str}]->(to)
         """
         try:
-            conn.execute(match_sql)
+            backend.execute(match_sql)
             relationships_created += 1
         except Exception as e:
             console.print(f"[red]Error creating {rel_name} relationship:[/red] {e}")
@@ -748,15 +750,15 @@ def load_graph_data(
 
 
 def create_graph(
-    conn: kuzu.Connection,
+    backend: GraphBackend,
     model: BaseModel,
     schema_config,
     relations=None,
 ) -> tuple[Dict[str, List[Dict]], List[Tuple]]:
-    """Create a knowledge graph from a Pydantic model in Kuzu database.
+    """Create a knowledge graph from a Pydantic model in the configured graph database.
 
     Args:
-        conn: Kuzu database connection
+        backend: Graph database backend
         model: Root instance to convert
         schema_config: GraphSchema object with node and relationship configurations
         relations: Ignored (kept for compatibility)
@@ -822,11 +824,11 @@ def create_graph(
             relation_config._to_field_path = None
 
     console.print("[cyan]Creating database tables...[/cyan]")
-    create_schema(conn, schema.nodes, schema.relations)
+    create_schema(backend, schema.nodes, schema.relations)
 
     console.print("[cyan]Extracting and loading data...[/cyan]")
     nodes_dict, relationships = extract_graph_data(model, schema.nodes, schema.relations)
-    load_graph_data(conn, nodes_dict, relationships, schema.nodes)
+    load_graph_data(backend, nodes_dict, relationships, schema.nodes)
 
     console.print("\n[bold green]Graph creation complete![/bold green]")
     total_nodes = sum(len(node_list) for node_list in nodes_dict.values())
@@ -837,17 +839,15 @@ def create_graph(
 
 
 class KnowledgeGraphExtractor:
-    """Extract graph data from Kuzu database for visualization."""
+    """Extract graph data from the graph database for visualization."""
 
-    def __init__(self, database_path: str):
-        """Initialize with database path.
+    def __init__(self, backend: GraphBackend):
+        """Initialize with a graph backend.
 
         Args:
-            database_path: Path to Kuzu database file
+            backend: Graph backend instance
         """
-        self.database_path = database_path
-        self.db = kuzu.Database(database_path)
-        self.conn = kuzu.Connection(self.db)
+        self.backend = backend
 
     def extract_graph_for_visualization(self) -> tuple[list[tuple[str, dict]], list[tuple[str, str, str, dict]]]:
         """Extract nodes and relationships from the database for visualization.
@@ -861,8 +861,8 @@ class KnowledgeGraphExtractor:
             # Import the HTML visualization function
             from genai_blueprint.demos.ekg.kuzu_graph_html import _fetch_graph_data
 
-            # Use the existing data fetching logic
-            nodes_data, edges_data = _fetch_graph_data(self.conn)
+            # Use the existing data fetching logic with the backend
+            nodes_data, edges_data = _fetch_graph_data(self.backend)
 
             return nodes_data, edges_data
 

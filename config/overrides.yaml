@@ -62,7 +62,6 @@ ekg_local:
 # Overide envivonment variable 
   :env:
     BAML_LOG: "warn"
-
   llm:
     models:
       default: kimi_k2_openrouter
@@ -92,7 +91,12 @@ ekg_local:
   graph_db: 
     default:
       type: kuzu
-      path: ${paths.data_root}/....  # NOT IMPLE%ENTED
+      path: ${paths.data_root}/kuzu/ekg_database.db
+    neo4j_local:
+      type: neo4j
+      path: neo4j://localhost
+      username : tcl
+      password: ${oc.env:NEO4_PASSWORD, null}
       
   paths:
     ekg_data : ${oc.env:ONEDRIVE, null}/prj/atos-kg

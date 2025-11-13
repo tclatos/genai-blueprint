@@ -17,7 +17,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-import kuzu
 from genai_tk.core.prompts import dedent_ws
 from rich.console import Console
 
@@ -120,7 +119,7 @@ def build_merge_query(
 
 
 def merge_node_in_graph(
-    conn: kuzu.Connection,
+    conn: Any,
     node_type: str,
     node_data: dict[str, Any],
     schema_config: Any | None = None,
@@ -132,7 +131,7 @@ def merge_node_in_graph(
     then either updates timestamp or creates new node.
 
     Args:
-        conn: Kuzu database connection
+        conn: Graph database connection (kuzu.Connection or similar)
         node_type: Node label/type
         node_data: Node properties dictionary
         schema_config: Optional schema configuration
@@ -192,7 +191,7 @@ def merge_node_in_graph(
 
 
 def merge_nodes_batch(
-    conn: kuzu.Connection,
+    conn: Any,
     nodes_dict: dict[str, list[dict[str, Any]]],
     schema_config: Any | None = None,
     merge_on_field: str = "_name",
@@ -203,7 +202,7 @@ def merge_nodes_batch(
     for relationship creation.
 
     Args:
-        conn: Kuzu database connection
+        conn: Graph database connection (kuzu.Connection or similar)
         nodes_dict: Mapping of node_type to list of node data dicts
         schema_config: Optional schema configuration
         merge_on_field: Field to match nodes on

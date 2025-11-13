@@ -40,53 +40,32 @@ import webbrowser
 from pathlib import Path
 from typing import Annotated
 
-import kuzu
 import typer
 from genai_tk.main.cli import CliTopCommand
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Confirm
 from rich.table import Table
+
+from genai_blueprint.demos.ekg.graph_backend import GraphBackend, create_backend_from_config
+from genai_blueprint.demos.ekg.text2cypher import query_kg
 
 # Initialize Rich console
 console = Console()
 
 # Configuration constants
 KV_STORE_ID = "file"
-EKG_DB_DIR = Path.home() / "kuzu"
-EKG_DB_PATH = EKG_DB_DIR / "ekg_database.db"
 
 
-def get_ekg_db_path() -> Path:
-    """Get the EKG database path.
-
-    Returns:
-        Path to the shared EKG database file
-    """
-    return EKG_DB_PATH
-
-
-# Removed - now handled by subgraph classes
-
-
-# Removed - now handled by subgraph classes
-
-
-def get_db_connection() -> tuple[kuzu.Database, kuzu.Connection] | None:
+def _get_db_connection() -> GraphBackend | None:
     """Get database connection to the shared EKG database.
 
     Returns:
-        Tuple of (Database, Connection) or None if database doesn't exist
+        GraphBackend instance or None if database doesn't exist
     """
-    db_path = get_ekg_db_path()
-
-    if not db_path.exists():
-        return None
-
     try:
-        db = kuzu.Database(str(db_path))
-        conn = kuzu.Connection(db)
-        return db, conn
+        backend = create_backend_from_config("default")
+        return backend
     except Exception as e:
         console.print(f"[red]Error connecting to database: {e}[/red]")
         return None
@@ -104,8 +83,8 @@ class EkgCommands(CliTopCommand):
     def register_sub_commands(self, cli_app: typer.Typer) -> None:
         from genai_blueprint.demos.ekg.rainbow_subgraph import get_subgraph
 
-        @cli_app.command("add")
-        def add_data(
+        @cli_app.command("add-doc")
+        def add_doc(
             keys: Annotated[
                 list[str],
                 typer.Option(
@@ -141,7 +120,7 @@ class EkgCommands(CliTopCommand):
                 subgraph_impl = get_subgraph(subgraph)
             except ValueError as e:
                 console.print(f"[red]❌ {e}[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from e
 
             # Validate that we have at least one key
             if not keys:
@@ -171,8 +150,7 @@ class EkgCommands(CliTopCommand):
 
             # Initialize or connect to database once
             console.print("🔧 Connecting to EKG database...")
-            db = kuzu.Database(str(db_path))
-            conn = kuzu.Connection(db)
+            backend = create_backend_from_config("default")
 
             # Track aggregate statistics across all documents
             total_docs_processed = 0
@@ -196,8 +174,8 @@ class EkgCommands(CliTopCommand):
                     console.print(f"[green]✓[/green] Loaded: [bold]{entity_name}[/bold]")
 
                     # Add data to the knowledge graph
-                    console.print(f"🚀 Merging into graph...")
-                    nodes_dict, relationships = create_graph(conn, data, schema)
+                    console.print("🚀 Merging into graph...")
+                    nodes_dict, relationships = create_graph(backend, data, schema)
 
                     # Accumulate statistics
                     # Note: create_graph now uses merge_nodes_batch internally which tracks created vs matched
@@ -229,7 +207,7 @@ class EkgCommands(CliTopCommand):
                     )
                 )
             else:
-                console.print(Panel(f"[bold red]❌ Failed to process any documents[/bold red]"))
+                console.print(Panel("[bold red]❌ Failed to process any documents[/bold red]"))
                 raise typer.Exit(1)
 
             summary_table = Table(title="Final Summary")
@@ -273,11 +251,10 @@ class EkgCommands(CliTopCommand):
 
             try:
                 # Try to get some basic stats
-                result = get_db_connection()
-                if result:
-                    db, conn = result
+                backend = _get_db_connection()
+                if backend:
                     try:
-                        tables_result = conn.execute("CALL show_tables() RETURN *")
+                        tables_result = backend.execute("CALL show_tables() RETURN *")
                         tables_df = tables_result.get_as_df()
                         node_count = len([row for _, row in tables_df.iterrows() if row.get("type") == "NODE"])
                         rel_count = len([row for _, row in tables_df.iterrows() if row.get("type") == "REL"])
@@ -288,7 +265,7 @@ class EkgCommands(CliTopCommand):
                         for _, row in tables_df.iterrows():
                             if row.get("type") == "NODE":
                                 try:
-                                    result = conn.execute(f"MATCH (n:{row['name']}) RETURN count(n) as count")
+                                    result = backend.execute(f"MATCH (n:{row['name']}) RETURN count(n) as count")
                                     count = result.get_as_df().iloc[0]["count"]
                                     total_nodes += count
                                 except Exception:
@@ -327,37 +304,57 @@ class EkgCommands(CliTopCommand):
                 )
             except Exception as e:
                 console.print(f"[red]❌ Error deleting database: {e}[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from e
 
         @cli_app.command("query")
         def query_ekg(
-            query: Annotated[str | None, typer.Option("--query", "-q", help="Cypher query to execute")] = None,
+            query: str = typer.Argument(help="query to execute"),
+            config_name: Annotated[
+                str,
+                typer.Option(
+                    "--config",
+                    help="Name of the structured config to use from yaml config",
+                ),
+            ] = "default",
+            llm: Annotated[
+                str | None,
+                typer.Option(help="Name or tag of the LLM to use by BAML"),
+            ] = None,
             subgraph: Annotated[
                 str, typer.Option("--subgraph", "-g", help="Subgraph type for sample queries")
             ] = "ReviewedOpportunity",
         ) -> None:
-            """Execute Cypher queries on the EKG database.
+            """Execute queries in natural language (Text-2-Cypher) on the EKG database.
 
-            If no query is provided, starts an interactive query shell.
-            """
-            # Get subgraph implementation for sample queries
+            ex:  List the names of all competitors for opportunities created after January 1, 2012."""
+            from loguru import logger
+
             try:
-                subgraph_impl = get_subgraph(subgraph)
-            except ValueError as e:
-                console.print(f"[red]❌ {e}[/red]")
-                raise typer.Exit(1)
+                df = query_kg(query, subgraph=subgraph, llm_id=llm)
+                console.print(df)
 
+            except Exception as e:
+                logger.error(f"Failed to execute BAML function '{function_name}': {e}")
+                return
+
+            return
+
+        @cli_app.command("cypher")
+        def cypher(
+            query: str = typer.Argument(help="Cypher query to execute"),
+            subgraph: Annotated[
+                str, typer.Option("--subgraph", "-g", help="Subgraph type for sample queries")
+            ] = "ReviewedOpportunity",
+        ) -> None:
+            """Execute Cypher queries on the EKG database."""
             console.print(Panel("[bold cyan]Querying EKG Database[/bold cyan]"))
 
             # Get database connection
-            result = get_db_connection()
-            if not result:
+            backend = _get_db_connection()
+            if not backend:
                 console.print("[red]❌ No EKG database found[/red]")
                 console.print("[yellow]💡 Add data first: [bold]cli kg add --key <data_key>[/bold][/yellow]")
                 raise typer.Exit(1)
-
-            db, conn = result
-            console.print("[green]✅ Connected to EKG database[/green]")
 
             def execute_query(cypher_query: str) -> None:
                 """Execute a single Cypher query and display results."""
@@ -366,7 +363,7 @@ class EkgCommands(CliTopCommand):
 
                 try:
                     console.print(f"[dim]Executing: {cypher_query}[/dim]")
-                    result = conn.execute(cypher_query)
+                    result = backend.execute(cypher_query)
                     df = result.get_as_df()
 
                     if df.empty:
@@ -401,44 +398,6 @@ class EkgCommands(CliTopCommand):
                 execute_query(query)
                 return
 
-            # Interactive query shell
-            console.print("\n[bold green]🔍 Interactive Query Shell[/bold green]")
-            console.print("[dim]Enter Cypher queries (type 'exit' or 'quit' to leave, 'help' for examples)[/dim]\n")
-
-            # Get sample queries from subgraph
-            sample_queries = subgraph_impl.get_sample_queries()
-
-            while True:
-                try:
-                    query_input = Prompt.ask("[bold cyan]cypher>[/bold cyan]")
-
-                    if query_input.lower() in ("exit", "quit", "q"):
-                        console.print("[yellow]Goodbye! 👋[/yellow]")
-                        break
-                    elif query_input.lower() == "help":
-                        console.print(Panel(f"Sample Queries ({subgraph} subgraph)", style="green"))
-                        for i, sample in enumerate(sample_queries, 1):
-                            console.print(f"{i}. [cyan]{sample}[/cyan]")
-                        console.print()
-                        continue
-                    elif query_input.isdigit():
-                        # Execute sample query by number
-                        query_num = int(query_input) - 1
-                        if 0 <= query_num < len(sample_queries):
-                            execute_query(sample_queries[query_num])
-                        else:
-                            console.print("[red]Invalid sample query number[/red]")
-                        continue
-
-                    execute_query(query_input)
-
-                except KeyboardInterrupt:
-                    console.print("\n[yellow]Goodbye! 👋[/yellow]")
-                    break
-                except EOFError:
-                    console.print("\n[yellow]Goodbye! 👋[/yellow]")
-                    break
-
         @cli_app.command("info")
         def show_info(
             subgraph: Annotated[
@@ -455,18 +414,17 @@ class EkgCommands(CliTopCommand):
                 subgraph_impl = get_subgraph(subgraph)
             except ValueError as e:
                 console.print(f"[red]❌ {e}[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from e
 
             console.print(Panel(f"[bold cyan]{subgraph.title()} EKG Database Information[/bold cyan]"))
 
             # Get database connection
-            result = get_db_connection()
-            if not result:
+            backend = _get_db_connection()
+            if not backend:
                 console.print("[red]❌ No EKG database found[/red]")
                 console.print("[yellow]💡 Add data first: [bold]cli kg add --key <data_key>[/bold][/yellow]")
                 raise typer.Exit(1)
 
-            db, conn = result
             console.print("[green]✅ Connected to EKG database[/green]\n")
 
             # Database location info
@@ -486,7 +444,7 @@ class EkgCommands(CliTopCommand):
 
             # Get schema information
             try:
-                tables_result = conn.execute("CALL show_tables() RETURN *")
+                tables_result = backend.execute("CALL show_tables() RETURN *")
                 tables_df = tables_result.get_as_df()
 
                 node_tables = []
@@ -517,7 +475,7 @@ class EkgCommands(CliTopCommand):
 
                     for node_type in sorted(node_tables):
                         try:
-                            result = conn.execute(f"MATCH (n:{node_type}) RETURN count(n) as count")
+                            result = backend.execute(f"MATCH (n:{node_type}) RETURN count(n) as count")
                             count = result.get_as_df().iloc[0]["count"]
                             node_stats_table.add_row(node_type, str(count))
                         except Exception as e:
@@ -534,7 +492,7 @@ class EkgCommands(CliTopCommand):
 
                     for rel_type in sorted(rel_tables):
                         try:
-                            result = conn.execute(f"MATCH ()-[r:{rel_type}]->() RETURN count(r) as count")
+                            result = backend.execute(f"MATCH ()-[r:{rel_type}]->() RETURN count(r) as count")
                             count = result.get_as_df().iloc[0]["count"]
                             rel_stats_table.add_row(rel_type, str(count))
                         except Exception as e:
@@ -634,13 +592,12 @@ class EkgCommands(CliTopCommand):
             console.print(Panel("[bold cyan]Exporting EKG HTML Visualization[/bold cyan]"))
 
             # Get database connection
-            result = get_db_connection()
-            if not result:
+            backend = _get_db_connection()
+            if not backend:
                 console.print("[red]❌ No EKG database found[/red]")
                 console.print("[yellow]💡 Add data first: [bold]cli kg add --key <opportunity_key>[/bold][/yellow]")
                 raise typer.Exit(1)
 
-            db, conn = result
             console.print("[green]✅ Connected to EKG database[/green]")
 
             # Prepare output path
@@ -656,7 +613,7 @@ class EkgCommands(CliTopCommand):
             console.print("🎨 Generating interactive visualization...")
             try:
                 with console.status("[bold green]Creating HTML visualization..."):
-                    generate_html_visualization(conn, str(html_file_path), title="EKG Database Visualization")
+                    generate_html_visualization(backend, str(html_file_path), title="EKG Database Visualization")
 
                 console.print("[green]✅ HTML visualization created successfully[/green]")
 
@@ -700,7 +657,7 @@ class EkgCommands(CliTopCommand):
 
             except Exception as e:
                 console.print(f"[red]❌ Error generating visualization: {e}[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from e
 
         @cli_app.command("schema")
         def show_schema(
@@ -714,110 +671,15 @@ class EkgCommands(CliTopCommand):
             node types, relationships, properties, and indexed fields. This output is
             designed to provide context to LLMs for generating correct Cypher queries.
             """
+            from rich.markdown import Markdown
+
             from genai_blueprint.demos.ekg.schema_doc_generator import generate_schema_markdown
 
             console.print(Panel("[bold cyan]Knowledge Graph Schema[/bold cyan]"))
 
             try:
                 markdown = generate_schema_markdown(subgraph)
-                console.print(markdown)
+                console.print(Markdown(markdown))
             except ValueError as e:
                 console.print(f"[red]❌ {e}[/red]")
-                raise typer.Exit(1)
-
-        # @cli_app.command("agent")
-        def ekg_agent_shell(
-            input: Annotated[str | None, typer.Option(help="Input query or '-' to read from stdin")] = None,
-            cache: Annotated[str, typer.Option(help="Cache strategy: 'sqlite', 'memory' or 'no_cache'")] = "memory",
-            mcp: Annotated[
-                list[str], typer.Option(help="MCP server names to connect to (e.g. playwright, filesystem, ..)")
-            ] = [],
-            lc_verbose: Annotated[bool, typer.Option("--verbose", "-v", help="Enable LangChain verbose mode")] = False,
-            lc_debug: Annotated[bool, typer.Option("--debug", "-d", help="Enable LangChain debug mode")] = False,
-            llm: Annotated[
-                str | None, typer.Option("--llm", "-m", help="LLM identifier (ID or tag from config)")
-            ] = None,
-            chat: Annotated[bool, typer.Option("--chat", help="Start an interactive shell to send prompts")] = False,
-        ) -> None:
-            """Run a ReAct agent to query the Enterprise Knowledge Graph (EKG).
-
-            Can either start an interactive shell or execute a single query directly.
-            The agent can query processed project data using semantic search across the
-            vector store and has access to project information extracted from Markdown files.
-
-            Examples:
-                # Basic interactive shell
-                uv run cli kg agent
-
-                # Execute a single query
-                uv run cli kg agent --input "Find all projects using Python"
-
-                # With custom LLM and cache
-                uv run cli kg agent --llm gpt-4o-mini --cache sqlite
-            """
-            import asyncio
-            import sys
-
-            from genai_blueprint.demos.ekg.struct_rag_tool_factory import create_structured_rag_tool
-            from genai_tk.core.llm_factory import LlmFactory, get_llm_unified
-            from genai_tk.core.mcp_client import get_mcp_servers_dict
-            from genai_tk.utils.cli.langchain_setup import setup_langchain
-            from genai_tk.utils.cli.langgraph_agent_shell import run_langgraph_agent_shell
-            from genai_tk.utils.langgraph import print_astream
-            from langchain.agents import create_agent
-            from langchain_core.messages import HumanMessage
-            from langchain_mcp_adapters.client import MultiServerMCPClient
-            from loguru import logger
-
-            async def call_ekg_agent(
-                query: str,
-                llm_id: str | None = None,
-                tools: list | None = None,
-                mcp_server_names: list[str] | None = None,
-            ) -> None:
-                """Execute a single query using the EKG agent with tools and stream the response."""
-                model = get_llm_unified(llm=llm_id)
-                all_tools = tools or []
-
-                if mcp_server_names:
-                    logger.info(f"Connecting to MCP servers: {mcp_server_names}")
-                    client = MultiServerMCPClient(get_mcp_servers_dict(mcp_server_names))
-                    mcp_tools = await client.get_tools()
-                    all_tools.extend(mcp_tools)
-
-                agent = create_agent(model, all_tools)
-                logger.info("Executing EKG agent query...")
-                resp = agent.astream({"messages": [HumanMessage(content=query)]})
-                await print_astream(resp)
-
-            # Resolve LLM identifier if provided
-            llm_id = None
-            if llm:
-                resolved_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm)
-                if error_msg:
-                    print(error_msg)
-                    return
-                llm_id = resolved_id
-
-            if not setup_langchain(llm_id, lc_debug, lc_verbose, cache):
-                return
-
-            LLM_ID = None
-            KV_STORE_ID = "file"
-            rainbow_schema = "Rainbow File"
-            rainbow_tool = create_structured_rag_tool(rainbow_schema, llm_id=LLM_ID, kvstore_id=KV_STORE_ID)
-
-            if chat:
-                asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
-            else:
-                if not input and not sys.stdin.isatty():
-                    input = sys.stdin.read()
-
-                if input and len(input.strip()) >= 5:
-                    asyncio.run(
-                        call_ekg_agent(input.strip(), llm_id=llm_id, tools=[rainbow_tool], mcp_server_names=mcp)
-                    )
-                else:
-                    if input and len(input.strip()) < 5:
-                        print("Warning: Input too short (minimum 5 characters), starting interactive shell instead")
-                    asyncio.run(run_langgraph_agent_shell(llm_id, tools=[rainbow_tool], mcp_server_names=mcp))
+                raise typer.Exit(1) from e

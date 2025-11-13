@@ -27,7 +27,7 @@ import os
 import uuid
 from typing import Any
 
-import kuzu  # Requires the `kuzu` package
+from genai_blueprint.demos.ekg.graph_backend import GraphBackend
 
 # Import new schema types
 
@@ -163,14 +163,14 @@ def _get_node_color(node_type: str, custom_colors: dict[str, str] | None = None)
 
 
 def _fetch_graph_data(
-    connection: kuzu.Connection,
+    connection: GraphBackend,
     node_configs: list | None = None,
     relation_configs: list | None = None,
 ) -> tuple[list[tuple[str, dict]], list[tuple[str, str, str, dict]]]:
-    """Fetch all nodes and edges from the Kuzu database via the provided connection.
+    """Fetch all nodes and edges from the graph database via the provided connection/backend.
 
     Args:
-        connection: Kuzu database connection
+        connection: Object exposing an execute() method (e.g. GraphBackend or kuzu.Connection)
         node_configs: Optional list of node configurations (legacy or new format)
         relation_configs: Optional list of relation configurations (legacy or new format)
 
@@ -377,16 +377,16 @@ def _fetch_graph_data(
 
 
 def generate_kuzu_graph_html(
-    connection: kuzu.Connection,
+    connection: GraphBackend,
     destination_file_path: str | None = None,
     node_configs: list | None = None,
     relation_configs: list | None = None,
     custom_colors: dict[str, str] | None = None,
 ) -> str:
-    """Generate an HTML graph visualization from a Kuzu connection.
+    """Generate an HTML graph visualization from a graph connection/backend.
 
     Args:
-        connection: An active kuzu.Connection connected to a database that uses
+        connection: Object exposing an execute() method (e.g. GraphBackend or kuzu.Connection) connected to a database that uses
             a schema with Node(id, name, type, properties) and EDGE(relationship_name, properties).
         destination_file_path: Optional path to write the HTML file. If omitted,
             the file will be saved as "graph_visualization.html" in the user's home directory.
@@ -735,19 +735,19 @@ def generate_kuzu_graph_html(
 
 # Alias for backward compatibility
 def generate_html_visualization(
-    connection: kuzu.Connection,
+    connection: GraphBackend,
     destination_file_path: str | None = None,
     title: str = "Knowledge Graph",
     node_configs: list | None = None,
     relation_configs: list | None = None,
     custom_colors: dict[str, str] | None = None,
 ) -> str:
-    """Generate an HTML graph visualization from a Kuzu connection.
+    """Generate an HTML graph visualization from a graph connection/backend.
 
     Alias for generate_kuzu_graph_html for backward compatibility.
 
     Args:
-        connection: An active kuzu.Connection
+        connection: Object exposing an execute() method (e.g. GraphBackend or kuzu.Connection)
         destination_file_path: Optional path to write the HTML file
         title: Title for the visualization (currently unused)
         node_configs: Optional list of node configurations
