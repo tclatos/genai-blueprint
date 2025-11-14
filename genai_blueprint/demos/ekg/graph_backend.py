@@ -10,8 +10,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
-
 
 class QueryExecutor(ABC):
     """Thin abstraction for anything that can execute Cypher-like queries.
@@ -438,29 +436,3 @@ def create_backend_from_config(config_key: str = "default") -> GraphBackend:
         backend.connect(connection_path)
 
     return backend
-
-
-def get_db_path_from_config(config_key: str = "default") -> Path:
-    """Get database path from configuration.
-
-    Args:
-        config_key: Key in graph_db config section
-
-    Returns:
-        Path to the database
-    """
-    from genai_tk.utils.config_mngr import global_config
-
-    config = global_config()
-    graph_db_config = config.get("graph_db", {})
-
-    if config_key not in graph_db_config:
-        raise ValueError(f"Graph database config '{config_key}' not found. Available: {list(graph_db_config.keys())}")
-
-    db_config = graph_db_config[config_key]
-    connection_path = db_config.get("path")
-
-    if not connection_path:
-        raise ValueError(f"Missing 'path' in graph_db config for '{config_key}'")
-
-    return Path(connection_path)

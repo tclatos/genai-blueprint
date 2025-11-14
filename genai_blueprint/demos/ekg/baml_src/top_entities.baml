@@ -26,6 +26,13 @@ enum KnownCompetitor {
    // Other @description("Other Competitors are mentionned")
 }
 
+class Opportunity {
+  name string @description("Official name of the project/opportunity")
+  opportunity_id string @description("Unique identifier from Salesforce or similar CRM")
+  status OpportunityStatus? @description("Current phase: Pursuit/Active/Completed/Cancelled")
+  customer Customer @description("Client or customer information")
+}
+
 class Person {
   @@description("person involved in a project")
   name string? @description("Full name of involved person")
@@ -41,7 +48,9 @@ class Customer {
   employees Person[]?  @description("Customer's employees mentionned in the document. Do not include Atos or other people")
 }
 
+
 class Partner {
   name string
   p_role_ string? @description("role in the project")
 }
+

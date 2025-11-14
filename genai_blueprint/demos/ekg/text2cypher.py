@@ -8,6 +8,8 @@ from loguru import logger
 from genai_blueprint.demos.ekg.graph_backend import create_backend_from_config
 from genai_blueprint.demos.ekg.schema_doc_generator import generate_schema_markdown
 
+# taken from https://kuzudb.github.io/blog/post/improving-text2cypher-for-graphrag-via-schema-pruning/
+
 SYSTEM_PROMPT = """  
     Translate the given question into a valid Cypher query that respects the given graph schema.
     <SYNTAX>
@@ -20,6 +22,7 @@ SYSTEM_PROMPT = """
       - Use the CONTAINS operator to check for presence of one substring in the other
     - DO NOT use APOC as the database does not support it.
     - For datetime queries, use the TIMESTAMP type, which combines the date and time.
+    - Ensure all nodes, relationships and properties are conform to the given schema.
     </SYNTAX>
 
     <RETURN_RESULTS>
@@ -30,16 +33,17 @@ SYSTEM_PROMPT = """
     </RETURN_RESULTS> """
 
 USER_PROMPT = """
-    <QUESTION>
-    {question}
-    </QUESTION>
 
     <SCHEMA>
     {schema}
     </SCHEMA>
 
+    <QUESTION>
+    {question}
+    </QUESTION>
+
     <OUTPUT>: 
-    Valid Cypher query with no newlines: 
+    Valid Cypher query, conform to schema, with no newlines: 
 """
 
 
@@ -69,8 +73,11 @@ def query_kg(query: str, subgraph: str, llm_id: str | None = None) -> pd.DataFra
         raise Exception("EKG database not found")
     cypher_query = text2cypher_chain(query, subgraph, llm_id=llm_id).invoke({})
     logger.info(f"Generated Cypher query: {cypher_query}")
-    result = backend.execute(cypher_query)
-    df = result.get_as_df()
+    try:
+        result = backend.execute(cypher_query)
+        df = result.get_as_df()
+    except Exception as e:
+        raise RuntimeError(f"Error in Cypher command execution: {cypher_query}\nException:{e}") from e
     return df
 
 

@@ -331,13 +331,30 @@ class EkgCommands(CliTopCommand):
 
             try:
                 df = query_kg(query, subgraph=subgraph, llm_id=llm)
-                console.print(df)
+
+                if df.empty:
+                    console.print("[yellow]Query returned no results[/yellow]")
+                    return
+
+                # Create a Rich table for results
+                table = Table(title="Query Results")
+                for col in df.columns:
+                    table.add_column(str(col), style="cyan")
+                MAX_ROWS = 20
+                for i, (_, row) in enumerate(df.iterrows()):
+                    if i >= MAX_ROWS:
+                        table.add_row(*["..." for _ in df.columns])
+                        break
+                    table.add_row(*[str(val) for val in row])
+                console.print(table)
+
+                if len(df) > MAX_ROWS:
+                    console.print(f"[dim]Showing first {MAX_ROWS} of {len(df)} results[/dim]")
 
             except Exception as e:
-                logger.error(f"Failed to execute BAML function '{function_name}': {e}")
+                logger.error(f"Failed to process query: {e}")
+                console.print(f"[red]❌ Query error: {e}[/red]")
                 return
-
-            return
 
         @cli_app.command("cypher")
         def cypher(

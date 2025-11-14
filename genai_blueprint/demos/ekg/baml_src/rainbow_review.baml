@@ -35,10 +35,28 @@ enum SWProjectRisks {
         This risk can impact project quality, timelines, and costs, as experienced personnel are crucial for project success."#)
 }
 
+class ReviewedOpportunity {
+  opportunity Opportunity
+  start_date string? @description("Planned/projected start date")
+  keywords string[]? @description("Key terms for semantic search")
+  tech_stack TechnicalApproach @description("Architecure and technology choices")
+
+  // statement_of_work KeyStatementOfWorkElement? @description("Business approach to win the opportunity")
+  team Person[] @description("Atos or Eviden person involved")  
+  financials FinancialMetrics @description("Financial metrics")
+  risks RiskAnalysis[] @description("Risk analysis")
+  competition CompetitiveLandscape @description("Competitive landscape")
+  competitors Competitor[]? @description("Identified competitors for that opportunity")
+  // bidding BiddingStrategy @description("Bidding strategy")
+  partners Partner[]? @description("Third-party partners/subcontractors")
+
+  //competitor_map map<string, Competitor> @description("Identified competitors for that opportunity")
+
+} 
 class Competitor {
   @@description("Atos competitor mentionned in the documents. Don't confused with Partners")
   // isa ACompetitor @description("Competitor mentionned in the review")
-  name string @description("name of the competitor ")
+  name string @description("name of the competitor")
   known_as KnownCompetitor? @description("Competitor id (short name)")
 
   // Link properties 
@@ -55,12 +73,6 @@ class TechnicalApproach {
   technical_stack string[]? @description("technical stack (platforms, frameworks, third-party softwares, programming language, ...)")
 }
 
-class Opportunity {
-  name string @description("Official name of the project/opportunity")
-  opportunity_id string @description("Unique identifier from Salesforce or similar CRM")
-  status OpportunityStatus? @description("Current phase: Pursuit/Active/Completed/Cancelled")
-  customer Customer @description("Client or customer information")
-}
 
 
 // class KeyStatementOfWorkElement {
@@ -105,24 +117,7 @@ class BiddingStrategy {
   challenges string[]? @description("Key bidding challenges")
 }
 
-class ReviewedOpportunity {
-  opportunity Opportunity
-  start_date string? @description("Planned/projected start date")
-  keywords string[]? @description("Key terms for semantic search")
-  tech_stack TechnicalApproach @description("Architecure and technology choices")
 
-  // statement_of_work KeyStatementOfWorkElement? @description("Business approach to win the opportunity")
-  team Person[] @description("Atos or Eviden person involved")  
-  financials FinancialMetrics @description("Financial metrics")
-  risks RiskAnalysis[] @description("Risk analysis")
-  competition CompetitiveLandscape @description("Competitive landscape")
-  competitors Competitor[]? @description("Identified competitors for that opportunity")
-  // bidding BiddingStrategy @description("Bidding strategy")
-  partners Partner[]? @description("Third-party partners/subcontractors")
-
-  //competitor_map map<string, Competitor> @description("Identified competitors for that opportunity")
-
-} 
 
 function ExtractRainbow(rainbow_file: string) -> ReviewedOpportunity {
   client "GptOss120" 
@@ -134,7 +129,7 @@ function ExtractRainbow(rainbow_file: string) -> ReviewedOpportunity {
   "#
 }
 
-function FakeRainbow(project_description: string) -> ReviewedOpportunity {
+function FakeRainbowJson(project_description: string) -> ReviewedOpportunity {
   client "GptOss120" 
   
   prompt #"

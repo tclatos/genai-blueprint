@@ -16,32 +16,29 @@
 - "write a Markdown file chunker, inheriting LangChain Loader.  It takes a list of Markdown file as input, and chunk them using the Chonkie package https://docs.chonkie.ai/oss/chefs/markdownchef ,  https://pypi.org/project/chonkie/, https://docs.chonkie.ai/oss/chunkers/table-chunker, ... . Set filename in metadata.  Use Context7 to get Chonkie usage. Makes parameters such as cheun siez configurable, but provide common default values for that kind of file" 
 
 
-## Graph Database Factory
-dans conf:
-graph_db:
-    default:
-      type: 
-
-
-
 # Import tables
-- rename cli kg add  -> kg add-doc
 - new command add-table
+
+LOAD CSV WITH HEADERS FROM 'file:///data.csv' AS row
+MATCH (existingNode {opportunity: toInteger(row.opportunity)})
+CREATE (newNode:Person {name: row.name, age: toInteger(row.age)})
+CREATE (existingNode)-[:RELATED_TO]->(newNode)
+
+
    - 
 - new command relink
 
 
 # Text2Cypher
+- Add enum descriptions in schema
 
-Complete method
-
-generate_schema_markdown
-
-
-- Create a full KG schema  with BAML from 
-    - the Kuzu schema
-- generate text2qsl wit 
 - possibly Prune the schema with https://kuzudb.github.io/blog/post/improving-text2cypher-for-graphrag-via-schema-pruning/#pruned-graph-schema-results
+
+## ReAct agents
+- tools: 
+    - graph_search()  (or cypher_run()  so the schema is known by agent)
+    - doc_search()  (from Chonkie)
+    - node_search()
 
 
 
@@ -66,3 +63,14 @@ https://docs.chonkie.ai/oss/pipelines
 # Misc
 
 Use https://github.com/GrahamDumpleton/wrapt for @once
+
+
+# Doc to add in KG
+- Sales presentations describing references (case studies)
+- L1/L2 Offerings (from Nessie code ? GRD code ? ) 
+- GTM conversations / BL Offerings ? 
+- Win / Loss review
+- RFQ
+- Architecture document
+- ....
+
