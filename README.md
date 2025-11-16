@@ -36,7 +36,7 @@ A framework for building and deploying Generative AI/ Agentic AI applications wi
 ## Documentation
 
 For an overview of the code structure and patterns:
-[Tutorial: genai-blueprint](https://code2tutorial.com/tutorial/d4f58807-1657-41e1-92b8-15a3a10cb162/index.md) 
+[Tutorial: https://deepwiki.com/tclatos/genai-blueprint/1-overview) 
 
 Note: The tutorial was automatically generated and may be slightly outdated - refer to the code for current implementations.
 
