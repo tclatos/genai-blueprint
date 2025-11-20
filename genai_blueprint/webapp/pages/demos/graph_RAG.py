@@ -89,7 +89,7 @@ sample_demos = load_demos_from_config()
 print(sample_demos)
 
 
-llm = get_llm(llm_id=None)
+llm = get_llm(llm=None)
 st.title("Graph RAG with Kuzu")
 
 # Initialize session state for graph data

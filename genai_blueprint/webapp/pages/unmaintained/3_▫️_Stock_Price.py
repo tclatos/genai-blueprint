@@ -132,9 +132,9 @@ def call_functions(llm_with_tools, user_prompt):
 
 
 def main() -> None:
-    llm = get_llm(llm_id=LLM_ID, streaming=False)
+    llm = get_llm(llm=LLM_ID, streaming=False)
 
-    #    llm = LlmFactory(llm_id="gpt_35_openai").get()
+    #    llm = LlmFactory(llm="gpt_35_openai").get()
 
     # llm = ChatGroq(groq_api_key=os.getenv("GROQ_API_KEY"), model="llama3-70b-8192")
 

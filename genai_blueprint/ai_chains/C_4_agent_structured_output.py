@@ -31,7 +31,7 @@ def get_weather(city: Literal["nyc", "sf"]) -> str:
 # @chain
 def get_weather_fn(query: str, config: RunnableConfig) -> WeatherResponse:
     llm_id = config["configurable"].get("llm_id")
-    llm = get_llm(llm_id)
+    llm = get_llm(llm=llm_id)
     graph = create_react_structured_output_graph(llm, [get_weather], WeatherResponse)
     graph_input = {"messages": [("human", query)]}
     result = graph.invoke(graph_input)

@@ -42,7 +42,7 @@ tools = [multiply, exponentiate, add]
 
 
 def create_runnable(config: dict) -> Runnable:
-    llm = get_llm(llm_id=config["llm"])
+    llm = get_llm(llm=config["llm"])
     return llm.bind_tools(tools)
 
 
@@ -58,7 +58,7 @@ register_runnable(
 
 def create_executor(config: dict) -> Runnable:
     llm_id = config["llm"]
-    llm = get_llm(llm_id)
+    llm = get_llm(llm=llm_id)
     # info = get_llm_info(llm_id)
 
     prompt = ChatPromptTemplate.from_messages(

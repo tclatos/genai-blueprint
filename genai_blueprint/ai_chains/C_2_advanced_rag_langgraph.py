@@ -81,7 +81,7 @@ def question_router() -> Runnable[Any, DataRoute]:
         Instructions: {instructions} """
 
     prompt = def_prompt(system_prompt, user_prompt).partial(instructions=parser.get_format_instructions())
-    question_router = prompt | get_llm(llm_id=LLM_ID) | parser
+    question_router = prompt | get_llm(llm=LLM_ID) | parser
     return question_router  # type: ignore
 
 
@@ -173,7 +173,7 @@ def rag_chain() -> Runnable[Any, str]:
         Answer: """
     logger.debug("Rag chain'")
     prompt = def_prompt(system=system_prompt, user=user_prompt)
-    return prompt | get_llm(llm_id=LLM_ID) | StrOutputParser()
+    return prompt | get_llm(llm=LLM_ID) | StrOutputParser()
 
 
 # Generates answer using RAG chain
@@ -200,7 +200,7 @@ def answer_grader() -> Runnable[Any, YesOrNo]:
         Instructions: {instructions}
         """
     prompt = def_prompt(system_prompt, user_prompt).partial(instructions=yesno_enum_parser.get_format_instructions())
-    return prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser  # type: ignore
+    return prompt | get_llm(llm=LLM_ID) | to_lower | yesno_enum_parser  # type: ignore
 
 
 # Grades whether a retrieved document is relevant to the question
@@ -222,7 +222,7 @@ def retrieval_grader() -> Runnable[Any, YesOrNo]:
     prompt = def_prompt(system_prompt, user_prompt).partial(instructions=yesno_enum_parser.get_format_instructions())
 
     logger.debug("Retrieval Grader'")
-    retrieval_grader = prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser
+    retrieval_grader = prompt | get_llm(llm=LLM_ID) | to_lower | yesno_enum_parser
     return retrieval_grader  # type: ignore
 
 
@@ -284,7 +284,7 @@ def hallucination_grader() -> Runnable[Any, YesOrNo]:
         Here is the answer: {generation} \n
         Instructions: {instructions} """
     prompt = def_prompt(system_prompt, user_prompt).partial(instructions=yesno_enum_parser.get_format_instructions())
-    return prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser  # type: ignore
+    return prompt | get_llm(llm=LLM_ID) | to_lower | yesno_enum_parser  # type: ignore
 
 
 # Evaluates answer quality and grounding

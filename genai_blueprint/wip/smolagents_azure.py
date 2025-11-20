@@ -4,7 +4,7 @@ from smolagents import (
     WebSearchTool,
 )
 
-llm_factory = LlmFactory(llm_tag="azure", llm_params={"temperature": 0.7})
+llm_factory = LlmFactory(llm="azure", llm_params={"temperature": 0.7})
 llm = llm_factory.get_smolagent_model()
 print(f"Using model: {llm_factory.get_id()}")
 agent = CodeAgent(tools=[WebSearchTool()], model=llm)

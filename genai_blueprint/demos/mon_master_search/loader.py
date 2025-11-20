@@ -159,7 +159,7 @@ EMBEDDINGS_MODEL = "solon_large_local"
 
 
 @app.command()
-def create_embeddings(embeddings_id: str = EMBEDDINGS_MODEL) -> None:
+def create_embeddings(embeddings: str = EMBEDDINGS_MODEL) -> None:
     vector_factory = EmbeddingsStore.create_from_config("default")
     docs = list(load_objects_from_jsonl(FILES, Document))
 

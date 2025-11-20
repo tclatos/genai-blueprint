@@ -41,7 +41,7 @@ LLM_ID = "gpt_4omini_edenai"
 # LLM_ID = "gpt_4_azure"
 LLM_ID = "gpt_4o_azure"
 
-llm = get_llm(llm_id=LLM_ID, temperature=0.0)
+llm = get_llm(llm=LLM_ID, temperature=0.0)
 
 tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 

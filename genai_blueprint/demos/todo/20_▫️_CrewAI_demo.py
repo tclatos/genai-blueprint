@@ -15,7 +15,7 @@ except ImportError as e:
 
 
 def main() -> None:
-    llm = LlmFactory(llm_id="mixtral_7x8_groq").get()
+    llm = LlmFactory(llm="mixtral_7x8_groq").get()
 
     # Streamlit UI
     st.title("CrewAI Machine Learning Assistant")

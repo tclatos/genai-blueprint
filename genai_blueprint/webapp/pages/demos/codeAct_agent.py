@@ -320,7 +320,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
             if prompt:
                 # Initialize LLM model with error handling
                 try:
-                    model_name = LlmFactory(llm_id=MODEL_ID).get_litellm_model_name()
+                    model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
                     llm = LiteLLMModel(model_id=model_name)
                 except Exception as e:
                     st.error(f"Failed to initialize LLM model: {e}")

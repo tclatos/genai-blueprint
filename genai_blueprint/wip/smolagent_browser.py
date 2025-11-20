@@ -24,7 +24,7 @@ load_dotenv()
 # )
 
 MODEL_ID = "qwen25_72_openrouter"
-model_name = LlmFactory(llm_id=MODEL_ID).get_litellm_model_name()
+model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
 model = LiteLLMModel(model_id=model_name)
 
 

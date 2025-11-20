@@ -91,7 +91,7 @@ def retrieval_grader(question: str, document: str) -> YesOrNo:
         Here is the user question: {question} \n"""
 
     prompt = def_prompt(system_prompt, user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(YesOrNo)
+    chain = prompt | get_llm(llm=LLM_ID).with_structured_output(YesOrNo)
     return chain.invoke({"question": question, "document": document})  # type: ignore
 
 
@@ -107,7 +107,7 @@ def rag_chain(question: str, context: list[Document]) -> str:
         Context: {context}
         Answer: """
     prompt = def_prompt(system=system_prompt, user=user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID) | StrOutputParser()
+    chain = prompt | get_llm(llm=LLM_ID) | StrOutputParser()
     return chain.invoke({"question": question, "context": context})
 
 
@@ -123,7 +123,7 @@ def hallucination_grader(documents: list[Document], generation: str) -> YesOrNo:
         --- \n {documents} ---\n
         Here is the answer: {generation} """
     prompt = def_prompt(system_prompt, user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(YesOrNo)
+    chain = prompt | get_llm(llm=LLM_ID).with_structured_output(YesOrNo)
     return chain.invoke({"documents": documents, "generation": generation})  # type: ignore
 
 
@@ -140,7 +140,7 @@ def answer_grader(question: str, generation: str) -> YesOrNo:
         Here is the question: {question}
         """
     prompt = def_prompt(system_prompt, user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(YesOrNo)
+    chain = prompt | get_llm(llm=LLM_ID).with_structured_output(YesOrNo)
     return chain.invoke({"question": question, "generation": generation})  # type: ignore
 
 
@@ -157,7 +157,7 @@ def question_router(question: str) -> DataRoute:
     user_prompt = """
         Question to route: {question}  """
     prompt = def_prompt(system_prompt, user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID).with_structured_output(DataRoute)
+    chain = prompt | get_llm(llm=LLM_ID).with_structured_output(DataRoute)
     return chain.invoke({"question": question})  # type: ignore
 
 

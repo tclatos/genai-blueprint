@@ -98,7 +98,7 @@ def should_retrieve(question: str) -> YesOrNo:
         """
     user_prompt = """Question: {question}"""
     prompt = def_prompt(system_prompt, user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser
+    chain = prompt | get_llm(llm=LLM_ID) | to_lower | yesno_enum_parser
     return chain.invoke({"question": question})
 
 
@@ -117,7 +117,7 @@ concise.
         Context: {context}                                                                                            
         Answer: """
     prompt = def_prompt(system=system_prompt, user=user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID) | StrOutputParser()
+    chain = prompt | get_llm(llm=LLM_ID) | StrOutputParser()
     return chain.invoke({"question": question, "context": context})
 
 
@@ -135,7 +135,7 @@ def answer_sufficient(question: str, answer: str) -> YesOrNo:
         Answer: {answer}                                                                                              
         Is this answer sufficient? """
     prompt = def_prompt(system_prompt, user_prompt)
-    chain = prompt | get_llm(llm_id=LLM_ID) | to_lower | yesno_enum_parser
+    chain = prompt | get_llm(llm=LLM_ID) | to_lower | yesno_enum_parser
     return chain.invoke({"question": question, "answer": answer})
 
 
@@ -159,7 +159,7 @@ def route_question(question: str) -> DataRoute:
         """
     user_prompt = """Question: {question}"""
     prompt = def_prompt(system_prompt, user_prompt).partial(instructions=parser.get_format_instructions())
-    chain = prompt | get_llm(llm_id=LLM_ID) | parser
+    chain = prompt | get_llm(llm=LLM_ID) | parser
     return chain.invoke({"question": question})
 
 

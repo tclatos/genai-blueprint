@@ -31,7 +31,7 @@ with st.container():
                     window_size={"width": 800, "height": 600},
                 )
 
-                llm = get_llm(llm_id=LLM_ID)
+                llm = get_llm(llm=LLM_ID)
                 sss.agent = Agent(task=task, llm=llm, browser_session=browser_session)
                 sss.running = True
                 sss.agent_history = None

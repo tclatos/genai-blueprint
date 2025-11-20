@@ -22,7 +22,7 @@ SAMPLE_PROMPTS = [
 ]
 
 
-model_name = LlmFactory(llm_id=MODEL_ID).get_litellm_model_name()
+model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
 llm = LiteLLMModel(model_id=model_name)
 print(model_name)
 

@@ -93,7 +93,7 @@ def get_query_constructor(config: dict):
         metadata_field_info,
     )
     output_parser = StructuredQueryOutputParser.from_components()
-    llm = get_llm(llm_id=config.get("llm"))
+    llm = get_llm(llm=config.get("llm"))
 
     # debug(llm)
     query_constructor = prompt | llm | output_parser

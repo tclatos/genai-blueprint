@@ -44,7 +44,7 @@ if __name__ == "__main__":
     from smolagents import WebSearchTool
 
     MODEL_ID = "gpt_4omini_openai"
-    llm_factory = LlmFactory(llm_id=MODEL_ID, llm_params={"temperature": 0.7})
+    llm_factory = LlmFactory(llm=MODEL_ID, llm_params={"temperature": 0.7})
 
     agent = CodeAgent(tools=[WebSearchTool()], model=get_model_from_factory(llm_factory))
 

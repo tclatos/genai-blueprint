@@ -154,7 +154,7 @@ with st.sidebar:
         # Model information
         if selected_model:
             try:
-                factory = EmbeddingsFactory(embeddings_id=selected_model)
+                factory = EmbeddingsFactory(embeddings=selected_model)
                 model_info = factory.info
                 st.info(f"**Provider:** {model_info.provider}\n\n**Model:** {model_info.model}")
                 if model_info.dimension:
@@ -268,7 +268,7 @@ if texts and selected_model:
         with st.spinner("Computing embeddings..."):
             try:
                 start_time = time.time()
-                embeddings_model = get_embeddings(embeddings_id=selected_model, cache_embeddings=cache_embeddings)
+                embeddings_model = get_embeddings(embeddings=selected_model, cache_embeddings=cache_embeddings)
 
                 # Compute embeddings
                 embeddings = embeddings_model.embed_documents(texts)
@@ -277,7 +277,7 @@ if texts and selected_model:
                 embeddings_data = {
                     "embeddings": embeddings,
                     "processing_time": processing_time,
-                    "model_info": EmbeddingsFactory(embeddings_id=selected_model).info,
+                    "model_info": EmbeddingsFactory(embeddings=selected_model).info,
                 }
 
                 # Cache if enabled

@@ -52,7 +52,7 @@ def _fabric_prompt(param: dict):
 
 
 def get_fabric_chain(config: dict):
-    chain = RunnablePassthrough() | _fabric_prompt | get_llm(llm_id=config["llm"]) | StrOutputParser()
+    chain = RunnablePassthrough() | _fabric_prompt | get_llm(llm=config["llm"]) | StrOutputParser()
     return chain
 
 
