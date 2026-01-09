@@ -4,7 +4,7 @@ from functools import cache
 import pandas as pd
 from genai_tk.core.embeddings_store import EmbeddingsStore
 from genai_tk.extra.retrievers.bm25s_retriever import get_spacy_preprocess_fn
-from genai_tk.utils.pydantic.jsonl_store import load_objects_from_jsonl
+from genai_tk.utils.pydantic_utils.jsonl_store import load_objects_from_jsonl
 from langchain_classic.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
