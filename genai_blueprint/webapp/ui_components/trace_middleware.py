@@ -11,10 +11,11 @@ Key Components:
 
 Usage Example:
     ```python
-    from genai_blueprint.webapp.ui_components.trace_middleware import (
-        TraceMiddleware,
-        display_tool_traces,
-    )
+from genai_blueprint.webapp.ui_components.trace_middleware import (
+    TraceMiddleware,
+    display_llm_traces,
+    display_tool_traces,
+)
 
     # Create middleware instance (typically stored in session state)
     if "trace_middleware" not in st.session_state:

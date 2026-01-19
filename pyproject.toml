@@ -53,7 +53,7 @@ dependencies = [
     # ============================================
     # Research & Web Search
     # ============================================
-    "gpt-researcher>=0.13.3", # Autonomous web research agent
+    "gpt-researcher>=0.14.0", # Autonomous web research agent (requires cryptography>=45)
 ]
 
 [project.urls]
@@ -104,17 +104,21 @@ ui = [
 # Demo Applications
 # ============================================
 demos = [
-    "bs4>=0.0.2",                 # BeautifulSoup HTML/XML parser
-    "lark>=1.1.9,<2",             # Modern parsing toolkit for grammars
-    "plotly>=5.22.0",             # Interactive web-based charts and graphs
+    "bs4>=0.0.2",           # BeautifulSoup HTML/XML parser
+    "lark>=1.1.9,<2",       # Modern parsing toolkit for grammars
+    "plotly>=5.22.0",       # Interactive web-based charts and graphs
+    "Faker>=25.0.0",        # Generate realistic fake data for testing
+    "yfinance>=0.2.38",     # Yahoo Finance market data downloader
+    "matplotlib>=3.9.0,<4", # Comprehensive plotting and visualization
+    "sqlalchemy>=2.0.29",   # SQL toolkit and ORM
+    "pypdf>=5.1.0,<6",      # Pure-Python PDF library
+    "scikit-learn>=1.6.1",  # Machine learning algorithms and tools
+]
+
+# Optional PII anonymization (requires cryptography<44.1)
+presidio = [
     "presidio-analyzer>=2.2.0",   # PII detection and analysis
-    "presidio-anonymizer>=2.2.0", # PII anonymization and redaction
-    "Faker>=25.0.0",              # Generate realistic fake data for testing
-    "yfinance>=0.2.38",           # Yahoo Finance market data downloader
-    "matplotlib>=3.9.0,<4",       # Comprehensive plotting and visualization
-    "sqlalchemy>=2.0.29",         # SQL toolkit and ORM
-    "pypdf>=5.1.0,<6",            # Pure-Python PDF library
-    "scikit-learn>=1.6.1",        # Machine learning algorithms and tools
+    "presidio-anonymizer>=2.2.0", # PII anonymization and redaction (requires cryptography<44.1)
 ]
 
 # ============================================

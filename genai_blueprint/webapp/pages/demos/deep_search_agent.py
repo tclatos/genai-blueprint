@@ -160,10 +160,8 @@ async def main() -> None:
         try:
             with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmpfile:
                 md2pdf(
-                    tmpfile.name,
-                    md_content=sss.web_research_result,
-                    base_url=None,
-                    css_file_path=None,
+                    Path(tmpfile.name),
+                    raw=sss.web_research_result,
                 )
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M")
                 st.download_button(
