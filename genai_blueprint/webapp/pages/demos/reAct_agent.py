@@ -8,19 +8,20 @@ Example prompts are displayed for easy copy/paste into the chat input.
 """
 
 import asyncio
-import textwrap
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, cast
 
 import streamlit as st
 from dotenv import load_dotenv
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.mcp_client import get_mcp_servers_dict
 from genai_tk.core.prompts import dedent_ws
-from genai_tk.tools.langchain.shared_config_loader import LangChainAgentConfig, load_all_langchain_agent_configs
+from genai_tk.tools.langchain.shared_config_loader import (
+    LangChainAgentConfig,
+    load_all_langchain_agent_configs,
+)
 from langchain.agents import create_agent
-from langchain_core.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -31,6 +32,11 @@ from streamlit.delta_generator import DeltaGenerator
 
 from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
+from genai_blueprint.webapp.ui_components.trace_middleware import (
+    TraceMiddleware,
+    display_llm_traces,
+    display_tool_traces,
+)
 
 load_dotenv()
 
@@ -47,48 +53,10 @@ SYSTEM_PROMPT = dedent_ws(
 )
 
 
-class StreamlitToolCallbackHandler(BaseCallbackHandler):
-    """Callback handler for tracking tool calls in Streamlit."""
-
-    def __init__(self) -> None:
-        self.tool_calls = []
-        self.current_tool_call = None
-
-    def on_llm_start(self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any) -> None:
-        # Don't track LLM calls as tool calls
-        pass
-
-    def on_tool_start(self, serialized: Dict[str, Any], input_str: str, **kwargs: Any) -> None:
-        tool_name = serialized.get("name", "Unknown Tool")
-        print(f"Tool started: {tool_name} with input: {str(input_str)[:100]}...")  # Debug
-        self.current_tool_call = {
-            "tool_name": tool_name,
-            "input": str(input_str),
-            "output": None,
-            "error": None,
-        }
-
-    def on_tool_end(self, output: str, **kwargs: Any) -> None:
-        if self.current_tool_call:
-            self.current_tool_call["output"] = str(output)
-            self.tool_calls.append(self.current_tool_call.copy())
-            print(f"Tool completed: {self.current_tool_call['tool_name']}")  # Debug
-            self.current_tool_call = None
-
-    def on_tool_error(self, error: BaseException, **kwargs: Any) -> None:
-        if self.current_tool_call:
-            self.current_tool_call["error"] = str(error)
-            self.tool_calls.append(self.current_tool_call.copy())
-            print(f"Tool error: {self.current_tool_call['tool_name']} - {error}")  # Debug
-            self.current_tool_call = None
-
-
 def initialize_session_state() -> None:
     """Initialize session state variables."""
     if "messages" not in sss:
         sss.messages = [AIMessage(content="Hello! I'm your ReAct agent. How can I help you today?")]
-    if "tool_calls" not in sss:
-        sss.tool_calls = []
     if "agent" not in sss:
         sss.agent = None
     if "agent_config" not in sss:
@@ -97,15 +65,28 @@ def initialize_session_state() -> None:
         sss.current_demo = None
     if "just_processed" not in sss:
         sss.just_processed = False
+    if "trace_middleware" not in sss:
+        sss.trace_middleware = TraceMiddleware()
 
 
-def clear_chat_history() -> None:
-    """Reset the chat history and related state."""
+def clear_chat_history(keep_traces: bool = False) -> None:
+    """Reset the chat history and related state.
+
+    Args:
+        keep_traces: If True, preserve execution traces while clearing chat messages
+    """
     if "messages" in sss:
         sss.messages = [AIMessage(content="Hello! I'm your ReAct agent. How can I help you today?")]
-    if "tool_calls" in sss:
-        sss.tool_calls = []
+
+    # Only clear traces if not preserving them
+    if not keep_traces and "trace_middleware" in sss:
+        sss.trace_middleware.clear()
     # Don't clear agent/config - let them persist to avoid recreation
+
+
+def clear_all_history() -> None:
+    """Reset both chat and execution trace history."""
+    clear_chat_history(keep_traces=False)
 
 
 def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -> str | None:
@@ -139,9 +120,9 @@ def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -
             key="demo_selector",
         )
 
-        # Only clear history if the demo actually changed
+        # Only clear chat messages if the demo actually changed (preserve traces)
         if sss.current_demo and sss.current_demo != selected_pill:
-            clear_chat_history()
+            clear_chat_history(keep_traces=True)
             # Reset agent to force recreation with new demo
             sss.agent = None
             sss.agent_config = None
@@ -165,48 +146,54 @@ def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -
                         st.code(example, language="text", height=None, wrap_lines=True)
 
         if st.button("🗑️ Clear Chat History"):
-            clear_chat_history()
-            st.rerun()
+            # Ask user if they want to also clear traces
+            has_traces = False
+            if "trace_middleware" in sss:
+                middleware = sss.trace_middleware
+                has_traces = bool(middleware.tool_calls or getattr(middleware, "llm_calls", None))
+
+            if has_traces:
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Clear chat only", use_container_width=True):
+                        clear_chat_history(keep_traces=True)
+                        st.rerun()
+                with col2:
+                    if st.button("Clear chat & traces", use_container_width=True):
+                        clear_all_history()
+                        st.rerun()
+            else:
+                # No traces to preserve, just clear chat
+                clear_chat_history()
+                st.rerun()
 
     return selected_pill
 
 
-def display_tool_calls_sidebar(tool_calls: List[Dict[str, Any]]) -> None:
-    """Display tool calls in the left column with expandable details."""
-    if not tool_calls:
-        st.info("No tool calls yet. Send a message to see tool interactions!")
+def display_tool_calls_sidebar() -> None:
+    """Display detailed execution traces in the left column.
+
+    Shows both LLM calls and tool calls using the shared trace middleware.
+    """
+    if "trace_middleware" not in sss:
+        st.info("No activity yet. Send a message to see LLM and tool interactions!")
         return
 
-    st.subheader("🔧 Tool Calls")
-    for _i, call in enumerate(tool_calls):
-        tool_name = call.get("tool_name", "Unknown Tool")
-        input_str = call.get("input", "")
-        output = call.get("output")
-        error = call.get("error")
+    # LLM calls first, then tool calls, so both appear side by side in the
+    # same column but in clearly separated sections.
+    display_llm_traces(
+        sss.trace_middleware,
+        show_clear_button=False,
+        expand_latest=True,
+    )
 
-        # Create an expander for each tool call
-        status_emoji = "❌" if error else "✅"
-        short_input = textwrap.shorten(str(input_str), 50, placeholder="...")
+    st.divider()
 
-        with st.expander(f"{status_emoji} {tool_name} - {short_input}", expanded=False):
-            st.markdown(f"**Tool:** `{tool_name}`")
-
-            st.markdown("**Input:**")
-            st.code(input_str, language="text")
-
-            if error:
-                st.markdown("**Error:**")
-                st.error(error)
-            elif output:
-                st.markdown("**Output:**")
-                # Truncate very long outputs
-                display_output = output
-                MAX_OUTPUT = 2000
-                if len(str(output)) > MAX_OUTPUT:
-                    display_output = str(output)[:MAX_OUTPUT] + "\n\n... (truncated)"
-                st.code(display_output, language="text")
-            else:
-                st.info("Tool is still running...")
+    display_tool_traces(
+        sss.trace_middleware,
+        show_clear_button=True,
+        expand_latest=True,
+    )
 
 
 @st.cache_resource()
@@ -215,14 +202,14 @@ def get_cached_checkpointer():
     return MemorySaver()
 
 
-def get_or_create_agent(demo: LangChainAgentConfig) -> Tuple[Any, RunnableConfig, BaseCheckpointSaver]:
+def get_or_create_agent(demo: LangChainAgentConfig) -> tuple[Any, RunnableConfig, BaseCheckpointSaver]:
     """Get or create agent for the current demo configuration.
 
     Returns:
         Tuple of (agent, config, checkpointer)
     """
     # Check if we need to create a new agent
-    if sss.agent is None or sss.current_demo != demo.name or sss.agent_config is None:
+    if sss.agent is None or sss.agent_config is None:
         thread_id = str(uuid.uuid4())
         config = {"configurable": {"thread_id": thread_id}}
         checkpointer = get_cached_checkpointer()
@@ -231,6 +218,23 @@ def get_or_create_agent(demo: LangChainAgentConfig) -> Tuple[Any, RunnableConfig
         sss.agent_config = config
         sss.current_demo = demo.name
 
+        return None, cast(RunnableConfig, config), checkpointer
+
+    # If demo changed, we need to recreate the agent with the same middleware
+    if sss.current_demo != demo.name:
+        # Preserve the existing traces
+        existing_trace_middleware = sss.get("trace_middleware", None)
+
+        thread_id = str(uuid.uuid4())
+        config = {"configurable": {"thread_id": thread_id}}
+        checkpointer = get_cached_checkpointer()
+
+        # Update demo name and config
+        sss.agent_config = config
+        old_demo = sss.current_demo
+        sss.current_demo = demo.name
+
+        # Force agent recreation while preserving traces
         return None, cast(RunnableConfig, config), checkpointer
 
     return sss.agent, sss.agent_config, get_cached_checkpointer()
@@ -303,7 +307,23 @@ async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
 
             # Create agent with demo's system prompt or default
             system_prompt = demo.system_prompt or SYSTEM_PROMPT
-            agent = create_agent(model=llm, tools=all_tools, system_prompt=system_prompt, checkpointer=checkpointer)
+
+            # Store the current middleware to preserve traces
+            current_middleware = sss.get("trace_middleware", None)
+            if current_middleware is None:
+                current_middleware = TraceMiddleware()
+                sss.trace_middleware = current_middleware
+
+            # Use custom trace middleware for detailed execution display
+            middleware = [current_middleware]
+
+            agent = create_agent(
+                model=llm,
+                tools=all_tools,
+                system_prompt=system_prompt,
+                checkpointer=checkpointer,
+                middleware=middleware,
+            )
 
             # Cache the agent
             sss.agent = agent
@@ -316,8 +336,17 @@ async def process_user_input(
     user_input: str,
     status_container: DeltaGenerator,
     chat_container: DeltaGenerator | None = None,
+    trace_container: DeltaGenerator | None = None,
 ) -> None:
-    """Process user input and generate agent response."""
+    """Process user input and generate agent response.
+
+    Args:
+        demo: The demo configuration to use
+        user_input: The user's input message
+        status_container: Container for displaying agent execution status
+        chat_container: Container for displaying chat messages
+        trace_container: Container for updating tool traces during execution
+    """
     # Add user message to chat
     sss.messages.append(HumanMessage(content=user_input))
 
@@ -329,29 +358,38 @@ async def process_user_input(
     # Set up agent
     agent = await setup_agent_if_needed(demo)
 
-    # Create tool callback handler
-    tool_callback = StreamlitToolCallbackHandler()
-
     # Get current config
     _, config, _ = get_or_create_agent(demo)
 
     try:
-        with status_container.status("🤖 Agent is thinking...", expanded=True) as status:
+        with status_container.status("Agent is thinking...", expanded=True) as status:
             status.write("Processing your request...")
 
-            # Prepare inputs - use the format that works in the CLI version
+            # Prepare inputs
             inputs = {"messages": [HumanMessage(content=user_input)]}
-
-            # Set up callbacks
-            callbacks = [tool_callback]
 
             response_content = ""
             final_response = None
 
             # Stream the response
-            astream = agent.astream(inputs, config | {"callbacks": callbacks})
+            astream = agent.astream(inputs, config)
             async for step in astream:
                 status.write(f"Processing step: {type(step).__name__}")
+
+                # Update traces in real-time if container provided
+                if trace_container and "trace_middleware" in sss:
+                    with trace_container:
+                        display_llm_traces(
+                            sss.trace_middleware,
+                            show_clear_button=False,
+                            expand_latest=True,
+                        )
+                        st.divider()
+                        display_tool_traces(
+                            sss.trace_middleware,
+                            show_clear_button=False,
+                            expand_latest=True,
+                        )
 
                 # Handle different step formats
                 if isinstance(step, tuple):
@@ -369,13 +407,18 @@ async def process_user_input(
                                 if latest_message.content:
                                     response_content = latest_message.content
                                     final_response = latest_message
+
+                                    # Record this LLM output in the shared trace middleware
+                                    trace_middleware = sss.get("trace_middleware")
+                                    if trace_middleware is not None:
+                                        trace_middleware.add_llm_call(
+                                            node=node,
+                                            content=str(latest_message.content),
+                                        )
+
                                     status.write(f"Got AI response: {len(response_content)} chars")
 
-                            # Also check for HumanMessages (tool calls)
-                            elif isinstance(latest_message, HumanMessage):
-                                status.write(f"Tool interaction: {latest_message.content[:100]}...")
-
-            status.update(label="✅ Complete!", state="complete", expanded=False)
+            status.update(label="Complete!", state="complete", expanded=False)
 
         # Add the response to messages and display immediately
         if final_response and final_response.content:
@@ -384,7 +427,6 @@ async def process_user_input(
             if chat_container:
                 with chat_container:
                     st.chat_message("ai").write(final_response.content)
-            status_container.success(f"Response added: {len(final_response.content)} characters")
         elif response_content:
             ai_message = AIMessage(content=response_content)
             sss.messages.append(ai_message)
@@ -392,26 +434,20 @@ async def process_user_input(
             if chat_container:
                 with chat_container:
                     st.chat_message("ai").write(response_content)
-            status_container.success(f"Response added: {len(response_content)} characters")
         else:
             error_msg = "I apologize, but I couldn't generate a proper response."
             sss.messages.append(AIMessage(content=error_msg))
-            # Display error message immediately if chat container is provided
+            # Display error message immediately if chat_container is provided
             if chat_container:
                 with chat_container:
                     st.chat_message("ai").write(error_msg)
-            status_container.warning("No response content found")
-
-        # Update tool calls in session state
-        if tool_callback.tool_calls:
-            sss.tool_calls.extend(tool_callback.tool_calls)
-            status_container.info(f"Added {len(tool_callback.tool_calls)} tool calls")
 
         # Mark that we just processed input to prevent re-execution
         sss.just_processed = True
-        status_container.success(
-            f"✅ Processing complete! Messages: {len(sss.messages)}, Tool calls: {len(sss.tool_calls)}"
-        )
+
+        # Force a rerun to display the updated traces
+        # The just_processed flag will prevent re-execution of the query
+        st.rerun()
 
     except Exception as e:
         status_container.error(f"An error occurred: {str(e)}")
@@ -452,23 +488,25 @@ async def main() -> None:
     # Create two-column layout
     col_tools, col_chat = st.columns([1, 2], gap="medium")
 
-    # Left column: Tool calls
+    # Left column: Tool calls and execution traces
     with col_tools:
-        st.header("🔧 Activity")
-        display_tool_calls_sidebar(sss.tool_calls)
+        st.header("Activity")
 
-        # Link to view traces
+        # Container for tool execution traces (persisted from session state)
+        trace_container = st.container()
+        with trace_container:
+            display_tool_calls_sidebar()
+
         st.divider()
-        st.link_button("🔗 View Traces", "https://smith.langchain.com/")
-        st.caption("View all traces in LangSmith")
+
+        # Container for agent execution status (shown during processing)
+        status_container = st.container()
+
+        st.link_button("View Traces", "https://smith.langchain.com/", help="View all traces in LangSmith")
 
     # Right column: Chat interface
     with col_chat:
-        st.header("💬 Conversation")
-
-        # Debug info
-        if len(sss.messages) > 1:  # Don't show for just the welcome message
-            st.caption(f"Debug: {len(sss.messages)} messages, {len(sss.tool_calls)} tool calls")
+        st.header("Conversation")
 
         # Display chat messages
         chat_container = st.container(height=450)
@@ -496,8 +534,13 @@ async def main() -> None:
 
             # Process regular user input
             if user_input:
-                col_tools.info(f"🚀 Processing input: {user_input[:100]}...")
-                await process_user_input(demo, user_input, col_tools, chat_container)
+                await process_user_input(
+                    demo,
+                    user_input,
+                    status_container,
+                    chat_container,
+                    trace_container,
+                )
                 # Processing complete - response is already displayed
 
 

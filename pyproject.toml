@@ -5,26 +5,55 @@ description = "GenAI Blueprint - Application framework built on genai_tk"
 authors = [{ name = "Thierry Caminel", email = "thierry.caminel@atos.net" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    # GenAI Toolkit - core AI components
-    "genai_tk @ git+https://github.com/tclatos/genai-tk@main",
-    # Application framework dependencies
-    "pydantic>=2.7.0,<3", # Data validation framework
-    "devtools>=0.12.2", # Development utilities
-    "loguru>=0.7.3", # Logging library
-    "typer>=0.13.0", # CLI framework
-    "omegaconf>=2.3.0", # Configuration management
-    "fastapi[standard]>=0.115.6", # Web framework
-    "rich[jupyter]>=13.9.4", # Terminal formatting
-    "universal-pathlib>=0.2.6", # Cross-platform paths
-    "pip>=25.1.1", # Package installer
-    "modal>=1.0.5", # Serverless cloud platform
-    "python-dotenv>=1.1.1", # Environment variables
-    "beartype>=0.21.0", # Run time type checking
-    "baml-py>=0.209.0",
-    "langchain-classic>=1.0.0",
-    "psycopg2-binary>=2.9.11",
-    "gpt-researcher>=0.13.3",
-    "baml-cli>=0.1.0",
+    # ============================================
+    # Core AI Toolkit
+    # ============================================
+    "genai_tk @ git+https://github.com/tclatos/genai-tk@main", # GenAI Toolkit - core AI framework and components
+
+    # ============================================
+    # Core Infrastructure
+    # ============================================
+    "pydantic>=2.7.0,<3",       # Data validation and settings management
+    "loguru>=0.7.3",            # Structured logging with better UX
+    "typer>=0.13.0",            # CLI framework with type hints
+    "omegaconf>=2.3.0",         # Hierarchical configuration system
+    "rich[jupyter]>=13.9.4",    # Rich terminal formatting and progress bars
+    "universal-pathlib>=0.2.6", # Unified path interface for local/cloud storage
+    "python-dotenv>=1.1.1",     # Environment variable management
+    "beartype>=0.21.0",         # Runtime type validation
+    "devtools>=0.12.2",         # Debug printing and development utilities
+    "pip>=25.1.1",              # Python package installer and manager
+
+    # ============================================
+    # Web Framework & API
+    # ============================================
+    "fastapi[standard]>=0.115.6", # Modern async web framework with OpenAPI
+
+    # ============================================
+    # Deployment Platforms
+    # ============================================
+    "modal>=1.0.5", # Serverless cloud platform for Python apps
+
+    # ============================================
+    # LangChain Extensions
+    # ============================================
+    "langchain-classic>=1.0.0", # Classic LangChain components
+
+    # ============================================
+    # Structured Data Extraction
+    # ============================================
+    "baml-py>=0.209.0", # BAML Python library for LLM parsing
+    "baml-cli>=0.1.0",  # BAML CLI for structured extraction
+
+    # ============================================
+    # Database Backends
+    # ============================================
+    "psycopg2-binary>=2.9.11", # PostgreSQL adapter for Python
+
+    # ============================================
+    # Research & Web Search
+    # ============================================
+    "gpt-researcher>=0.13.3", # Autonomous web research agent
 ]
 
 [project.urls]
@@ -33,57 +62,70 @@ Repository = "https://github.com/tclatos/genai-blueprint"
 
 
 [dependency-groups]
-# UI and web application dependencies
+# Optional dependency groups for specific use cases
+# Install with: uv sync --group <group-name>
 
-# Browser control dependencies (from genai-tk browser-control group)
-# These are kept as optional since browser automation is not always needed
+# ============================================
+# Browser Automation
+# ============================================
 browser_control = [
-    "playwright>=1.51.0",     # Browser automation
-    "helium>=5.1.0,<6",       # Web automation wrapper
-    "browser-use-sdk>=2.0.4", # Browser automation agent
+    "playwright>=1.51.0",     # Headless browser automation framework
+    "helium>=5.1.0,<6",       # High-level web automation wrapper
+    "browser-use-sdk>=2.0.4", # Browser automation agent SDK
 ]
 
+# ============================================
+# Extended AI Capabilities
+# ============================================
 extra = [
-    # Additional AI capabilities 
-    "gpt-researcher>=0.13",     # AI research assistant
-    "unidecode>=1.3.8",         # Unicode text processing
-    "tavily-python>=0.7.12",    # LLM optimized search engine
-    "langchain-tavily>=0.2.11",
-    "ddgs>=9.7.0",              # DuckDuckGo search API
-    "openpyxl>=3.1.5",          # Excel file handling
-    "fuzzysearch>=0.8.0",       # Fuzzy string matching
-    # "markpickle>=1.6.1",        # Markdown serialization
+    "gpt-researcher>=0.13",     # Autonomous AI research assistant
+    "tavily-python>=0.7.12",    # LLM-optimized search engine API
+    "langchain-tavily>=0.2.11", # LangChain integration for Tavily
+    "ddgs>=9.7.0",              # DuckDuckGo search API wrapper
+    "unidecode>=1.3.8",         # ASCII transliteration of Unicode text
+    "openpyxl>=3.1.5",          # Excel file reading and writing
+    "fuzzysearch>=0.8.0",       # Fuzzy string matching algorithms
 ]
 
+# ============================================
+# Web UI & Visualization
+# ============================================
 ui = [
-    "uvicorn>=0.34.0",          # ASGI server
-    "sse-starlette>=2.1.0",     # Server-sent events
-    "streamlit[pdf]>=1.49",     # Web app framework
-    "streamlit-monaco>=0.1.3",  # Code editor component
-    "st-annotated-text>=4.0.2", # Text annotation component
-    "st-cytoscape>=0.0.5",      # Streamlit graph visualization
-    "ipycytoscape>=1.3.3",      # Jupyter graph visualization
-]
-demos = [
-    "bs4>=0.0.2",                 # HTML/XML parsing
-    "lark>=1.1.9,<2",             # Parsing toolkit
-    "plotly>=5.22.0",             # Interactive charts
-    "presidio-analyzer>=2.2.0",   # PII detection
-    "presidio-anonymizer>=2.2.0", # PII anonymization
-    "Faker>=25.0.0",              # Fake data generation
-    "yfinance>=0.2.38",           # Yahoo Finance API
-    "matplotlib>=3.9.0,<4",       # Plotting library
-    "sqlalchemy>=2.0.29",         # SQL toolkit
-    "pypdf>=5.1.0,<6",            # PDF processing
-    "scikit-learn>=1.6.1",        # ML algorithms
+    "uvicorn>=0.34.0",          # Lightning-fast ASGI server
+    "sse-starlette>=2.1.0",     # Server-sent events for streaming
+    "streamlit[pdf]>=1.49",     # Interactive web app framework with PDF support
+    "streamlit-monaco>=0.1.3",  # Monaco code editor component for Streamlit
+    "st-annotated-text>=4.0.2", # Text annotation component for Streamlit
+    "st-cytoscape>=0.0.5",      # Cytoscape graph visualization for Streamlit
+    "ipycytoscape>=1.3.3",      # Interactive graph visualization for Jupyter
 ]
 
+# ============================================
+# Demo Applications
+# ============================================
+demos = [
+    "bs4>=0.0.2",                 # BeautifulSoup HTML/XML parser
+    "lark>=1.1.9,<2",             # Modern parsing toolkit for grammars
+    "plotly>=5.22.0",             # Interactive web-based charts and graphs
+    "presidio-analyzer>=2.2.0",   # PII detection and analysis
+    "presidio-anonymizer>=2.2.0", # PII anonymization and redaction
+    "Faker>=25.0.0",              # Generate realistic fake data for testing
+    "yfinance>=0.2.38",           # Yahoo Finance market data downloader
+    "matplotlib>=3.9.0,<4",       # Comprehensive plotting and visualization
+    "sqlalchemy>=2.0.29",         # SQL toolkit and ORM
+    "pypdf>=5.1.0,<6",            # Pure-Python PDF library
+    "scikit-learn>=1.6.1",        # Machine learning algorithms and tools
+]
+
+# ============================================
+# Development Tools
+# ============================================
 dev = [
-    "ruff>=0.9.1",       # Python linter
-    "pytest>=8.1.1",     # Testing framework
-    "ipykernel>=6.29.4", # Jupyter kernel
-    "ipywidgets>=8.1.2", # Jupyter widgets
-    "grandalf>=0.8",     # Graph layout algorithms
+    "ruff>=0.9.1",       # Fast Python linter and formatter
+    "pytest>=8.1.1",     # Modern testing framework
+    "ipykernel>=6.29.4", # Jupyter kernel for notebooks
+    "ipywidgets>=8.1.2", # Interactive widgets for Jupyter
+    "grandalf>=0.8",     # Graph and tree layout algorithms
 ]
 
 [tool.uv]
