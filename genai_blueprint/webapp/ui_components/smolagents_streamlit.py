@@ -42,7 +42,10 @@ def get_step_footnote_content(step_log: ActionStep | PlanningStep, step_name: st
     """Get a footnote string for a step log with duration and token information"""
     step_footnote = f"**{step_name}**"
     if step_log.token_usage is not None:
-        step_footnote += f" | Input tokens: {step_log.token_usage.input_tokens:,} | Output tokens: {step_log.token_usage.output_tokens:,}"
+        step_footnote += (
+            f" | Input tokens: {step_log.token_usage.input_tokens:,} | "
+            f"Output tokens: {step_log.token_usage.output_tokens:,}"
+        )
     step_footnote += f" | Duration: {round(float(step_log.timing.duration), 2)}s" if step_log.timing.duration else ""
     return step_footnote
 
@@ -175,6 +178,7 @@ def stream_to_streamlit(
     reset_agent_memory: bool = False,
     additional_args: Optional[Dict] = None,
     display_details: bool = True,
+    final_answer_handler: Optional[callable] = None,
 ) -> None:
     """Runs an agent with the given task and streams the messages to Streamlit components.
 
@@ -185,6 +189,7 @@ def stream_to_streamlit(
         reset_agent_memory: Whether to reset the agent's memory before running
         additional_args: Additional arguments to pass to the agent's run method
         display_details: Whether to show detailed information like code and footnotes
+        final_answer_handler: Optional custom handler for FinalAnswerStep, receives the step as argument
     """
     intermediate_text = ""
 
@@ -193,7 +198,11 @@ def stream_to_streamlit(
     ):
         if isinstance(event, (ActionStep, PlanningStep, FinalAnswerStep)):
             intermediate_text = ""
-            _display_step_content(event, display_details)
+            # Use custom handler for FinalAnswerStep if provided
+            if isinstance(event, FinalAnswerStep) and final_answer_handler is not None:
+                final_answer_handler(event)
+            else:
+                _display_step_content(event, display_details)
             scroll_to_here()
         elif isinstance(event, ChatMessageStreamDelta):
             if event.content:

@@ -34,6 +34,7 @@ from smolagents import (
     MCPClient,
     tool,
 )
+from smolagents.memory import FinalAnswerStep
 from streamlit import session_state as sss
 from streamlit.delta_generator import DeltaGenerator
 
@@ -52,12 +53,22 @@ MODEL_ID = None  # Use the one by configuration
 DATA_PATH = Path.cwd() / "use_case_data/other"
 CONF_YAML_FILE = "config/agents/smolagents.yaml"
 
-# Initialize session state variables for managing agent output and display
+##########################
+#  Initialize session state
+##########################
+
+# Initialize all session state variables before any usage to prevent AttributeError
 if "agent_output" not in sss:
     sss.agent_output = []  # Stores all agent responses
 
 if "result_display" not in sss:
-    sss.result_display = st  # Default display container
+    sss.result_display = None  # Display container for results
+
+if "agent_running" not in sss:
+    sss.agent_running = False  # Track if agent is currently executing
+
+if "last_error" not in sss:
+    sss.last_error = None  # Store last error for display
 
 llm_selector_widget(st.sidebar)
 
@@ -143,8 +154,9 @@ strecorder = StreamlitRecorder()
 def clear_display() -> None:
     """Clear the current display and reset agent output when changing demos"""
     sss.agent_output = []  # Reset stored outputs
+    sss.result_display = None  # Reset display container
+    sss.last_error = None  # Clear any previous errors
     strecorder.clear()  # Clear the action recorder
-    # st.rerun()  # Optional: Uncomment to force UI refresh
 
 
 @tool
@@ -160,18 +172,22 @@ def my_final_answer(answer: Any) -> Any:
     Returns:
         String representation of the answer
     """
-    """
-    Provides a final answer to the given problem.
+    try:
+        # Ensure session state is properly initialized
+        if not hasattr(sss, "agent_output"):
+            sss.agent_output = []
 
-        Args:
-        answer : The final answer to the problem.  Can be Markdown or an object of type pd.DataFrame, Path or folium.Map
-    """
-    # additional_args = getattr(my_final_answer, "_additional_args", {})
-    # widget = additional_args.get("widget") # Does not woek here
-    if len(sss.agent_output) == 0 or sss.agent_output[-1] != answer:
-        sss.agent_output.append(answer)
-        display_final_msg(answer)
-    return str(answer)
+        # Avoid duplicate outputs
+        if len(sss.agent_output) == 0 or sss.agent_output[-1] != answer:
+            sss.agent_output.append(answer)
+            display_final_msg(answer)
+
+        return str(answer)
+    except Exception as e:
+        error_msg = f"Error in my_final_answer: {e}"
+        logger.error(error_msg)
+        sss.last_error = error_msg
+        return error_msg
 
 
 def update_display() -> None:
@@ -196,20 +212,31 @@ def display_final_msg(msg: Any) -> None:
         msg: The message to display, can be various types
     """
     try:
-        with sss.result_display:
+        # Use result_display if available and is a container, otherwise use st directly
+        if sss.result_display is not None and hasattr(sss.result_display, "__enter__"):
+            display_container = sss.result_display
+        else:
+            display_container = st.container()
+
+        with display_container:
             if isinstance(msg, str):
                 st.markdown(msg)
             # elif isinstance(msg, folium.Map):
             #     st_folium(msg)
             elif isinstance(msg, pd.DataFrame):
-                st.dataframe(msg)
+                st.dataframe(msg, use_container_width=True)
             elif isinstance(msg, Path):
-                st.image(msg)
+                if msg.exists():
+                    st.image(str(msg))
+                else:
+                    st.warning(f"Image file not found: {msg}")
             else:
                 st.write(msg)
     except Exception as ex:
-        logger.exception(ex)
-        raise ex
+        error_msg = f"Error displaying message: {ex}"
+        logger.exception(error_msg)
+        st.error(error_msg)
+        sss.last_error = error_msg
 
 
 # LLM will be initialized in handle_submission to avoid early initialization errors
@@ -297,75 +324,179 @@ def display_input_form(select_block: DeltaGenerator, sample_search: str | None) 
 
 def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str, max_steps: int) -> None:
     """Handles the agent execution on form submission."""
+    # Prevent multiple simultaneous executions
+    if sss.agent_running:
+        st.warning("Agent is already running. Please wait for it to complete.")
+        return
+
+    sss.agent_running = True
+    sss.last_error = None
+
     HEIGHT = 800
     exec_block = placeholder.container()
-    col_display_left, col_display_right = exec_block.columns(2)
-    log_widget = col_display_left.container(height=HEIGHT)
-    result_display = col_display_right.container(height=HEIGHT)
+    col_display_left, col_display_right = exec_block.columns([1, 1], gap="medium")
+
+    log_widget = col_display_left.container(height=HEIGHT, border=True)
+    result_display = col_display_right.container(height=HEIGHT, border=True)
     sss.result_display = result_display
 
     mcp_client = None
-    with col_display_right:
+
+    # Display existing results
+    with result_display:
         update_display()
+
     try:
         mcp_tools = []
         if demo.mcp_servers:
-            mcp_servers = dict_to_stdio_server_list(get_mcp_servers_dict(demo.mcp_servers))
-            if mcp_servers:
-                mcp_client = MCPClient(mcp_servers)  # type: ignore
-                mcp_tools = mcp_client.get_tools()
+            try:
+                mcp_servers = dict_to_stdio_server_list(get_mcp_servers_dict(demo.mcp_servers))
+                if mcp_servers:
+                    mcp_client = MCPClient(mcp_servers)  # type: ignore
+                    mcp_tools = mcp_client.get_tools()
+                    logger.info(f"Loaded {len(mcp_tools)} MCP tools")
+            except Exception as e:
+                st.warning(f"Could not load MCP servers: {e}")
+                logger.warning(f"MCP loading error: {e}")
 
         strecorder.replay(log_widget)
-        with log_widget:
-            if prompt:
-                # Initialize LLM model with error handling
-                try:
-                    model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
-                    llm = LiteLLMModel(model_id=model_name)
-                except Exception as e:
-                    st.error(f"Failed to initialize LLM model: {e}")
-                    logger.error(f"LLM initialization error: {e}")
-                    return
 
-                tools = demo.tools + mcp_tools + [my_final_answer]
-                authorized_imports_list = list(dict.fromkeys(COMMON_AUTHORIZED_IMPORTS + demo.authorized_imports))
+        with log_widget:
+            if not prompt or not prompt.strip():
+                st.warning("Please enter a task to execute.")
+                return
+
+            # Initialize LLM model with error handling
+            try:
+                model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
+                llm = LiteLLMModel(model_id=model_name)
+                logger.info(f"Initialized LLM: {model_name}")
+            except Exception as e:
+                error_msg = f"Failed to initialize LLM model: {e}"
+                st.error(error_msg)
+                logger.error(error_msg)
+                sss.last_error = error_msg
+                return
+
+            # Build tool list and agent
+            tools = demo.tools + mcp_tools + [my_final_answer]
+            authorized_imports_list = list(dict.fromkeys(COMMON_AUTHORIZED_IMPORTS + demo.authorized_imports))
+
+            try:
                 agent = CodeAgent(
                     tools=tools,
                     model=llm,
                     additional_authorized_imports=authorized_imports_list,
-                    max_steps=max_steps,  # for debug
+                    max_steps=max_steps,
                 )
-                with st.spinner(text="Thinking..."):
-                    result_display.write(f"query: {prompt}")
-                    formatted_prompt = PRE_PROMPT.format(authorized_imports=", ".join(authorized_imports_list)) + prompt
-                    try:
-                        with strecorder:
-                            stream_to_streamlit(
-                                agent,
-                                formatted_prompt,
-                                # additional_args={"widget": col_display_right},  # does not work in fact
-                                display_details=False,
-                            )
-                    except Exception as e:
-                        st.error(f"Agent execution failed: {e}")
-                        logger.error(f"Agent execution error: {e}")
-                        # Display the full traceback for debugging
-                        import traceback
+                logger.info(
+                    f"Created agent with {len(tools)} tools and {len(authorized_imports_list)} authorized imports"
+                )
+            except Exception as e:
+                error_msg = f"Failed to create agent: {e}"
+                st.error(error_msg)
+                logger.error(error_msg)
+                sss.last_error = error_msg
+                return
 
+            # Execute the agent
+            with st.spinner(text="🤔 Agent is thinking..."):
+                result_display.markdown(f"**Query:** {prompt}")
+                result_display.divider()
+                formatted_prompt = PRE_PROMPT.format(authorized_imports=", ".join(authorized_imports_list)) + prompt
+
+                # Custom handler to display final answer in right column
+                def handle_final_answer(step: FinalAnswerStep) -> None:
+                    """Handle final answer step by displaying in the right column"""
+                    from smolagents.agent_types import AgentAudio, AgentImage, AgentText
+
+                    with result_display:
+                        st.markdown("### 🎯 Final Answer")
+                        final_answer = step.output
+                        if isinstance(final_answer, AgentText):
+                            st.markdown(final_answer.to_string())
+                        elif isinstance(final_answer, AgentImage):
+                            image_raw = final_answer.to_raw()
+                            if image_raw is not None:
+                                st.image(image_raw)
+                        elif isinstance(final_answer, AgentAudio):
+                            st.audio(final_answer.to_raw())
+                        elif isinstance(final_answer, pd.DataFrame):
+                            st.dataframe(final_answer, use_container_width=True)
+                        elif isinstance(final_answer, Path):
+                            if final_answer.exists():
+                                st.image(str(final_answer))
+                            else:
+                                st.warning(f"Image file not found: {final_answer}")
+                        else:
+                            st.markdown(str(final_answer))
+
+                try:
+                    with strecorder:
+                        stream_to_streamlit(
+                            agent,
+                            formatted_prompt,
+                            display_details=True,  # Show details for better debugging
+                            final_answer_handler=handle_final_answer,  # Custom handler for right column
+                        )
+                    st.success("✅ Agent execution completed")
+                except KeyboardInterrupt:
+                    st.warning("⚠️ Execution interrupted by user")
+                    logger.warning("Agent execution interrupted")
+                except Exception as e:
+                    error_msg = f"Agent execution failed: {e}"
+                    st.error(f"❌ {error_msg}")
+                    logger.error(error_msg)
+                    sss.last_error = error_msg
+
+                    # Display detailed error information
+                    import traceback
+
+                    with st.expander("🐛 Full Error Traceback"):
                         st.code(traceback.format_exc(), language="python")
-                    scroll_to_here()
+
+                scroll_to_here()
+
+    except Exception as e:
+        error_msg = f"Unexpected error in handle_submission: {e}"
+        st.error(error_msg)
+        logger.exception(error_msg)
+        sss.last_error = error_msg
+
+        import traceback
+
+        with st.expander("🐛 Full Error Traceback"):
+            st.code(traceback.format_exc(), language="python")
+
     finally:
+        sss.agent_running = False
         if mcp_client:
-            mcp_client.disconnect()
+            try:
+                mcp_client.disconnect()
+                logger.info("MCP client disconnected")
+            except Exception as e:
+                logger.warning(f"Error disconnecting MCP client: {e}")
 
 
 def main() -> None:
     """Main function to set up and run the Streamlit application."""
 
+    # Display any previous errors
+    if sss.last_error:
+        st.error(f"⚠️ Last error: {sss.last_error}")
+        if st.button("Clear Error"):
+            sss.last_error = None
+            st.rerun()
+
+    # Display running status
+    if sss.agent_running:
+        st.info("🏃 Agent is currently running...")
+
     selected_pill = display_header_and_demo_selector(sample_demos) if sample_demos else None
 
     placeholder = st.empty()
     select_block = placeholder.container()
+
     if selected_pill:
         demo, sample_search, _, _ = handle_selection(selected_pill, select_block)
         prompt, max_steps, submitted = display_input_form(select_block, sample_search)
@@ -374,4 +505,7 @@ def main() -> None:
             handle_submission(placeholder, demo, prompt, max_steps)
 
 
-main()
+if __name__ == "__main__":
+    main()
+else:
+    main()
