@@ -10,6 +10,44 @@ Key Features:
 - Integration with various data sources and APIs
 - Safe execution environment with restricted imports
 - Real-time output display including plots and maps
+
+Thread pool executors in SmolAgents create their own separate session state instance. so we need Module-Level Shared Storage
+= ( _shared_agent_outputs)
+
+┌─────────────────────────────────────────────────────────┐
+│                   Streamlit Main Thread                 │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  handle_submission()                              │  │
+│  │  • Creates agent with my_final_answer tool        │  │
+│  │  • Starts execution                               │  │
+│  └───────────────────────┬───────────────────────────┘  │
+│                          │                              │
+│                          ▼                              │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  SmolAgents CodeAgent                             │  │
+│  │  └─► Spawns ThreadPoolExecutor                    │  │
+│  └───────────────────────┬───────────────────────────┘  │
+└──────────────────────────┼──────────────────────────────┘
+                           │
+         ┌─────────────────┴──────────────────┐
+         │    Thread Pool Executor Thread     │
+         │  ┌──────────────────────────────┐  │
+         │  │  Agent executes Python code  │  │
+         │  │  • Calls my_final_answer()   │  │
+         │  │  • Stores in                 │  │
+         │  │    _shared_agent_outputs ◄───┼──┼─ Module-level
+         │  └──────────────────────────────┘  │    shared list
+         └────────────────────────────────────┘
+                           │
+         ┌─────────────────┴──────────────────┐
+         │      Back to Main Thread           │
+         │  ┌──────────────────────────────┐  │
+         │  │  handle_submission()         │  │
+         │  │  • Reads _shared_agent_      │  │
+         │  │    outputs                   │  │
+         │  │  • Displays in right column  │  │
+         │  └──────────────────────────────┘  │
+         └────────────────────────────────────┘
 """
 
 from pathlib import Path
@@ -58,8 +96,8 @@ CONF_YAML_FILE = "config/agents/smolagents.yaml"
 ##########################
 
 # Initialize all session state variables before any usage to prevent AttributeError
-if "agent_output" not in sss:
-    sss.agent_output = []  # Stores all agent responses
+if "agent_output" not in st.session_state:
+    st.session_state["agent_output"] = []  # Stores all agent responses
 
 if "result_display" not in sss:
     sss.result_display = None  # Display container for results
@@ -150,10 +188,19 @@ FILE_SElECT_CHOICE = ":open_file_folder: :orange[Select your file]"
 # recorder of agents generated output, to be re-displayed when the page is rerun.
 strecorder = StreamlitRecorder()
 
+# Thread-safe shared storage for outputs from agent threads
+# SmolAgents executes code in thread pool executors, which have separate session state instances.
+# This module-level list acts as a bridge between the executor thread and main Streamlit thread.
+# Python's GIL ensures thread-safe list operations without requiring explicit locks.
+_shared_agent_outputs: list[Any] = []
+
 
 def clear_display() -> None:
     """Clear the current display and reset agent output when changing demos"""
-    sss.agent_output = []  # Reset stored outputs
+    global _shared_agent_outputs
+    _shared_agent_outputs = []  # Clear shared storage
+    if "agent_output" in st.session_state:
+        st.session_state["agent_output"] = []  # Reset stored outputs
     sss.result_display = None  # Reset display container
     sss.last_error = None  # Clear any previous errors
     strecorder.clear()  # Clear the action recorder
@@ -163,30 +210,47 @@ def clear_display() -> None:
 def my_final_answer(answer: Any) -> Any:
     """Display the final result of the AI agent's execution.
 
-    This tool handles the presentation of different types of results including
-    Markdown text, DataFrames, images, and Folium maps in the Streamlit interface.
+    This tool stores outputs in a thread-safe shared storage that can be accessed
+    by the main Streamlit thread for display. It handles various output types including
+    text, DataFrames, images (as Path objects), and other data.
+
+    Thread Safety:
+        Uses module-level `_shared_agent_outputs` list to bridge thread pool executors
+        and the main Streamlit thread, avoiding session state isolation issues.
 
     Args:
-        answer: The final result to display, can be various types
+        answer: The result to display - can be str, DataFrame, Path, or other types
 
     Returns:
         String representation of the answer
     """
-    try:
-        # Ensure session state is properly initialized
-        if not hasattr(sss, "agent_output"):
-            sss.agent_output = []
+    global _shared_agent_outputs
 
-        # Avoid duplicate outputs
-        if len(sss.agent_output) == 0 or sss.agent_output[-1] != answer:
-            sss.agent_output.append(answer)
-            display_final_msg(answer)
+    logger.info(f"my_final_answer called with {type(answer).__name__}: {answer}")
+
+    try:
+        # Convert string paths to Path objects for consistent image handling
+        if isinstance(answer, str) and ("/" in answer or "\\" in answer):
+            try:
+                test_path = Path(answer)
+                if test_path.suffix in [".png", ".jpg", ".jpeg", ".gif", ".svg"]:
+                    answer = test_path
+                    logger.debug(f"Converted string to Path for image: {answer}")
+            except Exception as e:
+                logger.debug(f"Could not convert to path: {e}")
+
+        # Store in thread-safe shared storage
+        _shared_agent_outputs.append(answer)
+        logger.info(f"Stored output in shared storage (total: {len(_shared_agent_outputs)} items)")
 
         return str(answer)
+
     except Exception as e:
         error_msg = f"Error in my_final_answer: {e}"
         logger.error(error_msg)
-        sss.last_error = error_msg
+        import traceback
+
+        logger.error(traceback.format_exc())
         return error_msg
 
 
@@ -196,10 +260,10 @@ def update_display() -> None:
     This function iterates through the stored agent outputs and displays
     them in the appropriate format in the Streamlit interface.
     """
-    if len(sss.agent_output) > 0:
+    if "agent_output" in st.session_state and len(st.session_state["agent_output"]) > 0:
         st.write("answer:")
-    for msg in sss.agent_output:
-        display_final_msg(msg)
+        for msg in st.session_state["agent_output"]:
+            display_final_msg(msg)
 
 
 def display_final_msg(msg: Any) -> None:
@@ -212,11 +276,21 @@ def display_final_msg(msg: Any) -> None:
         msg: The message to display, can be various types
     """
     try:
-        # Use result_display if available and is a container, otherwise use st directly
-        if sss.result_display is not None and hasattr(sss.result_display, "__enter__"):
-            display_container = sss.result_display
-        else:
-            display_container = st.container()
+        # Check if we're in a Streamlit context
+        try:
+            # Use result_display if available and is a container
+            if (
+                hasattr(sss, "result_display")
+                and sss.result_display is not None
+                and hasattr(sss.result_display, "__enter__")
+            ):
+                display_container = sss.result_display
+            else:
+                display_container = st.container()
+        except (AttributeError, RuntimeError):
+            # Called from thread without Streamlit context
+            logger.debug("display_final_msg called from thread without Streamlit context")
+            return  # Can't display in thread, will be handled by FinalAnswerStep
 
         with display_container:
             if isinstance(msg, str):
@@ -232,11 +306,17 @@ def display_final_msg(msg: Any) -> None:
                     st.warning(f"Image file not found: {msg}")
             else:
                 st.write(msg)
+    except (AttributeError, RuntimeError) as ex:
+        # Thread context error - silently ignore as it will be handled by main thread
+        logger.debug(f"display_final_msg thread context error (expected): {ex}")
     except Exception as ex:
         error_msg = f"Error displaying message: {ex}"
         logger.exception(error_msg)
-        st.error(error_msg)
-        sss.last_error = error_msg
+        try:
+            st.error(error_msg)
+            sss.last_error = error_msg
+        except (AttributeError, RuntimeError):
+            pass  # Can't display error in thread context
 
 
 # LLM will be initialized in handle_submission to avoid early initialization errors
@@ -382,6 +462,8 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
             tools = demo.tools + mcp_tools + [my_final_answer]
             authorized_imports_list = list(dict.fromkeys(COMMON_AUTHORIZED_IMPORTS + demo.authorized_imports))
 
+            logger.info(f"Creating agent with {len(tools)} tools and {len(authorized_imports_list)} authorized imports")
+
             try:
                 agent = CodeAgent(
                     tools=tools,
@@ -436,9 +518,29 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                         stream_to_streamlit(
                             agent,
                             formatted_prompt,
-                            display_details=True,  # Show details for better debugging
-                            final_answer_handler=handle_final_answer,  # Custom handler for right column
+                            display_details=True,
+                            final_answer_handler=handle_final_answer,
                         )
+
+                    # Display outputs collected by my_final_answer (from thread pool executor)
+                    global _shared_agent_outputs
+                    if len(_shared_agent_outputs) > 0:
+                        logger.info(f"Displaying {len(_shared_agent_outputs)} outputs from agent")
+                        with result_display:
+                            st.markdown("### 🎯 Results from my_final_answer")
+                            for output in _shared_agent_outputs:
+                                if isinstance(output, str):
+                                    st.markdown(output)
+                                elif isinstance(output, pd.DataFrame):
+                                    st.dataframe(output, use_container_width=True)
+                                elif isinstance(output, Path):
+                                    if output.exists():
+                                        st.image(str(output))
+                                    else:
+                                        st.warning(f"Image file not found: {output}")
+                                else:
+                                    st.write(output)
+
                     st.success("✅ Agent execution completed")
                 except KeyboardInterrupt:
                     st.warning("⚠️ Execution interrupted by user")
@@ -505,7 +607,4 @@ def main() -> None:
             handle_submission(placeholder, demo, prompt, max_steps)
 
 
-if __name__ == "__main__":
-    main()
-else:
-    main()
+main()

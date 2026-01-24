@@ -34,8 +34,7 @@ from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialo
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
 from genai_blueprint.webapp.ui_components.trace_middleware import (
     TraceMiddleware,
-    display_llm_traces,
-    display_tool_traces,
+    display_interleaved_traces,
 )
 
 load_dotenv()
@@ -170,32 +169,6 @@ def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -
     return selected_pill
 
 
-def display_tool_calls_sidebar() -> None:
-    """Display detailed execution traces in the left column.
-
-    Shows both LLM calls and tool calls using the shared trace middleware.
-    """
-    if "trace_middleware" not in sss:
-        st.info("No activity yet. Send a message to see LLM and tool interactions!")
-        return
-
-    # LLM calls first, then tool calls, so both appear side by side in the
-    # same column but in clearly separated sections.
-    display_llm_traces(
-        sss.trace_middleware,
-        show_clear_button=False,
-        expand_latest=True,
-    )
-
-    st.divider()
-
-    display_tool_traces(
-        sss.trace_middleware,
-        show_clear_button=True,
-        expand_latest=True,
-    )
-
-
 @st.cache_resource()
 def get_cached_checkpointer():
     """Get a cached checkpointer to avoid recreating it."""
@@ -220,18 +193,14 @@ def get_or_create_agent(demo: LangChainAgentConfig) -> tuple[Any, RunnableConfig
 
         return None, cast(RunnableConfig, config), checkpointer
 
-    # If demo changed, we need to recreate the agent with the same middleware
+    # If demo changed, we need to recreate the agent
     if sss.current_demo != demo.name:
-        # Preserve the existing traces
-        existing_trace_middleware = sss.get("trace_middleware", None)
-
         thread_id = str(uuid.uuid4())
         config = {"configurable": {"thread_id": thread_id}}
         checkpointer = get_cached_checkpointer()
 
         # Update demo name and config
         sss.agent_config = config
-        old_demo = sss.current_demo
         sss.current_demo = demo.name
 
         # Force agent recreation while preserving traces
@@ -379,17 +348,7 @@ async def process_user_input(
                 # Update traces in real-time if container provided
                 if trace_container and "trace_middleware" in sss:
                     with trace_container:
-                        display_llm_traces(
-                            sss.trace_middleware,
-                            show_clear_button=False,
-                            expand_latest=True,
-                        )
-                        st.divider()
-                        display_tool_traces(
-                            sss.trace_middleware,
-                            show_clear_button=False,
-                            expand_latest=True,
-                        )
+                        display_interleaved_traces(sss.trace_middleware, key_prefix="streaming")
 
                 # Handle different step formats
                 if isinstance(step, tuple):
@@ -485,63 +444,66 @@ async def main() -> None:
     if sss.just_processed:
         sss.just_processed = False
 
-    # Create two-column layout
-    col_tools, col_chat = st.columns([1, 2], gap="medium")
+    # Single column layout with traces above conversation
 
-    # Left column: Tool calls and execution traces
-    with col_tools:
-        st.header("Activity")
+    # Section 1: Execution traces (LLM + Tool calls interleaved)
+    st.header("🔍 Execution Trace")
+    trace_container = st.container()
+    with trace_container:
+        if "trace_middleware" in sss:
+            display_interleaved_traces(sss.trace_middleware, key_prefix="main")
+        else:
+            st.info("No activity yet. Send a message to see LLM and tool interactions!")
 
-        # Container for tool execution traces (persisted from session state)
-        trace_container = st.container()
-        with trace_container:
-            display_tool_calls_sidebar()
+    st.divider()
 
-        st.divider()
+    # Container for agent execution status (shown during processing)
+    status_container = st.container()
 
-        # Container for agent execution status (shown during processing)
-        status_container = st.container()
+    st.divider()
 
-        st.link_button("View Traces", "https://smith.langchain.com/", help="View all traces in LangSmith")
+    # Section 2: Chat conversation
+    st.header("💬 Conversation")
 
-    # Right column: Chat interface
-    with col_chat:
-        st.header("Conversation")
+    # Display chat messages
+    chat_container = st.container(height=400)
+    with chat_container:
+        for msg in sss.messages:
+            if isinstance(msg, HumanMessage):
+                st.chat_message("human").write(msg.content)
+            elif isinstance(msg, AIMessage):
+                st.chat_message("ai").write(msg.content)
 
-        # Display chat messages
-        chat_container = st.container(height=450)
-        with chat_container:
-            for msg in sss.messages:
-                if isinstance(msg, HumanMessage):
-                    st.chat_message("human").write(msg.content)
-                elif isinstance(msg, AIMessage):
-                    st.chat_message("ai").write(msg.content)
+    # Chat input at the bottom
+    user_input = st.chat_input("Type your message here... (or use /help for commands)", key="chat_input")
 
-        # Chat input at the bottom
-        user_input = st.chat_input("Type your message here... (or use /help for commands)", key="chat_input")
+    # Link to LangSmith at the bottom
+    st.link_button(
+        "📊 View Full Traces in LangSmith", "https://smith.langchain.com/", help="View all traces in LangSmith"
+    )
 
-        # Handle user input - but only if we haven't just processed something
-        if user_input and not sss.just_processed:
-            user_input = user_input.strip()
+    # Handle user input - but only if we haven't just processed something
+    if user_input and not sss.just_processed:
+        user_input = user_input.strip()
 
-            # Handle commands
-            if handle_command(user_input):
-                if user_input == "/clear":
-                    # The rerun is handled in handle_command
-                    pass
-                # Command handled, don't process as regular input
-                return
+        # Handle commands
+        if handle_command(user_input):
+            if user_input == "/clear":
+                # The rerun is handled in handle_command
+                pass
+            # Command handled, don't process as regular input
+            return
 
-            # Process regular user input
-            if user_input:
-                await process_user_input(
-                    demo,
-                    user_input,
-                    status_container,
-                    chat_container,
-                    trace_container,
-                )
-                # Processing complete - response is already displayed
+        # Process regular user input
+        if user_input:
+            await process_user_input(
+                demo,
+                user_input,
+                status_container,
+                chat_container,
+                trace_container,
+            )
+            # Processing complete - response is already displayed
 
 
 # Run the async main function only when executing in Streamlit context

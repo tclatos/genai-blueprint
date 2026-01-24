@@ -6,15 +6,17 @@ agent tool calls, their arguments, results, and timing information.
 
 Key Components:
     - ToolCallRecord: Data class representing a single tool execution
+    - LLMCallRecord: Data class representing a single LLM message
     - TraceMiddleware: Generic middleware for capturing tool execution details
     - display_tool_traces: UI function to render tool traces in Streamlit
+    - display_llm_traces: UI function to render LLM traces in Streamlit
+    - display_interleaved_traces: UI function to render both traces interleaved chronologically
 
 Usage Example:
     ```python
 from genai_blueprint.webapp.ui_components.trace_middleware import (
     TraceMiddleware,
-    display_llm_traces,
-    display_tool_traces,
+    display_interleaved_traces,
 )
 
     # Create middleware instance (typically stored in session state)
@@ -28,9 +30,8 @@ from genai_blueprint.webapp.ui_components.trace_middleware import (
         middleware=[st.session_state.trace_middleware],
     )
 
-    # Display traces in sidebar or column
-    with st.sidebar:
-        display_tool_traces(st.session_state.trace_middleware)
+    # Display traces (interleaved is recommended for better flow understanding)
+    display_interleaved_traces(st.session_state.trace_middleware)
     ```
 
 Design Notes:
@@ -383,7 +384,7 @@ def display_tool_traces(
     # Display each tool call in an expandable section
     for i, call in enumerate(middleware.tool_calls):
         _render_tool_call_expander(
-            ctx,
+            ctx,  # pyright: ignore[reportArgumentType]
             call,
             index=i,
             total=count,
@@ -487,7 +488,7 @@ def display_llm_traces(
 
     for i, call in enumerate(middleware.llm_calls):
         _render_llm_call_expander(
-            ctx,
+            ctx,  # type: ignore
             call,
             index=i,
             total=count,
@@ -525,3 +526,149 @@ def _render_llm_call_expander(
             ctx.caption(f"Content was {len(content)} characters (truncated for display)")
         else:
             ctx.code(content, language="text")
+
+
+def display_interleaved_traces(
+    middleware: "TraceMiddleware",
+    container: Optional[DeltaGenerator] = None,
+    key_prefix: str = "main",
+    show_full_trace: bool = True,
+    show_clear_button: bool = True,
+    max_result_length: int = 500,
+) -> None:
+    """Display LLM and tool traces interleaved chronologically.
+
+    Shows execution traces in chronological order, interleaving LLM calls
+    and tool calls for better understanding of the agent's execution flow.
+
+    Args:
+        middleware: The TraceMiddleware instance containing trace records
+        container: Optional Streamlit container to render into (defaults to current context)
+        key_prefix: Unique prefix for Streamlit element keys to avoid duplicates
+                   when this function is called multiple times in the same run.
+        show_full_trace: Whether to show the collapsible full trace summary
+        show_clear_button: Whether to show a button to clear traces
+        max_result_length: Maximum characters before showing result in a text area
+
+    Example:
+        ```python
+        from genai_blueprint.webapp.ui_components.trace_middleware import (
+            TraceMiddleware,
+            display_interleaved_traces,
+        )
+
+        # Display traces in main area
+        display_interleaved_traces(st.session_state.trace_middleware)
+
+        # Or with custom options
+        display_interleaved_traces(
+            middleware,
+            key_prefix="streaming",
+            show_full_trace=False,
+        )
+        ```
+    """
+    ctx = container or st
+
+    # Generate a unique call ID to avoid duplicate keys when called multiple times
+    # Use a module-level counter stored in session state
+    if "_trace_display_counter" not in st.session_state:
+        st.session_state._trace_display_counter = 0
+    st.session_state._trace_display_counter += 1
+    call_id = st.session_state._trace_display_counter
+    unique_prefix = f"{key_prefix}_{call_id}"
+
+    # Collect all events
+    events = []
+
+    # Add LLM calls
+    if hasattr(middleware, "llm_calls") and middleware.llm_calls:
+        for call in middleware.llm_calls:
+            events.append({"type": "llm", "timestamp": call.timestamp, "data": call})
+
+    # Add tool calls
+    if middleware.tool_calls:
+        for call in middleware.tool_calls:
+            events.append({"type": "tool", "timestamp": call.start_time, "data": call})
+
+    if not events:
+        ctx.info("No activity yet. Send a message to see LLM and tool interactions!")
+        return
+
+    # Sort by timestamp to interleave
+    events.sort(key=lambda x: x["timestamp"])
+
+    # Optional: collapsible section to view full trace
+    if show_full_trace:
+        with ctx.expander("📋 View Full Trace (All Events)", expanded=False):
+            for i, event in enumerate(events):
+                if event["type"] == "llm":
+                    call = event["data"]
+                    ctx.markdown(f"**{i + 1}. 🧠 LLM Call** - {call.formatted_time}")
+                    ctx.markdown(f"   - **Node:** `{call.node}`")
+                    with ctx.container(border=True):
+                        ctx.markdown(call.content)
+                elif event["type"] == "tool":
+                    call = event["data"]
+                    status = "✅ Success" if not call.is_error else "❌ Error"
+                    duration = f" ({call.duration_ms:.0f}ms)" if call.duration_ms else ""
+                    ctx.markdown(f"**{i + 1}. 🔧 Tool Call** - {call.formatted_time}{duration}")
+                    ctx.markdown(f"   - **Tool:** `{call.name}` - {status}")
+                    if call.arguments:
+                        ctx.markdown(f"   - **Arguments:** `{call.arguments}`")
+                    if call.result:
+                        with ctx.container(border=True):
+                            result_preview = call.result[:200] + "..." if len(call.result) > 200 else call.result
+                            ctx.text(result_preview)
+                    if call.error:
+                        ctx.error(f"   - **Error:** {call.error}")
+                ctx.divider()
+
+    # Display individual events as separate expanders (latest expanded)
+    for i, event in enumerate(events):
+        if event["type"] == "llm":
+            call = event["data"]
+            with ctx.expander(
+                f"🧠 LLM Call - {call.node} ({call.formatted_time})",
+                expanded=(i == len(events) - 1 and event["type"] == "llm"),
+            ):
+                ctx.markdown(call.content)
+
+        elif event["type"] == "tool":
+            call = event["data"]
+            status = "✅" if not call.is_error else "❌"
+            with ctx.expander(
+                f"🔧 {call.name} {status}",
+                expanded=(i == len(events) - 1 and event["type"] == "tool"),
+            ):
+                ctx.markdown(f"**Status:** {'Error' if call.is_error else 'Success'}")
+
+                if call.arguments:
+                    ctx.markdown("**Arguments:**")
+                    ctx.code(call.arguments, language="text")
+
+                if call.result:
+                    ctx.markdown("**Result:**")
+                    result = call.result
+                    if isinstance(result, str) and len(result) > max_result_length:
+                        ctx.text_area(
+                            "Output",
+                            result,
+                            height=150,
+                            disabled=True,
+                            key=f"{unique_prefix}_tool_result_{i}",
+                        )
+                    else:
+                        ctx.code(str(result), language="text")
+
+                if call.error:
+                    ctx.markdown("**Error:**")
+                    ctx.error(call.error)
+
+    # Optional clear button
+    if show_clear_button:
+        col1, col2 = ctx.columns([3, 1])
+        with col2:
+            if ctx.button("🗑️ Clear Traces", key=f"{unique_prefix}_clear_btn", use_container_width=True):
+                middleware.clear()
+                st.rerun()
