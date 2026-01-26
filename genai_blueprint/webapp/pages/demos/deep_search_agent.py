@@ -121,7 +121,7 @@ def display_logs_expander() -> None:
             col1, col2 = st.columns([3, 1])
             show_full = col1.checkbox("Show full logs", value=False, key="show_full_logs")
 
-            if col2.button("📥 Export Logs", use_container_width=True):
+            if col2.button("📥 Export Logs", width="stretch"):
                 log_text = "\n".join([f"[{e.get('timestamp', '')}] {e.get('output', '')}" for e in sss.log_entries])
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 st.download_button(
@@ -198,13 +198,13 @@ def display_how_it_works() -> None:
             st.write("**Normal Research**")
             st.image(
                 "https://private-user-images.githubusercontent.com/13554167/333804350-4ac896fd-63ab-4b77-9688-ff62aafcc527.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDY2NDgzODEsIm5iZiI6MTc0NjY0ODA4MSwicGF0aCI6Ii8xMzU1NDE2Ny8zMzM4MDQzNTAtNGFjODk2ZmQtNjNhYi00Yjc3LTk2ODgtZmY2MmFhZmNjNTI3LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA1MDclMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNTA3VDIwMDEyMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTgwM2RmODQwNjVmZTU0MjI4YTljODJjMzgxY2U1N2MwOGZjNWEyOGM3OTM5ZjNmNmEzMDEwYTg0ZjE5YzllYzUmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.SsI3BqipPrR8mL8soiWF0mlCbnXxNnzTip6F4wgY9aM",
-                use_container_width=True,
+                width="stretch",
             )
 
             st.write("**Deep Research**")
             st.image(
                 "https://github.com/user-attachments/assets/eba2d94b-bef3-4f8d-bbc0-f15bd0a40968",
-                use_container_width=True,
+                width="stretch",
             )
 
             st.markdown("""
@@ -285,7 +285,7 @@ def display_report_tabs(research_full_report: Any) -> None:
             for index, image_path in enumerate(research_full_report.images):
                 with image_cols[index % nb_col]:
                     try:
-                        st.image(image_path, caption=f"Image {index + 1}", use_container_width=True)
+                        st.image(image_path, caption=f"Image {index + 1}", width="stretch")
                     except Exception as e:
                         st.warning(f"Cannot display image: {image_path[:50]}...")
                         logger.warning(f"Image display error: {e}")
@@ -310,7 +310,7 @@ def display_report_tabs(research_full_report: Any) -> None:
             df = pd.DataFrame(source_data)
             st.dataframe(
                 df,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
                 column_config={
                     "URL": st.column_config.LinkColumn("URL", display_text="Open"),
@@ -350,7 +350,7 @@ def display_report_tabs(research_full_report: Any) -> None:
                     },
                 ]
             )
-            st.dataframe(stats_df, use_container_width=True, hide_index=True)
+            st.dataframe(stats_df, width="stretch", hide_index=True)
         else:
             st.info("Statistics will appear here after research completes")
 
@@ -374,7 +374,7 @@ def generate_pdf_report() -> None:
                         file_name=f"gptr_report_{timestamp}.pdf",
                         mime="application/pdf",
                         help="Download the full research report as PDF",
-                        use_container_width=True,
+                        width="stretch",
                     )
         except Exception as e:
             st.error(f"❌ Failed to generate PDF: {e}")
@@ -474,13 +474,13 @@ async def main() -> None:
         submitted = col2.form_submit_button(
             "🚀 Start Research",
             disabled=not search_input or sss.is_researching,
-            use_container_width=True,
+            width="stretch",
             type="primary",
         )
 
         clear_button = col3.form_submit_button(
             "🗑️ Clear",
-            use_container_width=True,
+            width="stretch",
         )
 
         if clear_button:
@@ -526,19 +526,19 @@ async def main() -> None:
         st.markdown("### 🎯 Actions")
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("🔄 New Research", use_container_width=True):
+            if st.button("🔄 New Research", width="stretch"):
                 clear_research()
                 st.rerun()
 
         with col2:
-            if st.button("📋 Copy Report", use_container_width=True):
+            if st.button("📋 Copy Report", width="stretch"):
                 if sss.web_research_result:
                     st.code(sss.web_research_result, language="markdown")
                     st.success("Report text is displayed above for copying")
 
         with col3:
             # Clear history button
-            if st.button("🗑️ Clear History", use_container_width=True):
+            if st.button("🗑️ Clear History", width="stretch"):
                 sss.research_history = []
                 st.success("History cleared")
                 st.rerun()

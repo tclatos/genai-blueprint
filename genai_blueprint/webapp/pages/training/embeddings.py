@@ -324,7 +324,7 @@ if texts and selected_model:
             """)
             embeddings_2d_pca = reduce_dimensions(embeddings, "PCA")
             fig_scatter_pca = create_embedding_plot(embeddings_2d_pca, texts, "Embeddings Visualization (PCA)")
-            st.plotly_chart(fig_scatter_pca, use_container_width=True)
+            st.plotly_chart(fig_scatter_pca, width="stretch")
 
         with tab2:
             st.markdown("""
@@ -333,7 +333,7 @@ if texts and selected_model:
             """)
             embeddings_2d_tsne = reduce_dimensions(embeddings, "t-SNE")
             fig_scatter_tsne = create_embedding_plot(embeddings_2d_tsne, texts, "Embeddings Visualization (t-SNE)")
-            st.plotly_chart(fig_scatter_tsne, use_container_width=True)
+            st.plotly_chart(fig_scatter_tsne, width="stretch")
 
         # Similarity analysis
         st.subheader("🌡️ Similarity Heatmap")
@@ -344,7 +344,7 @@ if texts and selected_model:
 
         similarity_matrix = calculate_similarity_matrix(embeddings)
         fig_heatmap = create_similarity_heatmap(similarity_matrix, texts)
-        st.plotly_chart(fig_heatmap, use_container_width=True)
+        st.plotly_chart(fig_heatmap, width="stretch")
 
         # Text similarity insights
         st.subheader("🔍 Similarity Insights")
@@ -422,7 +422,7 @@ if texts and selected_model:
                 st.caption("📊 How often different number ranges appear in this vector")
                 fig_hist = px.histogram(x=embedding, nbins=50, title=f"Value Distribution - {text[:30]}...")
                 fig_hist.update_layout(height=300)
-                st.plotly_chart(fig_hist, use_container_width=True)
+                st.plotly_chart(fig_hist, width="stretch")
 
 elif not texts:
     st.info("👆 Enter some texts above to start exploring embeddings!")

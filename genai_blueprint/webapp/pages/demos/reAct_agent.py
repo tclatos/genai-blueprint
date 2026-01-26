@@ -154,11 +154,11 @@ def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -
             if has_traces:
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("Clear chat only", use_container_width=True):
+                    if st.button("Clear chat only", width="stretch"):
                         clear_chat_history(keep_traces=True)
                         st.rerun()
                 with col2:
-                    if st.button("Clear chat & traces", use_container_width=True):
+                    if st.button("Clear chat & traces", width="stretch"):
                         clear_all_history()
                         st.rerun()
             else:

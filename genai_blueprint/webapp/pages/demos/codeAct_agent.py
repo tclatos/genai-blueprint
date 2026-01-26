@@ -298,7 +298,7 @@ def display_final_msg(msg: Any) -> None:
             # elif isinstance(msg, folium.Map):
             #     st_folium(msg)
             elif isinstance(msg, pd.DataFrame):
-                st.dataframe(msg, use_container_width=True)
+                st.dataframe(msg, width="stretch")
             elif isinstance(msg, Path):
                 if msg.exists():
                     st.image(str(msg))
@@ -504,7 +504,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                         elif isinstance(final_answer, AgentAudio):
                             st.audio(final_answer.to_raw())
                         elif isinstance(final_answer, pd.DataFrame):
-                            st.dataframe(final_answer, use_container_width=True)
+                            st.dataframe(final_answer, width="stretch")
                         elif isinstance(final_answer, Path):
                             if final_answer.exists():
                                 st.image(str(final_answer))
@@ -532,7 +532,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                                 if isinstance(output, str):
                                     st.markdown(output)
                                 elif isinstance(output, pd.DataFrame):
-                                    st.dataframe(output, use_container_width=True)
+                                    st.dataframe(output, width="stretch")
                                 elif isinstance(output, Path):
                                     if output.exists():
                                         st.image(str(output))
