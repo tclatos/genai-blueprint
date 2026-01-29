@@ -78,7 +78,6 @@ ekg_local:
     - genai_tk.extra.commands_extra:ExtraCommands
     - genai_tk.extra.agents.commands_agents:AgentCommands
     - genai_tk.extra.structured.commands_baml:BamlCommands
-    - genai_blueprint.demos.ekg.cli_commands.commands_ekg:EkgCommands
 
   kv_store: 
     default:
