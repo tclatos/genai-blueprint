@@ -9,7 +9,7 @@ training_adn:
   llm:
     models:
       #default:  mistral_small_edenai
-      default: gpt_oss120_openrouter
+      default: gpt_41_azure
       azure: gpt_41_azure
       openai: gpt_41mini_openai
       for_vision : gpt_41_azure
@@ -17,7 +17,8 @@ training_adn:
       local: gemma3_4b_ollama
   embeddings:
     models:
-      default: qwen3_06b_deepinfra      
+      default: ada_002_azure
+      cheap: qwen3_06b_deepinfra      
       edenai: ada_002_edenai
       local: artic_22_ollama
       azure: ada_002_azure
