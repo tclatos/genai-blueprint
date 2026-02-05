@@ -9,7 +9,6 @@ dependencies = [
     # Core AI Toolkit
     # ============================================
     "genai_tk @ git+https://github.com/tclatos/genai-tk@main", # GenAI Toolkit - core AI framework and components
-
     # ============================================
     # Core Infrastructure
     # ============================================
@@ -23,37 +22,32 @@ dependencies = [
     "beartype>=0.21.0",         # Runtime type validation
     "devtools>=0.12.2",         # Debug printing and development utilities
     "pip>=25.1.1",              # Python package installer and manager
-
     # ============================================
     # Web Framework & API
     # ============================================
     "fastapi[standard]>=0.115.6", # Modern async web framework with OpenAPI
-
     # ============================================
     # Deployment Platforms
     # ============================================
     "modal>=1.0.5", # Serverless cloud platform for Python apps
-
     # ============================================
     # LangChain Extensions
     # ============================================
     "langchain-classic>=1.0.0", # Classic LangChain components
-
     # ============================================
     # Structured Data Extraction
     # ============================================
     "baml-py>=0.209.0", # BAML Python library for LLM parsing
     "baml-cli>=0.1.0",  # BAML CLI for structured extraction
-
     # ============================================
     # Database Backends
     # ============================================
     "psycopg2-binary>=2.9.11", # PostgreSQL adapter for Python
-
     # ============================================
     # Research & Web Search
     # ============================================
     "gpt-researcher>=0.14.0", # Autonomous web research agent (requires cryptography>=45)
+    "presidio>=0.2.1",
 ]
 
 [project.urls]

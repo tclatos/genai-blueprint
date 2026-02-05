@@ -115,6 +115,7 @@ llm:
   providers:
     - openrouter: openai/gpt-4.1
     - edenai: gpt-4.1-2025-04-14
+    - openai: gpt-4.1-2025-04-14
     - azure: gpt-4.1/2024-10-01-preview
   capabilities: ['structured_outputs', 'vision']
 

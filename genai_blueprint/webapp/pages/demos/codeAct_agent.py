@@ -68,7 +68,6 @@ from genai_tk.utils.load_data import TABULAR_FILE_FORMATS_READERS, load_tabular_
 from loguru import logger
 from smolagents import (
     CodeAgent,
-    LiteLLMModel,
     MCPClient,
     tool,
 )
@@ -448,9 +447,9 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
 
             # Initialize LLM model with error handling
             try:
-                model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
-                llm = LiteLLMModel(model_id=model_name)
-                logger.info(f"Initialized LLM: {model_name}")
+                factory = LlmFactory(llm=MODEL_ID)
+                llm = factory.get_smolagent_model()
+                logger.info(f"Initialized LLM: {factory.llm_id} ({factory.provider}/{factory.info.model})")
             except Exception as e:
                 error_msg = f"Failed to initialize LLM model: {e}"
                 st.error(error_msg)

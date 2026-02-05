@@ -17,8 +17,6 @@ from genai_tk.utils.singleton import once
 from langchain_community.document_loaders.web_base import WebBaseLoader
 from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
-
-# from langchain_core.output_parsers import EnumOutputParser
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnableLambda
 from langchain_text_splitters import RecursiveCharacterTextSplitter
