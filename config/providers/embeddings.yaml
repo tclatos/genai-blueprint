@@ -14,6 +14,15 @@
 #cSpell: disable
 
 embeddings:
+
+
+  - model:
+      id: text_3_small
+    providers:
+      - openai: text-embedding-3-small
+      - openrouter: openai/text-embedding-3-small
+    dimension: 1536
+
   - model:
       id: ada_002
     providers:
@@ -38,6 +47,7 @@ embeddings:
       id: qwen3_06b
     providers:
       - deepinfra: Qwen/Qwen3-Embedding-0.6B
+      - openrouter: qwen/qwen3-embedding-0.6b
     dimension: 1024
 
 
