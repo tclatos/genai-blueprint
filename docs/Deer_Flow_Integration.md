@@ -370,7 +370,223 @@ async for chunk in agent.astream(
         print(f"💭 {chunk['thinking']}")
 ```
 
-## Example Profiles
+## Agent Modes
+
+Deer-flow supports four agent modes that control behavior and capabilities:
+
+| Mode | Thinking | Planning | Subagents | Best For |
+|------|----------|----------|-----------|----------|
+| **Flash** | ❌ | ❌ | ❌ | Quick answers, simple queries |
+| **Thinking** | ✅ | ❌ | ❌ | Reasoning tasks, analysis |
+| **Pro** | ✅ | ✅ | ❌ | Complex research, multi-step tasks |
+| **Ultra** | ✅ | ✅ | ✅ | Large projects, parallel execution |
+
+**Configuration:**
+```yaml
+profiles:
+  - name: "Quick Assistant"
+    mode: "flash"  # Fast, no thinking overhead
+    
+  - name: "Research Agent"
+    mode: "pro"    # Planning with todo lists
+    
+  - name: "Full-Power"
+    mode: "ultra"  # All features enabled
+```
+
+**Mode Behaviors:**
+- **Flash**: Direct answers without chain-of-thought. Fastest response time.
+- **Thinking**: Shows reasoning steps. Good for complex questions.
+- **Pro**: Creates and maintains todo lists for multi-step tasks. Shows progress tracking.
+- **Ultra**: Can spawn subagents for parallel execution. Best for large, complex projects.
+
+## Skills Library
+
+### Built-in Deer-flow Skills
+
+Deer-flow includes 16 public skills in `/skills/public/`:
+
+| Skill | Description | Tools Used |
+|-------|-------------|------------|
+| **deep-research** | Multi-source research with synthesis | Web search, content extraction |
+| **data-analysis** | DataFrame analysis and insights | Python, pandas, matplotlib |
+| **chart-visualization** | Create charts from data | Plotting libraries |
+| **github-deep-research** | Analyze GitHub repositories | GitHub API, code analysis |
+| **image-generation** | Generate images from prompts | Image generation APIs |
+| **video-generation** | Create videos programmatically | Video processing tools |
+| **podcast-generation** | Generate podcast episodes | TTS, audio processing |
+| **ppt-generation** | Create PowerPoint presentations | Office automation |
+| **frontend-design** | Design UI mockups | Design tools |
+| **consulting-analysis** | Business analysis | Research, data tools |
+| **skill-creator** | Create new skills | Code generation |
+| **find-skills** | Search available skills | Skill registry |
+| **surprise-me** | Random creative task | Various |
+| **web-design-guidelines** | Web design best practices | Design knowledge |
+| **vercel-deploy-claimable** | Deploy to Vercel | Deployment tools |
+
+### Adding Skills to Profiles
+
+```yaml
+deerflow_agents:
+  - name: "Data Analyst"
+    mode: "pro"
+    skills:
+      - data-analysis          # Public skill (implicit public/ prefix)
+      - chart-visualization
+      - deep-research
+    
+  - name: "Developer"
+    skills:
+      - public/github-deep-research   # Explicit category
+      - custom/my-company-skill       # Custom skill
+```
+
+### Custom GenAI Blueprint Skills
+
+You can integrate custom tools as skills:
+
+```yaml
+deerflow_agents:
+  - name: "Custom Agent"
+    skills:
+      - data-analysis
+    tools:
+      # GenAI Blueprint tool factory
+      - factory: my_module.create_custom_tool
+        config:
+          api_key: ${MY_API_KEY}
+```
+
+## UI Features
+
+### Artifacts Viewer
+
+The Deer-flow UI displays generated artifacts (code, documents, data files):
+
+- **Code blocks** - Syntax-highlighted with copy button
+- **Data tables** - Rendered as DataFrames
+- **Images** - Inline display with zoom
+- **Documents** - Formatted previews
+
+**In agent output:**
+```python
+# Agent saves artifact
+state["artifacts"].append("analysis_report.md")
+```
+
+**UI displays:**
+```
+📄 Artifacts (2)
+├── analysis_report.md
+└── chart.png [Click to view]
+```
+
+### Mermaid Diagram Rendering
+
+Agents can generate interactive diagrams using Mermaid syntax:
+
+**Agent response with diagram:**
+```markdown
+Here's a diagram of the architecture:
+
+flowchart TD
+    A[Input] --> B[Process]
+    B --> C[Output]
+```
+
+**UI renders as:**
+- 🎨 **Interactive SVG diagram** - Not code blocks
+- ✨ **Automatic detection** - Both fenced (` ```mermaid`) and bare syntax
+- 🖼️ **Iframe embedding** - Uses Mermaid.js v11 from CDN via `st.components.html()`
+- 📐 **Responsive layout** - 400px height with scrolling for large diagrams
+
+**Supported diagram types:**
+- `flowchart`, `graph` - Node-link diagrams
+- `sequenceDiagram` - Interaction flows
+- `classDiagram` - Class relationships
+- `stateDiagram` - State machines
+- `erDiagram` - Entity-relationship models
+- `gantt` - Project timelines
+- `pie` - Pie charts
+- `journey` - User journeys
+- Plus: `gitGraph`, `mindmap`, `timeline`, `sankey`, `block`
+
+**Technical implementation:**
+- Uses `genai_blueprint.webapp.ui_components.message_renderer.render_message_with_mermaid()`
+- Embeds Mermaid.js library via HTML component (no separate package required)
+- Matches deer-flow's frontend diagram capabilities
+
+### Todo List Tracking
+
+In `pro` and `ultra` modes, agents use TodoListMiddleware to track progress:
+
+**Agent creates todos:**
+```
+📋 Todo List
+├── ✅ Research quantum computing papers
+├── 🔄 Analyze key findings
+└── ⏳ Write summary report
+```
+
+**Real-time updates:**
+- Agent marks tasks as in-progress, completed, or failed
+- UI shows live progress as agent works
+- Helps users understand multi-step workflows
+
+### Image Viewer
+
+Agents can generate or analyze images:
+
+**Generated images appear inline:**
+```
+🖼️ Generated: landscape.png
+[Image preview]
+[Download] [View Full Size]
+```
+
+**Viewed images from agent analysis:**
+```
+Agent: "Analyzing the uploaded chart..."
+🔍 Viewing: sales_chart.png
+[Image preview with agent annotations]
+```
+
+### Mode Selector
+
+Switch modes on-the-fly in the sidebar:
+
+```
+⚡ Mode: Flash  ▼
+├── Flash (current)
+├── Thinking
+├── Pro
+└── Ultra
+```
+
+Changing mode updates agent behavior immediately for new conversations.
+
+### 6. Visual Explainer
+**Best for:** Direct explanations with diagrams (e.g., "Explain MOE to a 12-year-old")
+
+**Capabilities:**
+- Chart and diagram generation
+- Clear explanations with visuals
+- Web research for accuracy
+- Minimal clarification questions
+
+**Example queries:**
+- "Explain what MOE is to a 12-year-old boy"
+- "Explain transformer architecture with a diagram"
+- "Create a flowchart of the RAG pipeline"
+
+**Why this profile exists:**
+This profile is specifically optimized for queries like the deer-flow demo's "Explain MOE" example. It:
+- Uses `thinking` mode (reasoning without excessive planning)
+- Includes `chart-visualization` skill for diagrams
+- Has `file` and `bash` tool groups enabled for diagram generation
+- Configured to give direct answers with visual aids
+
+## Example Workflows
 
 ### 1. Research Assistant
 **Best for:** Literature review, competitive analysis, market research
@@ -535,6 +751,87 @@ config = {
 
 ## Troubleshooting
 
+### Agent asks questions instead of directly answering
+
+**Behavior:** Agent uses clarification questions like "What aspect would you like me to focus on?"
+
+**Cause:** Deer-flow includes a `ClarificationMiddleware` that gives the agent an `ask_clarification` tool. Some models (especially instruction-tuned models like GPT-4o) are trained to ask clarifying questions for ambiguous requests.
+
+**Solutions:**
+1. **Be more specific** in your prompts:
+   - ❌ "Explain MOE"
+   - ✅ "Explain what MOE (Mixture of Experts) is to a 12-year-old boy using simple language and diagrams"
+
+2. **Use appropriate mode**:
+   - `flash` mode: Gives direct answers without much deliberation
+   - `thinking`/`pro`/`ultra`: May ask clarifying questions for better results
+
+3. **Prepend "directly"**: "Directly explain what MOE is..."
+
+**Note:** This is a deer-flow feature, not a bug. The agent asks questions when it needs more context to provide a better answer.
+
+### No diagrams or visualizations in response
+
+**Behavior:** Text-only responses for queries that would benefit from diagrams (e.g., "Explain MOE")
+
+**Cause:** Profile missing visualization skills or required tool groups.
+
+**Solutions:**
+
+1. **Enable chart-visualization skill**:
+   ```yaml
+   deerflow_agents:
+     - name: "Research Assistant"
+       skills:
+         - deep-research
+         - chart-visualization  # Add this
+   ```
+
+2. **Add required tool groups**:
+   ```yaml
+   deerflow_agents:
+     - name: "Research Assistant"
+       tool_groups:
+         - web
+         - file   # Required for saving charts
+         - bash   # Required for running generation scripts
+   ```
+
+3. **Request diagrams explicitly**:
+   - ✅ "Explain MOE with a diagram showing how experts are selected"
+   - ✅ "Create a flowchart explaining the transformer architecture"
+   - ✅ "Draw a mind map of deep learning concepts"
+
+**Available visualization skills:**
+- `chart-visualization` - Generates Mermaid diagram syntax (26 types: flowcharts, mind maps, network graphs, etc.)
+- `image-generation` - AI-generated artistic images (requires image generation API)
+
+**Mermaid rendering:**
+- ✅ **Automatic** - Diagrams render as interactive SVGs (not code blocks)
+- ✅ **Detection** - Works with both ` ```mermaid` fences and bare syntax
+- ✅ **Auto-fix** - Labels with special chars (`:`, `()`, `·`, `^`) are automatically quoted
+- ✅ **UI Component** - Uses `render_message_with_mermaid()` with Mermaid.js v11 via HTML component
+- ✅ **No packages needed** - Embeds Mermaid.js from CDN, no separate installation
+
+**Special character handling:**
+```mermaid
+# Agent generates (with special chars):
+graph TD
+    A[Input] --> B[Process: Query, Key]
+    B --> C[Attention (Q·K^T)]
+
+# Auto-fixed to:
+graph TD
+    A[Input] --> B["Process: Query, Key"]
+    B --> C["Attention (Q·K^T)"]
+```
+
+**Why deer-flow demo shows diagrams:**
+- Skills are pre-enabled in deer-flow's default config
+- Models may be prompted to use visualizations more proactively
+- Skills directory is mounted in sandbox with file/bash tools enabled
+- ✅ Frontend renders Mermaid automatically (GenAI Blueprint now does too!)
+
 ### Deer-flow backend not found
 
 **Error:** `FileNotFoundError: Deer-flow backend not found...`
@@ -602,6 +899,44 @@ uv sync --group deerflow
    rm ext/deer-flow/extensions_config.json
    ```
 3. Clear Streamlit cache: `st.cache_data.clear()` in sidebar
+
+## Recommended Models
+
+Different models behave differently with deer-flow. Here's a guide:
+
+### For Direct Answers (Less Questioning)
+- **Llama 3.3 70B** - Great balance of capability and directness
+- **Qwen 2.5 Coder 32B** - Excellent for technical explanations
+- **DeepSeek R1** - Strong reasoning without excessive questioning
+- **Claude Sonnet 3.5** - Good balance when properly prompted
+
+### For Interactive Work (More Clarification)
+- **GPT-4o** - Asks clarifying questions frequently, good for exploratory work
+- **GPT-4.1** - Similar to GPT-4o, emphasizes understanding user intent
+- **Claude Opus** - Thoughtful but may seek clarification
+
+### For Speed (Flash Mode)
+- **Llama 3.2 3B/11B** - Fast, direct answers
+- **Gemma 2 9B** - Quick responses for simple queries
+- **Qwen 2.5 7B** - Good speed/quality balance
+
+### Model Selection Tips
+1. **For explanatory queries** ("Explain X"): Use smaller, faster models in flash mode
+2. **For research/analysis**: Use larger models in pro/ultra modes with appropriate skills
+3. **For diagram generation**: Ensure skills + tool groups are enabled (model matters less)
+4. **To reduce questions**: Use flash mode or prepend "directly" to queries
+
+### Vision Support
+Models with `supports_vision: true` in config get the `view_image_tool`:
+- GPT-4o, GPT-4.1
+- Claude Sonnet 3.5, Claude Opus
+- Llama 3.2 Vision
+- Qwen 2.5 VL
+
+This enables:
+- Analyzing uploaded images
+- Viewing generated charts/diagrams
+- Image-based reasoning
 
 ## Performance Considerations
 

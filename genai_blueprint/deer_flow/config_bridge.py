@@ -13,145 +13,92 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from genai_tk.core.llm_factory import LlmFactory
 from loguru import logger
 
 from genai_blueprint.deer_flow._path_setup import get_deer_flow_backend_path
 
 
-def _get_llm_provider_mapping() -> dict[str, str]:
-    """Map GenAI Blueprint provider names to LangChain class import paths (deer-flow `use` field)."""
-    return {
-        "openai": "langchain_openai:ChatOpenAI",
-        "azure": "langchain_openai:AzureChatOpenAI",
-        "openrouter": "langchain_openai:ChatOpenAI",  # OpenRouter uses OpenAI-compatible API
-        "deepinfra": "langchain_openai:ChatOpenAI",
-        "groq": "langchain_openai:ChatOpenAI",
-        "edenai": "langchain_openai:ChatOpenAI",
-        "deepseek": "langchain_deepseek:ChatDeepSeek",
-        "google": "langchain_google_genai:ChatGoogleGenerativeAI",
-        "mistralai": "langchain_openai:ChatOpenAI",
-        "ollama": "langchain_ollama:ChatOllama",
-        "huggingface": "langchain_openai:ChatOpenAI",
-    }
-
-
-def _get_provider_base_urls() -> dict[str, str]:
-    """Map provider names to their API base URLs."""
-    return {
-        "openrouter": "https://openrouter.ai/api/v1",
-        "deepinfra": "https://api.deepinfra.com/v1/openai",
-        "groq": "https://api.groq.com/openai/v1",
-        "edenai": "https://api.edenai.run/v2/llm",
-        "mistralai": "https://api.mistral.ai/v1",
-    }
-
-
-def _get_provider_api_key_env() -> dict[str, str]:
-    """Map provider names to their API key environment variable names."""
-    return {
-        "openai": "OPENAI_API_KEY",
-        "azure": "AZURE_OPENAI_API_KEY",
-        "openrouter": "OPENROUTER_API_KEY",
-        "deepinfra": "DEEPINFRA_API_KEY",
-        "groq": "GROQ_API_KEY",
-        "edenai": "EDENAI_API_KEY",
-        "deepseek": "DEEPSEEK_API_KEY",
-        "google": "GOOGLE_API_KEY",
-        "mistralai": "MISTRAL_API_KEY",
-        "ollama": "",
-        "huggingface": "HUGGINGFACEHUB_API_TOKEN",
-    }
-
-
 def generate_deer_flow_models(llm_config_path: str = "config/providers/llm.yaml") -> list[dict[str, Any]]:
     """Generate Deer-flow model configs from GenAI Blueprint's llm.yaml.
 
-    Reads the LLM provider config and generates Deer-flow-compatible model entries.
+    Uses LlmFactory to get model information and provider configuration.
     Only includes models whose provider API keys are available in the environment.
 
     Args:
-        llm_config_path: Path to the LLM config YAML file
+        llm_config_path: Path to the LLM config YAML file (kept for backward compatibility)
 
     Returns:
         List of Deer-flow model config dicts
     """
+    # Get all known models from LlmFactory
+    all_models = LlmFactory.known_list()
+
+    # Also load capabilities from YAML since LlmInfo doesn't expose them
     config_path = Path(llm_config_path)
-    if not config_path.exists():
-        logger.warning(f"LLM config not found at {config_path}, using empty model list")
-        return []
-
-    with open(config_path) as f:
-        raw = yaml.safe_load(f)
-
-    llm_entries = raw.get("llm", [])
-    provider_mapping = _get_llm_provider_mapping()
-    base_urls = _get_provider_base_urls()
-    api_key_envs = _get_provider_api_key_env()
+    capabilities_map = {}
+    if config_path.exists():
+        with open(config_path) as f:
+            raw = yaml.safe_load(f)
+            llm_entries = raw.get("llm", [])
+            for entry in llm_entries:
+                if entry and entry.get("id"):
+                    capabilities_map[entry["id"]] = entry.get("capabilities", [])
 
     models = []
-    for entry in llm_entries:
-        if not entry:
-            continue
-        model_id = entry.get("id")
-        if not model_id:
+
+    for model_info in all_models:
+        model_id = model_info.id
+        provider_name = model_info.provider
+        model_name = model_info.model
+
+        # Get provider info from the centralized PROVIDER_INFO
+        try:
+            provider_info = model_info.get_provider_info()
+        except ValueError:
+            # Skip models with unknown providers
             continue
 
-        providers = entry.get("providers", [])
-        capabilities = entry.get("capabilities", [])
+        # Check if API key is available
+        api_key_env_var = provider_info.api_key_env_var
+        if api_key_env_var and not os.environ.get(api_key_env_var):
+            continue
+
+        # Extract capabilities from YAML
+        capabilities = capabilities_map.get(model_id, [])
         supports_vision = "vision" in capabilities
-        supports_thinking = "reasonning" in capabilities or "reasoning" in capabilities
+        supports_thinking = "thinking" in capabilities
 
-        # Try each provider, pick the first one with a valid API key
-        for provider_entry in providers:
-            if isinstance(provider_entry, dict):
-                provider_name = list(provider_entry.keys())[0]
-                model_name = provider_entry[provider_name]
+        # Build model config using provider info
+        model_config: dict[str, Any] = {
+            "name": model_id,
+            "display_name": model_id.replace("_", " ").title(),
+            "use": provider_info.get_use_string(),
+            "model": model_name,
+            "max_tokens": 4096,
+            "supports_vision": supports_vision,
+        }
 
-                # Handle custom provider with nested config
-                if isinstance(model_name, dict):
-                    continue  # Skip complex custom configs for now
+        if supports_thinking:
+            model_config["supports_thinking"] = True
 
-                use_class = provider_mapping.get(provider_name)
-                if not use_class:
-                    continue
+        if api_key_env_var:
+            model_config["api_key"] = f"${api_key_env_var}"
 
-                api_key_env = api_key_envs.get(provider_name, "")
+        # Add base URL from provider info
+        if provider_info.api_base:
+            model_config["api_base"] = provider_info.api_base
 
-                # Check if API key is available (skip if required but missing)
-                if api_key_env and not os.environ.get(api_key_env):
-                    continue
+        # Azure-specific handling
+        if provider_name == "azure":
+            parts = model_name.split("/")
+            if len(parts) == 2:
+                model_config["model"] = parts[0]
+                model_config["api_version"] = parts[1]
 
-                model_config: dict[str, Any] = {
-                    "name": model_id,
-                    "display_name": model_id.replace("_", " ").title(),
-                    "use": use_class,
-                    "model": model_name,
-                    "max_tokens": 4096,
-                    "supports_vision": supports_vision,
-                }
+        models.append(model_config)
 
-                if supports_thinking:
-                    model_config["supports_thinking"] = True
-
-                if api_key_env:
-                    model_config["api_key"] = f"${api_key_env}"
-
-                base_url = base_urls.get(provider_name)
-                if base_url:
-                    model_config["api_base"] = base_url
-
-                # Azure-specific handling
-                if provider_name == "azure":
-                    parts = model_name.split("/")
-                    if len(parts) == 2:
-                        model_config["model"] = parts[0]
-                        model_config["api_version"] = parts[1]
-                    model_config["api_key"] = "$AZURE_OPENAI_API_KEY"
-
-                models.append(model_config)
-                break  # Use first available provider
-
-    logger.info(f"Generated {len(models)} Deer-flow model configs from {llm_config_path}")
+    logger.info(f"Generated {len(models)} Deer-flow model configs using LlmFactory")
     return models
 
 
@@ -304,12 +251,14 @@ def write_extensions_config(
 
 def setup_deer_flow_config(
     mcp_server_names: list[str] | None = None,
+    enabled_skills: list[str] | None = None,
     config_dir: str | None = None,
 ) -> tuple[Path, Path]:
     """One-call setup: generates both Deer-flow config files and sets env vars.
 
     Args:
         mcp_server_names: MCP servers to enable
+        enabled_skills: Skills to enable (format: \"category/skill-name\" or \"skill-name\" for public)
         config_dir: Directory for config files (default: temp dir inside deer-flow backend)
 
     Returns:
@@ -320,7 +269,28 @@ def setup_deer_flow_config(
         config_dir = str(backend_path.parent)
 
     config_path = write_deer_flow_config(config_dir=config_dir)
-    ext_path = write_extensions_config(config_dir=config_dir, mcp_server_names=mcp_server_names)
+
+    # Generate extensions config with MCP servers
+    extensions_config = generate_extensions_config(mcp_server_names)
+
+    # Add skills state configuration
+    if enabled_skills:
+        skills_state = {}
+        for skill_spec in enabled_skills:
+            # Parse "category/skill-name" or just "skill-name" (defaults to public)
+            if "/" in skill_spec:
+                category, skill_name = skill_spec.split("/", 1)
+            else:
+                category, skill_name = "public", skill_spec
+
+            # Create nested dict structure
+            if category not in skills_state:
+                skills_state[category] = {}
+            skills_state[category][skill_name] = True
+
+        extensions_config["skills_state"] = skills_state
+
+    ext_path = write_extensions_config(extensions=extensions_config, config_dir=config_dir)
 
     # Set env vars for Deer-flow to find the configs
     os.environ["DEER_FLOW_CONFIG_PATH"] = str(config_path)

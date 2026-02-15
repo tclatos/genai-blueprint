@@ -6,93 +6,135 @@
 #
 # Key fields:
 #   name:              Profile display name
-#   tool_groups:       Deer-flow tool groups to enable (web, file:read, file:write, bash)
-#   subagent_enabled:  Enable subagent orchestration (parallel task delegation)
-#   thinking_enabled:  Enable thinking/reasoning mode (model-dependent)
+#   description:       Profile description
+#   mode:              Agent mode: flash (fast), thinking (reasoning), pro (planning), ultra (all features)
+#   tool_groups:       Deer-flow tool groups to enable (web, file, bash, image)
+#   skills:            Deer-flow skills to enable (format: "category/skill-name" or "skill-name" for public)
 #   mcp_servers:       MCP server names from config/mcp_servers.yaml
 #   tools:             Additional GenAI Blueprint tools (factory/class/function patterns)
-#   system_prompt:     Optional custom system prompt (appended to Deer-flow's built-in prompt)
+#   features:          Feature badges for UI display
 #   examples:          Sample queries for the demo UI
 
 deerflow_agents:
   - name: "Research Assistant"
-    description: "Web research with subagent orchestration for complex multi-step tasks"
+    description: "Web research with deep reasoning, visualizations, and skill execution"
+    mode: "pro"  # thinking + plan mode
     tool_groups:
       - web
-    subagent_enabled: true
-    thinking_enabled: true
+      - file
+      - bash
     mcp_servers:
-      - "tavily-mcp"
+      - tavily-mcp
+    skills:
+      - deep-research
+      - data-analysis
+      - chart-visualization
+    features:
+      - "🌐 Web Search"
+      - "📊 Data Analysis"
+      - "📈 Chart Generation"
+      - "🧠 Planning Mode"
     examples:
-      - "Research the latest developments in quantum computing and write a summary"
-      - "Compare the AI strategies of Google, Microsoft, and Meta in 2025"
-      - "What are the current trends in sustainable energy? Create a structured report"
+      - "Research the latest developments in quantum computing"
+      - "Compare different approaches to RAG systems"
+      - "Explain what MOE is to a 12-year-old boy"
 
   - name: "Web Browser"
-    description: "Interactive web browsing with Playwright MCP"
+    description: "Fast web browsing and content extraction"
+    mode: "flash"  # quick responses
     tool_groups:
       - web
-    subagent_enabled: false
-    thinking_enabled: false
     mcp_servers:
-      - "playwright"
+      - playwright
+    features:
+      - "🌐 Web Browsing"
+      - "📄 Content Extraction"
+      - "⚡ Fast Mode"
     examples:
       - "Go to atos.net, find the blog section and list recent articles"
-      - "Research the latest AI developments on OpenAI's website"
       - "Navigate to github.com/bytedance/deer-flow and summarize the project"
 
   - name: "Coder"
-    description: "Code execution in sandbox with file operations and bash"
+    description: "Code execution with subagents"
+    mode: "ultra"  # all features enabled
     tool_groups:
       - web
-      - "file:read"
-      - "file:write"
+      - file
       - bash
-    subagent_enabled: true
-    thinking_enabled: true
+    skills:
+      - github-deep-research
+    features:
+      - "💻 Code Execution"
+      - "📁 File Operations"
+      - "🔧 Bash Commands"
+      - "🤖 Sub-Agents"
     examples:
       - "Write a Python script that fetches weather data and creates a visualization"
-      - "Create a simple web page with HTML, CSS, and JavaScript"
-      - "Analyze the CSV file and create charts showing the key trends"
+      - "Analyze the codebase structure and suggest improvements"
 
   - name: "Chinook DB + Research"
-    description: "SQL database queries combined with web research"
+    description: "SQL database with web research"
+    mode: "thinking"  # reasoning mode
     tool_groups:
       - web
-    subagent_enabled: false
-    thinking_enabled: false
+    mcp_servers:
+      - tavily-mcp
     tools:
       - factory: genai_tk.tools.langchain.sql_tool_factory:create_sql_tool_from_config
         config:
           database_uri: "sqlite:///use_case_data/other/Chinook.db"
           tool_name: "query_chinook"
           tool_description: "Query the Chinook music database for information about artists, albums, tracks, customers, and invoices"
-          examples:
-            - input: "List all artists"
-              query: "SELECT * FROM Artist LIMIT 10;"
-            - input: "Find all albums for the artist 'AC/DC'"
-              query: "SELECT * FROM Album WHERE ArtistId = (SELECT ArtistId FROM Artist WHERE Name = 'AC/DC');"
-            - input: "Which country's customers spent the most?"
-              query: "SELECT BillingCountry, SUM(Total) as TotalSpent FROM Invoice GROUP BY BillingCountry ORDER BY TotalSpent DESC LIMIT 1;"
           top_k: 15
-    mcp_servers:
-      - "tavily-mcp"
+    skills:
+      - data-analysis
+      - chart-visualization
+    features:
+      - "🗄️ SQL Database"
+      - "🔍 Web Search"
+      - "📊 Data Visualization"
     examples:
-      - "List all artists in the Chinook database"
       - "Which country's customers spent the most? Search online why that might be"
       - "Find the top 5 genres by number of tracks, then research each genre's history"
 
   - name: "Weather & Files"
-    description: "Weather queries with file creation capabilities"
+    description: "Weather queries with file operations"
+    mode: "flash"
     tool_groups:
       - web
-      - "file:read"
-      - "file:write"
-    subagent_enabled: false
-    thinking_enabled: false
+      - file
     mcp_servers:
-      - "weather"
-      - "ppt"
+      - weather
+      - ppt
+    skills:
+      - ppt-generation
+    features:
+      - "📁 File Operations"
+      - "🌤️ Weather Info"
+      - "📊 Presentations"
     examples:
       - "Get the weather in Toulouse and create a PowerPoint about it"
       - "What is the weather in New York, London, and Tokyo? Save a comparison report"
+
+  - name: "Visual Explainer"
+    description: "Direct explanations with diagrams and visualizations (minimal questions)"
+    mode: "thinking"  # reasoning but not full planning
+    tool_groups:
+      - web
+      - file
+      - bash
+    mcp_servers:
+      - tavily-mcp
+    skills:
+      - chart-visualization
+      - data-analysis
+    features:
+      - "📊 Diagram Generation"
+      - "🎨 Visualizations"
+      - "🧠 Clear Explanations"
+      - "⚡ Direct Answers"
+    examples:
+      - "Explain what MOE is to a 12-year-old boy"
+      - "Explain transformer architecture with a diagram"
+      - "Visualize how attention mechanism works"
+      - "Create a flowchart of the RAG pipeline"

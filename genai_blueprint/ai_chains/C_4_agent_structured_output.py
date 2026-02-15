@@ -38,15 +38,15 @@ def get_weather_fn(query: str, config: RunnableConfig) -> WeatherResponse:
     return result["final_response"]
 
 
-MODEL = "claude_haiku35_openrouter"  # Work
-MODEL = "nvidia_nemotrom70_openrouter"  # Do NOT work
+MODEL = "claude_haiku45_openrouter"  # Work
+MODEL = "nvidia_nemotron70_openrouter"  # Do NOT work
 MODEL = "gpt_4o_azure"  # Work
-MODEL = "google_gemini15flash_openrouter"  # Do NOT work
-MODEL = "qwen25_72_openrouter"  # Do NOT work
+MODEL = "google_gemini3flash_openrouter"  # Updated to Gemini 3 (Flash)
+MODEL = "qwen2_vl72_openrouter"  # Do NOT work
 MODEL = "gpt_4omini_edenai"  # ?
-MODEL = "llama32_3_ollama"  # Do NOT work
+MODEL = "falcon3_3_ollama"  # Do NOT work
 MODEL = "mistral_nemo_openrouter"  # Work
-MODEL = "google_gemini15pro_openrouter"  # Work
+MODEL = "google_gemini3pro_openrouter"  # Updated to Gemini 3 (Pro)
 
 get_weather_chain = RunnableLambda(get_weather_fn).with_config(llm_config(MODEL) | {"recursion_limit": 6})
 answer = get_weather_chain.invoke("what's the weather in New York?")

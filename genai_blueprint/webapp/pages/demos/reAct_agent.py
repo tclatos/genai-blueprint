@@ -32,6 +32,7 @@ from streamlit.delta_generator import DeltaGenerator
 
 from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
+from genai_blueprint.webapp.ui_components.message_renderer import render_message_with_mermaid
 from genai_blueprint.webapp.ui_components.trace_middleware import (
     TraceMiddleware,
     display_interleaved_traces,
@@ -385,21 +386,24 @@ async def process_user_input(
             # Display AI response immediately if chat container is provided
             if chat_container:
                 with chat_container:
-                    st.chat_message("ai").write(final_response.content)
+                    with st.chat_message("ai"):
+                        render_message_with_mermaid(final_response.content, st)
         elif response_content:
             ai_message = AIMessage(content=response_content)
             sss.messages.append(ai_message)
             # Display AI response immediately if chat container is provided
             if chat_container:
                 with chat_container:
-                    st.chat_message("ai").write(response_content)
+                    with st.chat_message("ai"):
+                        render_message_with_mermaid(response_content, st)
         else:
             error_msg = "I apologize, but I couldn't generate a proper response."
             sss.messages.append(AIMessage(content=error_msg))
             # Display error message immediately if chat_container is provided
             if chat_container:
                 with chat_container:
-                    st.chat_message("ai").write(error_msg)
+                    with st.chat_message("ai"):
+                        render_message_with_mermaid(error_msg, st)
 
         # Mark that we just processed input to prevent re-execution
         sss.just_processed = True
@@ -472,7 +476,8 @@ async def main() -> None:
             if isinstance(msg, HumanMessage):
                 st.chat_message("human").write(msg.content)
             elif isinstance(msg, AIMessage):
-                st.chat_message("ai").write(msg.content)
+                with st.chat_message("ai"):
+                    render_message_with_mermaid(msg.content, st)
 
     # Chat input at the bottom
     user_input = st.chat_input("Type your message here... (or use /help for commands)", key="chat_input")

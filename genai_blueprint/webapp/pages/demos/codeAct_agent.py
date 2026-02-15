@@ -79,6 +79,7 @@ from genai_blueprint.utils.streamlit.auto_scroll import scroll_to_here
 from genai_blueprint.utils.streamlit.recorder import StreamlitRecorder
 from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
+from genai_blueprint.webapp.ui_components.message_renderer import render_message_with_mermaid
 from genai_blueprint.webapp.ui_components.smolagents_streamlit import stream_to_streamlit
 
 MODEL_ID = None  # Use the one by configuration
@@ -495,7 +496,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                         st.markdown("### 🎯 Final Answer")
                         final_answer = step.output
                         if isinstance(final_answer, AgentText):
-                            st.markdown(final_answer.to_string())
+                            render_message_with_mermaid(final_answer.to_string(), st)
                         elif isinstance(final_answer, AgentImage):
                             image_raw = final_answer.to_raw()
                             if image_raw is not None:
@@ -510,7 +511,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                             else:
                                 st.warning(f"Image file not found: {final_answer}")
                         else:
-                            st.markdown(str(final_answer))
+                            render_message_with_mermaid(str(final_answer), st)
 
                 try:
                     with strecorder:
@@ -529,7 +530,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                             st.markdown("### 🎯 Results from my_final_answer")
                             for output in _shared_agent_outputs:
                                 if isinstance(output, str):
-                                    st.markdown(output)
+                                    render_message_with_mermaid(output, st)
                                 elif isinstance(output, pd.DataFrame):
                                     st.dataframe(output, width="stretch")
                                 elif isinstance(output, Path):
@@ -538,7 +539,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
                                     else:
                                         st.warning(f"Image file not found: {output}")
                                 else:
-                                    st.write(output)
+                                    render_message_with_mermaid(str(output), st)
 
                     st.success("✅ Agent execution completed")
                 except KeyboardInterrupt:

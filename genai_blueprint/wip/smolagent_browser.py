@@ -23,7 +23,7 @@ load_dotenv()
 #     model_id="accounts/fireworks/models/qwen2-vl-72b-instruct",
 # )
 
-MODEL_ID = "qwen25_72_openrouter"
+MODEL_ID = "qwen2_vl72_openrouter"
 model_name = LlmFactory(llm=MODEL_ID).get_litellm_model_name()
 model = LiteLLMModel(model_id=model_name)
 

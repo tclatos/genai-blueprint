@@ -21,7 +21,7 @@ except Exception as ex:
     st.error(f"Problem loading demo: {ex} ")
     st.stop()
 
-LLM = "gemini_pro_google"
+LLM = "google_gemini3flash_google"
 
 
 DEFAULT_RESULT_COUNT = 100

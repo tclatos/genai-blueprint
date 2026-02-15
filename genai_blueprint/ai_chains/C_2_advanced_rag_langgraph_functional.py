@@ -26,7 +26,7 @@ from loguru import logger
 
 load_dotenv(verbose=True)
 
-# LLM_ID = "claude_haiku35_openrouter"
+# LLM_ID = "claude_haiku45_openrouter"
 
 LLM_ID = "gemma3_4b_ollama"
 

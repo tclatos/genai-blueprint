@@ -30,6 +30,7 @@ from streamlit.delta_generator import DeltaGenerator
 
 from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
+from genai_blueprint.webapp.ui_components.message_renderer import render_message_with_mermaid
 from genai_blueprint.webapp.ui_components.trace_middleware import (
     TraceMiddleware,
     display_interleaved_traces,
@@ -360,12 +361,14 @@ async def run_agent_streaming(
         if final_response and final_response.content:
             sss.df_messages.append(final_response)
             with chat_container:
-                st.chat_message("ai").write(final_response.content)
+                with st.chat_message("ai"):
+                    render_message_with_mermaid(final_response.content, st)
         elif response_content:
             ai_msg = AIMessage(content=response_content)
             sss.df_messages.append(ai_msg)
             with chat_container:
-                st.chat_message("ai").write(response_content)
+                with st.chat_message("ai"):
+                    render_message_with_mermaid(response_content, st)
         else:
             error_msg = "I couldn't generate a response. Please try again."
             sss.df_messages.append(AIMessage(content=error_msg))
@@ -446,7 +449,8 @@ async def main() -> None:
                 if isinstance(msg, HumanMessage):
                     st.chat_message("human").write(msg.content)
                 elif isinstance(msg, AIMessage):
-                    st.chat_message("ai").write(msg.content)
+                    with st.chat_message("ai"):
+                        render_message_with_mermaid(msg.content, st)
 
     # Status container (between columns and input)
     status_container = st.container()

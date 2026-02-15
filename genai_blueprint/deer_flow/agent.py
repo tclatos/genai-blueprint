@@ -34,9 +34,14 @@ class DeerFlowAgentConfig:
     tool_groups: list[str] = field(default_factory=lambda: ["web"])
     subagent_enabled: bool = False
     thinking_enabled: bool = True
+    is_plan_mode: bool = False
+    mode: str = "flash"  # flash, thinking, pro, ultra
     mcp_servers: list[str] = field(default_factory=list)
+    skills: list[str] = field(default_factory=list)  # List of "category/skill-name" or "skill-name"
     tools: list[BaseTool] = field(default_factory=list)
     tool_configs: list[dict[str, Any]] = field(default_factory=list)
+    features: list[str] = field(default_factory=list)
+    example_queries: list[str] = field(default_factory=list)
     system_prompt: str | None = None
     examples: list[str] = field(default_factory=list)
 
@@ -71,8 +76,13 @@ def load_deer_flow_profiles(
             tool_groups=entry.get("tool_groups", ["web"]),
             subagent_enabled=entry.get("subagent_enabled", False),
             thinking_enabled=entry.get("thinking_enabled", True),
+            is_plan_mode=entry.get("is_plan_mode", False),
+            mode=entry.get("mode", "flash"),
             mcp_servers=entry.get("mcp_servers", []),
+            skills=entry.get("skills", []),
             tool_configs=raw_tools,
+            features=entry.get("features", []),
+            example_queries=entry.get("examples", []),  # Map 'examples' to 'example_queries'
             system_prompt=entry.get("system_prompt"),
             examples=entry.get("examples", []),
         )
@@ -172,7 +182,10 @@ def create_deer_flow_agent(
 
     # Step 1: Setup deer-flow path and config
     setup_deer_flow_path()
-    setup_deer_flow_config(mcp_server_names=profile.mcp_servers or None)
+    setup_deer_flow_config(
+        mcp_server_names=profile.mcp_servers or None,
+        enabled_skills=profile.skills or None,
+    )
 
     # Step 2: Resolve extra tools from profile config
     profile_tools = resolve_tools_from_config(profile.tool_configs)
@@ -222,13 +235,38 @@ def _create_agent_internal(
             else:
                 model_name = "default"
 
+    # Apply mode settings (overrides profile defaults)
+    thinking_enabled = profile.thinking_enabled
+    is_plan_mode = profile.is_plan_mode
+    subagent_enabled = profile.subagent_enabled
+
+    # Mode-based configuration (matches deer-flow frontend logic)
+    if profile.mode:
+        mode = profile.mode.lower()
+        if mode == "flash":
+            thinking_enabled = False
+            is_plan_mode = False
+            subagent_enabled = False
+        elif mode == "thinking":
+            thinking_enabled = True
+            is_plan_mode = False
+            subagent_enabled = False
+        elif mode == "pro":
+            thinking_enabled = True
+            is_plan_mode = True
+            subagent_enabled = False
+        elif mode == "ultra":
+            thinking_enabled = True
+            is_plan_mode = True
+            subagent_enabled = True
+
     # Build RunnableConfig
     config = {
         "configurable": {
             "model_name": model_name,
-            "thinking_enabled": profile.thinking_enabled,
-            "subagent_enabled": profile.subagent_enabled,
-            "is_plan_mode": False,
+            "thinking_enabled": thinking_enabled,
+            "subagent_enabled": subagent_enabled,
+            "is_plan_mode": is_plan_mode,
             "max_concurrent_subagents": 3,
         }
     }
