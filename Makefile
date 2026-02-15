@@ -79,6 +79,28 @@ langserve: ## Lauch langserve app
 webapp: ## Launch Streamlit app
 	PYTHONPATH=$(DEV_PYTHONPATH) uv run streamlit run "$(STREAMLIT_ENTRY_POINT)"
 
+##############################
+##  Deer-flow Integration
+##############################
+DEER_FLOW_REPO=https://github.com/bytedance/deer-flow.git
+DEER_FLOW_DIR=ext/deer-flow
+
+.PHONY: deer-flow-sync deer-flow-install
+deer-flow-sync: ## Clone or update Deer-flow repository
+	@if [ -d "$(DEER_FLOW_DIR)" ]; then \
+		echo "Updating Deer-flow..."; \
+		cd $(DEER_FLOW_DIR) && git pull --rebase; \
+	else \
+		echo "Cloning Deer-flow..."; \
+		mkdir -p ext; \
+		git clone --depth 1 $(DEER_FLOW_REPO) $(DEER_FLOW_DIR); \
+	fi
+	@echo "Deer-flow synced at $(DEER_FLOW_DIR)"
+
+deer-flow-install: deer-flow-sync ## Sync Deer-flow and install dependencies
+	uv sync --group deerflow
+	@echo "Deer-flow ready. Backend at: $(DEER_FLOW_DIR)/backend"
+
 
 ##############################
 ##  Development

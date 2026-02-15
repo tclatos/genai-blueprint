@@ -116,6 +116,21 @@ presidio = [
 ]
 
 # ============================================
+# Deer-flow Agent Integration
+# ============================================
+# Dependencies required for deer-flow agent (backend code cloned separately)
+deerflow = [
+    "agent-sandbox>=0.0.19",         # Sandbox execution for code agents
+    "markitdown[all,xlsx]>=0.0.1a2", # Document conversion (PDF, PPT, Excel → Markdown)
+    "readabilipy>=0.3.0",            # Web page readability extraction  
+    "ddgs>=9.10.0",                  # DuckDuckGo search API
+    "langchain-mcp-adapters>=0.1.0", # LangChain MCP adapter (likely already installed)
+    "langchain-deepseek>=1.0.1",     # DeepSeek LLM support
+    "markdownify>=1.2.2",            # HTML to Markdown conversion
+    "duckdb>=1.4.4",                 # DuckDB for data analysis
+]
+
+# ============================================
 # Development Tools
 # ============================================
 dev = [

@@ -1,7 +1,7 @@
 """Deep Search Agent using GPT Researcher.
 
 This module provides an enhanced Streamlit interface for running
-GPT Researcher searches 
+GPT Researcher searches
 """
 
 import asyncio
@@ -334,11 +334,11 @@ def display_report_tabs(research_full_report: Any) -> None:
                 [
                     {
                         "Metric": "Total Sources",
-                        "Value": len(research_full_report.sources),
+                        "Value": str(len(research_full_report.sources)),
                     },
                     {
                         "Metric": "Total Images",
-                        "Value": len(research_full_report.images),
+                        "Value": str(len(research_full_report.images)),
                     },
                     {
                         "Metric": "Research Cost",
@@ -346,7 +346,7 @@ def display_report_tabs(research_full_report: Any) -> None:
                     },
                     {
                         "Metric": "Log Entries",
-                        "Value": len(sss.log_entries),
+                        "Value": str(len(sss.log_entries)),
                     },
                 ]
             )

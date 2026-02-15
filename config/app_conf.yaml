@@ -52,13 +52,14 @@ ui:
     demos:
       - demos/maintenance_agent.py
       - demos/mon_master.py
-      - demos/deep_search_agent.py
+     # - demos/deep_search_agent.py
       - demos/reAct_agent.py
       - demos/codeAct_agent.py
-      - demos/deep_agent.py
+     # - demos/deep_agent.py
       - demos/graph_RAG.py
       - demos/anonymization.py
-      - demos/cognee_KG.py
+      - demos/deer_flow_agent.py
+      #- demos/cognee_KG.py
 
 
 
