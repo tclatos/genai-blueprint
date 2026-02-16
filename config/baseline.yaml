@@ -9,13 +9,13 @@ llm:
   list: ${paths.config}/providers/llm.yaml
   # default_model: gpt_4omini_openai # gpt_35_azure # mistral_large_edenai 
   models:
-    default: gpt_4o_openai   # Use full GPT-4o model for structured output support
+    default: gpt_4o@openai   # Use full GPT-4o model for structured output support
     ### 
     # Optional model definitions (you can add your own type): 
     ###
-    fake: parrot_local_fake 
-    fast:  llama31_8_groq
-    coder : qwen25_coder32_openrouter
+    fake: parrot_local@fake 
+    fast:  llama31_8@groq
+    coder : qwen25_coder32@openrouter
 
   cache : sqlite
   cache_path: ${paths.data_root}/llm_cache/langchain.db
@@ -24,8 +24,8 @@ llm:
 embeddings:
   list: ${paths.config}/providers/embeddings.yaml
   models:
-    default:  ada_002_openai
-    local : artic_22_ollama
+    default: ada_002@openai
+    local: artic_22@ollama
   cache: ${paths.data_root}/hf_models
 
 embeddings_store:

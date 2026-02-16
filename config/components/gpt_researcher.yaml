@@ -1,6 +1,6 @@
 gpt_researcher:
   default:
-    fast_llm: gpt_41mini_openrouter
+    fast_llm: gpt_41mini@openrouter
     max_iterations: 3
     max_search_results_per_query: 5
     report_type: research_report
@@ -14,7 +14,7 @@ gpt_researcher:
      report_type: detailed_report
 
   legal_search:
-    fast_llm: gpt_41mini_openrouter
+    fast_llm: gpt_41mini@openrouter
     max_iterations: 2
     max_search_results_per_query: 2
     report_type: research_report

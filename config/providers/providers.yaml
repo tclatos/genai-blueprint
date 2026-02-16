@@ -1,0 +1,80 @@
+# Provider configuration for LLM and Embeddings factories
+# Each provider specifies:
+#   - use: Module and class in format 'module.path:ClassName'
+#   - api_key_env_var: Environment variable for API key (empty string if not required)
+#   - api_base: Optional API base URL for OpenAI-compatible providers
+
+providers:
+  fake:
+    use: langchain_core.language_models.fake_chat_models:ParrotFakeChatModel
+    api_key_env_var: ""
+    
+  openai:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: OPENAI_API_KEY
+    
+  deepinfra:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: DEEPINFRA_API_TOKEN
+    api_base: https://api.deepinfra.com/v1/openai
+    
+  groq:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: GROQ_API_KEY
+    api_base: https://api.groq.com/openai/v1
+    
+  ollama:
+    use: langchain_ollama:ChatOllama
+    api_key_env_var: ""
+    
+  edenai:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: EDENAI_API_KEY
+    api_base: https://api.edenai.run/v2/llm
+    
+  azure:
+    use: langchain_openai:AzureChatOpenAI
+    api_key_env_var: AZURE_OPENAI_API_KEY
+    
+  together:
+    use: langchain_together:ChatTogether
+    api_key_env_var: TOGETHER_API_KEY
+    
+  deepseek:
+    use: langchain_deepseek:ChatDeepSeek
+    api_key_env_var: DEEPSEEK_API_KEY
+    
+  openrouter:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: OPENROUTER_API_KEY
+    api_base: https://openrouter.ai/api/v1
+    
+  huggingface:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: HUGGINGFACEHUB_API_TOKEN
+    
+  mistralai:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: MISTRAL_API_KEY
+    api_base: https://api.mistral.ai/v1
+    
+  litellm:
+    use: litellm:ChatLiteLLM
+    api_key_env_var: ""
+    
+  # NOT TESTED:
+  bedrock:
+    use: langchain_aws:ChatBedrock
+    api_key_env_var: AWS_ACCESS_KEY_ID
+    
+  anthropic:
+    use: langchain_anthropic:ChatAnthropic
+    api_key_env_var: ANTHROPIC_API_KEY
+    
+  google:
+    use: langchain_google_genai:ChatGoogleGenerativeAI
+    api_key_env_var: GOOGLE_API_KEY
+    
+  custom:
+    use: langchain_openai:ChatOpenAI
+    api_key_env_var: ""

@@ -8,20 +8,20 @@
 training_adn:
   llm:
     models:
-      #default:  mistral_small_edenai
-      default: gpt_41_azure
-      azure: gpt_41_azure
-      openai: gpt_41mini_openai
-      for_vision : gpt_41_azure
-      openrouter: gpt_oss120_openrouter
-      local: gemma3_4b_ollama
+      #default:  mistral_small@edenai
+      default: gpt_41@azure
+      azure: gpt_41@azure
+      openai: gpt_41mini@openai
+      for_vision : gpt_41@azure
+      openrouter: gpt_oss120@openrouter
+      local: gemma3_4b@ollama
   embeddings:
     models:
-      default: ada_002_azure
-      cheap: qwen3_06b_deepinfra      
-      edenai: ada_002_edenai
-      local: artic_22_ollama
-      azure: ada_002_azure
+      default: ada_002@azure
+      cheap: qwen3_06b@deepinfra      
+      edenai: ada_002@edenai
+      local: artic_22@ollama
+      azure: ada_002@azure
   vector_store:
     default: Chroma_in_memory
 
@@ -29,10 +29,10 @@ training_adn:
 pytest:
   llm:
     models:
-      default: gpt_4omini_edenai
+      default: gpt_4omini@edenai
   embeddings:
     models:
-      default: ada_002_edenai
+      default: ada_002@edenai
   vector_store:
     default: InMemory
 
@@ -45,12 +45,12 @@ container:
     demo_conf: ${paths.project}/config/demos
   llm:
     models:
-      default: gpt_41mini_openrouter
+      default: gpt_41mini@openrouter
     cache: sqlite
     cache_path: ${paths.data_root}/llm_cache/langchain.db
   embeddings:
     models:
-      default: bge_m3_deepinfra
+      default: bge_m3@deepinfra
     cache: ${paths.data_root}/hf_models
   vector_store:
     default: Chroma
@@ -66,10 +66,10 @@ ekg_local:
     BAML_LOG: "warn"
   llm:
     models:
-      default: kimi_k2_openrouter
+      default: kimi_k2@openrouter
   embeddings:
     models:
-      default: qwen3_06b_deepinfra
+      default: qwen3_06b@deepinfra
   vector_store:
     default : PgVector
   cli:
