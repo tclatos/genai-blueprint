@@ -1,0 +1,26 @@
+# Deer-flow Agent Configuration
+# Configuration for deer-flow agent skills and sandbox settings
+
+deerflow:
+  # Skills configuration
+  skills:
+    # Path to skills directory (absolute or relative to project root)
+    # This directory should contain 'public/' and 'custom/' subdirectories
+    path: ${paths.project}/skills
+    
+    # Container mount path for skills (used in Docker sandbox)
+    container_path: /mnt/skills
+    
+    # Enable skill loading tracing
+    trace_loading: true
+  
+  # Sandbox configuration
+  sandbox:
+    # Use local sandbox by default (simpler, no Docker required)
+    provider: local
+    
+    # Docker sandbox configuration (uncomment to enable)
+    # provider: docker
+    # port: 8080
+    # auto_start: true
+    # container_prefix: deer-flow-sandbox

@@ -100,7 +100,7 @@ def get_cached_checkpointer() -> MemorySaver:
 def load_profiles() -> list[dict[str, Any]]:
     """Load Deer-flow profiles from YAML config (cached 60s)."""
     try:
-        from genai_blueprint.deer_flow.agent import load_deer_flow_profiles
+        from genai_tk.extra.agents.deer_flow.agent import DeerFlowError, load_deer_flow_profiles
 
         profiles = load_deer_flow_profiles(CONFIG_FILE)
         return [
@@ -117,8 +117,13 @@ def load_profiles() -> list[dict[str, Any]]:
             }
             for p in profiles
         ]
-    except Exception as e:
+    except (DeerFlowError, FileNotFoundError, ValueError) as e:
         logger.error(f"Failed to load profiles: {e}")
+        st.error(f"❌ Error loading Deer-flow profiles: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Unexpected error loading profiles: {e}")
+        st.error(f"❌ Unexpected error: {e}")
         return []
 
 
@@ -135,9 +140,27 @@ def get_profile_by_name(profiles: list[dict], name: str) -> dict[str, Any] | Non
 def create_agent_for_profile(profile_dict: dict[str, Any]) -> Any:
     """Create a Deer-flow agent for the given profile.
 
-    Uses the simplified creation path that takes GenAI Blueprint's LLM directly.
+    Uses the simplified creation path that takes GenAI Toolkit's LLM directly.
+
+    Raises:
+        DeerFlowError: If profile configuration is invalid (e.g., invalid MCP servers)
+        Exception: If agent creation fails for other reasons
     """
-    from genai_blueprint.deer_flow.agent import DeerFlowAgentConfig, create_deer_flow_agent_simple
+    from genai_tk.extra.agents.deer_flow.agent import (
+        DeerFlowAgentConfig,
+        create_deer_flow_agent_simple,
+        validate_mcp_servers,
+    )
+
+    # Validate MCP servers if specified
+    mcp_servers = profile_dict.get("mcp_servers", [])
+    if mcp_servers:
+        try:
+            validated_mcp = validate_mcp_servers(mcp_servers)
+            profile_dict["mcp_servers"] = validated_mcp
+        except Exception as e:
+            # Re-raise with more context
+            raise ValueError(f"Invalid MCP servers in profile '{profile_dict['name']}': {e}") from e
 
     profile = DeerFlowAgentConfig(
         name=profile_dict["name"],

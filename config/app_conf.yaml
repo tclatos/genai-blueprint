@@ -28,6 +28,7 @@ paths:
   - ${paths.config}/overrides.yaml
   - ${paths.config}/mcp_servers.yaml
   - ${paths.config}/components/gpt_researcher.yaml
+  - ${paths.config}/agents/deerflow_config.yaml
 
 
 #### 
@@ -81,7 +82,6 @@ cli:
     - genai_tk.extra.agents.commands_agents:AgentCommands
     - genai_tk.extra.structured.commands_baml:BamlCommands
     - genai_tk.main.cli:register_commands
-    - genai_bp.deer_flow.cli_commands:DeerFlowCommands
  
 logging:
   format: "<cyan>{time:HH:mm:ss}</cyan>-<level>{level: <7}</level> | <magenta>{file.name}</magenta>:<green>{line} <italic>{function}</italic></green>- <level>{message}</level>"

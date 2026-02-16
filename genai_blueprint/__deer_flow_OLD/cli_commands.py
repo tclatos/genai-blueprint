@@ -278,11 +278,23 @@ async def _run_single_shot(
     # Get LLM
     if llm_override:
         try:
-            llm_id = LlmFactory.resolve_llm_identifier(llm_override)
-            llm = LlmFactory.create_llm(llm_id)
+            # Resolve identifier with helpful error messages
+            llm_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm_override)
+            if error_msg:
+                console.print(error_msg)
+                raise typer.Exit(1)
+
+            # Create LLM instance
+            llm = get_llm(llm=llm_id)
+        except typer.Exit:
+            raise
         except Exception as e:
-            console.print(f"[red]Error resolving LLM '{llm_override}':[/red] {e}", style="bold")
-            raise typer.Exit(1)
+            console.print(f"[red]❌ Error creating LLM '{llm_override}':[/red] {e}", style="bold")
+            console.print(
+                "\n[yellow]💡 Tip:[/yellow] Check that the model exists and your API key is configured.\n"
+                "Use [cyan]uv run cli info models[/cyan] to see available models."
+            )
+            raise typer.Exit(1) from e
     else:
         llm = get_llm()
 
@@ -388,10 +400,22 @@ async def _run_chat_mode(
     # Get LLM
     if llm_override:
         try:
-            llm_id = LlmFactory.resolve_llm_identifier(llm_override)
-            llm = LlmFactory.create(llm_id)
+            # Resolve identifier with helpful error messages
+            llm_id, error_msg = LlmFactory.resolve_llm_identifier_safe(llm_override)
+            if error_msg:
+                console.print(error_msg)
+                raise typer.Exit(1)
+
+            # Create LLM instance
+            llm = get_llm(llm=llm_id)
+        except typer.Exit:
+            raise
         except Exception as e:
-            console.print(f"[red]Error resolving LLM '{llm_override}':[/red] {e}", style="bold")
+            console.print(f"[red]❌ Error creating LLM '{llm_override}':[/red] {e}", style="bold")
+            console.print(
+                "\n[yellow]💡 Tip:[/yellow] Check that the model exists and your API key is configured.\n"
+                "Use [cyan]uv run cli info models[/cyan] to see available models."
+            )
             raise typer.Exit(1) from e
     else:
         llm = get_llm()
