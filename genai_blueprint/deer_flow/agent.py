@@ -10,6 +10,7 @@ the same streaming patterns used in reAct_agent.py.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -177,8 +178,8 @@ def create_deer_flow_agent(
     Returns:
         A CompiledStateGraph (LangGraph agent) ready for .astream()
     """
-    from genai_blueprint.deer_flow._path_setup import setup_deer_flow_path
-    from genai_blueprint.deer_flow.config_bridge import setup_deer_flow_config
+    from genai_bp.deer_flow._path_setup import setup_deer_flow_path
+    from genai_bp.deer_flow.config_bridge import setup_deer_flow_config
 
     # Step 1: Setup deer-flow path and config
     setup_deer_flow_path()
@@ -341,10 +342,35 @@ def _create_agent_with_extra_tools(
     model = create_chat_model(name=model_name, thinking_enabled=thinking_enabled)
 
     # Get deer-flow tools + our extras
-    deer_flow_tools = get_available_tools(
-        model_name=model_name,
-        subagent_enabled=subagent_enabled,
-    )
+    try:
+        deer_flow_tools = get_available_tools(
+            model_name=model_name,
+            subagent_enabled=subagent_enabled,
+            groups=profile.tool_groups,
+        )
+    except ImportError as e:
+        # Handle missing dependencies gracefully
+        error_msg = str(e)
+        logger.warning(f"Some deer-flow tools could not be loaded: {error_msg}")
+
+        # Try to load tools individually, skipping ones that fail
+        deer_flow_tools = []
+        from langchain.tools import BaseTool
+        from src.reflection.resolvers import resolve_variable
+        from src.tools.tools import get_app_config
+
+        config = get_app_config()
+        for tool in config.tools:
+            if profile.tool_groups is None or tool.group in profile.tool_groups:
+                try:
+                    resolved_tool = resolve_variable(tool.use, BaseTool)
+                    deer_flow_tools.append(resolved_tool)
+                except ImportError as tool_err:
+                    logger.warning(f"Skipping tool {tool.name} ({tool.group}): {tool_err}")
+                    continue
+
+        logger.info(f"Loaded {len(deer_flow_tools)} deer-flow tools (some skipped)")
+
     all_tools = deer_flow_tools + extra_tools
 
     logger.info(
@@ -426,8 +452,45 @@ def create_deer_flow_agent_simple(
     all_extra_tools = profile_tools + (extra_tools or [])
 
     # Get deer-flow's built-in tools (web_search, web_fetch, etc.)
-    # We can't use model_name since we're using our own LLM
-    deer_flow_tools = get_available_tools(subagent_enabled=profile.subagent_enabled)
+    # Filter by tool_groups to avoid loading tools with missing dependencies
+    try:
+        deer_flow_tools = get_available_tools(
+            subagent_enabled=profile.subagent_enabled,
+            groups=profile.tool_groups,
+        )
+    except ImportError as e:
+        # Handle missing dependencies gracefully
+        error_msg = str(e)
+        logger.warning(f"Some deer-flow tools could not be loaded: {error_msg}")
+
+        if "readabilipy" in error_msg:
+            logger.info("To enable web_fetch tool with jina_ai, install: pip install readabilipy")
+
+        # Retry without any tool groups to get at least the basic tools that work
+        logger.info("Retrying with fallback tool loading...")
+        try:
+            # Try to get tools without group filtering - deer-flow will load what it can
+            deer_flow_tools = []
+            from src.tools.tools import get_app_config
+
+            config = get_app_config()
+            # Manually load only tools that don't fail
+            from langchain.tools import BaseTool
+            from src.reflection.resolvers import resolve_variable
+
+            for tool in config.tools:
+                if profile.tool_groups is None or tool.group in profile.tool_groups:
+                    try:
+                        resolved_tool = resolve_variable(tool.use, BaseTool)
+                        deer_flow_tools.append(resolved_tool)
+                    except ImportError as tool_err:
+                        logger.warning(f"Skipping tool {tool.name} ({tool.group}): {tool_err}")
+                        continue
+
+            logger.info(f"Loaded {len(deer_flow_tools)} deer-flow tools (some skipped due to missing dependencies)")
+        except Exception as retry_err:
+            logger.error(f"Could not load deer-flow tools: {retry_err}")
+            deer_flow_tools = []
 
     all_tools = deer_flow_tools + all_extra_tools
     logger.info(f"Deer-flow agent tools: {len(deer_flow_tools)} built-in + {len(all_extra_tools)} extra")
@@ -461,3 +524,67 @@ def create_deer_flow_agent_simple(
     )
 
     return agent
+
+
+async def run_deer_flow_agent(
+    agent: DeerFlowAgent,
+    user_input: str,
+    thread_id: str,
+    on_node: Callable[[str], None] | None = None,
+    on_content: Callable[[str, str], None] | None = None,
+) -> str:
+    """Run a Deer-flow agent with streaming support.
+
+    Reusable async function for executing Deer-flow agents with optional callbacks
+    for streaming progress updates. Used by both CLI and Streamlit interfaces.
+
+    Args:
+        agent: Compiled Deer-flow agent graph
+        user_input: User's query or message
+        thread_id: Thread ID for conversation memory
+        on_node: Optional callback called when entering a new node (receives node_name)
+        on_content: Optional callback called when agent generates content (receives node_name, content)
+
+    Returns:
+        The final agent response as a string
+
+    Example:
+        >>> async def node_handler(node):
+        ...     print(f"Processing: {node}")
+        >>> response = await run_deer_flow_agent(agent, "Hello", "thread-1", on_node=node_handler)
+    """
+    from langchain_core.messages import AIMessage, HumanMessage
+
+    config = {"configurable": {"thread_id": thread_id}}
+    inputs = {"messages": [HumanMessage(content=user_input)]}
+    response_content = ""
+    final_response = None
+
+    async for step in agent.astream(inputs, config):
+        # Handle tuple steps
+        if isinstance(step, tuple):
+            step = step[1]
+
+        if isinstance(step, dict):
+            for node, update in step.items():
+                # Notify caller of node transition
+                if on_node:
+                    on_node(node)
+
+                if "messages" in update and update["messages"]:
+                    latest = update["messages"][-1]
+                    if isinstance(latest, AIMessage) and latest.content:
+                        response_content = latest.content
+                        final_response = latest
+
+                        # Notify caller of new content
+                        if on_content:
+                            on_content(node, str(latest.content))
+
+    # Return final content
+    if final_response and final_response.content:
+        return str(final_response.content)
+    elif response_content:
+        return response_content
+    else:
+        return "I couldn't generate a response. Please try again."

@@ -94,7 +94,6 @@ deerflow_agents:
       - "🔍 Web Search"
       - "📊 Data Visualization"
     examples:
-      - "Which country's customers spent the most? Search online why that might be"
       - "Find the top 5 genres by number of tracks, then research each genre's history"
 
   - name: "Weather & Files"

@@ -15,6 +15,6 @@ Setup:
        then: uv sync --group deerflow
 """
 
-from genai_blueprint.deer_flow._path_setup import get_deer_flow_backend_path, setup_deer_flow_path
+from genai_bp.deer_flow._path_setup import get_deer_flow_backend_path, setup_deer_flow_path
 
 __all__ = ["get_deer_flow_backend_path", "setup_deer_flow_path"]

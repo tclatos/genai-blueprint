@@ -27,6 +27,24 @@ cli_commands:
   - name: List MCP server tools
     command: info mcp-tools --filter filesystem
 
+  - name: List Deer-flow profiles
+    command: deerflow --list
+
+  - name: Deer-flow Research Assistant
+    command: deerflow -p "Research Assistant" "What are the latest AI trends?"
+
+  - name: Deer-flow with streaming
+    command: deerflow -p "Research Assistant" --stream "Explain transformer architecture"
+
+  - name: Deer-flow interactive chat
+    command: deerflow -p "Research Assistant" --chat
+
+  - name: Deer-flow with LLM override
+    command: deerflow -p "Coder" --llm gpt_41_openrouter "Write a Python sorting algorithm"
+
+  - name: Deer-flow with extra MCP server
+    command: deerflow -p "Weather & Files" --mcp math "Calculate weather patterns"
+
 
   # - name: Agent with Browser
   #   command: mcp-agent --input" get news from atos.net web site" --server playwright --server filesystem

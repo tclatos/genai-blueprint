@@ -13,10 +13,9 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from genai_bp.deer_flow._path_setup import get_deer_flow_backend_path
 from genai_tk.core.llm_factory import LlmFactory
 from loguru import logger
-
-from genai_blueprint.deer_flow._path_setup import get_deer_flow_backend_path
 
 
 def generate_deer_flow_models(llm_config_path: str = "config/providers/llm.yaml") -> list[dict[str, Any]]:
