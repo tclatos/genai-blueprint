@@ -28,7 +28,8 @@ async def test_research_agent():
         # Create a simple mock model that doesn't require API keys
         from typing import Any, List, Optional
 
-        from langchain_core.language_models.base import BaseChatModel
+        from langchain_core.language_models.base import LanguageModelInput, LanguageModelOutput
+        from langchain_core.language_models.chat_models import BaseChatModel
         from langchain_core.messages import AIMessage, BaseMessage
         from langchain_core.outputs import ChatGeneration, ChatResult
 
@@ -40,14 +41,14 @@ async def test_research_agent():
                 return "mock"
 
             def _generate(
-                self, messages: List[BaseMessage], stop: Optional[List[str]] = None, **kwargs: Any
+                self, messages: LanguageModelInput, stop: Optional[List[str]] = None, **kwargs: Any
             ) -> ChatResult:
                 # Simple mock response
                 response = AIMessage(content="I'll search for information about Atos.")
                 return ChatResult(generations=[ChatGeneration(message=response)])
 
             async def _agenerate(
-                self, messages: List[BaseMessage], stop: Optional[List[str]] = None, **kwargs: Any
+                self, messages: LanguageModelInput, stop: Optional[List[str]] = None, **kwargs: Any
             ) -> ChatResult:
                 return self._generate(messages, stop, **kwargs)
 
