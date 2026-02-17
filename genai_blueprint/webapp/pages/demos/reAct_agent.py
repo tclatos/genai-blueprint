@@ -21,12 +21,12 @@ from genai_tk.tools.langchain.shared_config_loader import (
     LangChainAgentConfig,
     load_all_langchain_agent_configs,
 )
+from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent as create_agent
 from streamlit import session_state as sss
 from streamlit.delta_generator import DeltaGenerator
 

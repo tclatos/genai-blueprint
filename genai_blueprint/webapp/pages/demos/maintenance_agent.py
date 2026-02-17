@@ -21,11 +21,11 @@ import pandas as pd
 import streamlit as st
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, dict_input_message
+from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent as create_agent
 from loguru import logger  # noqa: F401
 
 from genai_blueprint.demos.maintenance_agent.dummy_data import dummy_database

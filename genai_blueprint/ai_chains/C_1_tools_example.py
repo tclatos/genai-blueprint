@@ -8,10 +8,9 @@ from genai_tk.core.chain_registry import (
     register_runnable,
 )
 from genai_tk.core.llm_factory import get_llm
-from langchain_core.prompts import ChatPromptTemplate
+from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
 
 
 @tool
@@ -58,20 +57,15 @@ register_runnable(
 
 
 def create_executor(config: dict) -> Runnable:
-    """Create a ReAct agent executor using LangGraph."""
+    """Create a ReAct agent executor using langchain.agents."""
     llm_id = config["llm"]
     llm = get_llm(llm=llm_id)
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", "You are a helpful Search Assistant"),
-            ("placeholder", "{messages}"),
-        ]
-    )
+    system_prompt = "You are a helpful Search Assistant"
 
-    # Create ReAct agent using modern LangGraph approach
-    agent = create_react_agent(llm, tools, state_modifier=prompt)
-    
+    # Create ReAct agent using langchain.agents.create_agent
+    agent = create_agent(model=llm, tools=tools, system_prompt=system_prompt)
+
     # Wrap to extract output in compatible format
     def run_and_extract(input_dict: dict) -> dict:
         messages = [("user", input_dict.get("input", ""))]
@@ -82,7 +76,7 @@ def create_executor(config: dict) -> Runnable:
                 if hasattr(msg, "content") and msg.content:
                     return {"output": msg.content}
         return {"output": "No response"}
-    
+
     return run_and_extract | itemgetter("output")
 
 
