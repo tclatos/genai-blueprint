@@ -21,11 +21,11 @@ import pandas as pd
 import streamlit as st
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, dict_input_message
-from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import create_react_agent as create_agent
 from loguru import logger  # noqa: F401
 
 from genai_blueprint.demos.maintenance_agent.dummy_data import dummy_database
@@ -214,7 +214,7 @@ async def main() -> None:
                     assert isinstance(response, AIMessage)
                     st.chat_message("ai", avatar="🛠️").write(response.content)
 
-            url = cb.get_run_url()
+            url = st_callback.get_run_url()
             st.session_state.messages.append(response)
             if url:
                 st.link_button("Trace", url)

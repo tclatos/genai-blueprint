@@ -8,9 +8,10 @@ from genai_tk.core.chain_registry import (
     register_runnable,
 )
 from genai_tk.core.llm_factory import get_llm
-from langchain.agents import AgentExecutor, create_tool_calling_agent, tool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
+from langchain_core.tools import tool
+from langgraph.prebuilt import create_react_agent
 
 
 @tool
@@ -57,21 +58,32 @@ register_runnable(
 
 
 def create_executor(config: dict) -> Runnable:
+    """Create a ReAct agent executor using LangGraph."""
     llm_id = config["llm"]
     llm = get_llm(llm=llm_id)
-    # info = get_llm_info(llm_id)
 
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", "You are a helpful Search Assistant"),
-            ("human", "{input}"),
-            ("placeholder", "{agent_scratchpad}"),
+            ("placeholder", "{messages}"),
         ]
     )
 
-    agent = create_tool_calling_agent(llm, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-    return agent_executor | itemgetter("output")
+    # Create ReAct agent using modern LangGraph approach
+    agent = create_react_agent(llm, tools, state_modifier=prompt)
+    
+    # Wrap to extract output in compatible format
+    def run_and_extract(input_dict: dict) -> dict:
+        messages = [("user", input_dict.get("input", ""))]
+        result = agent.invoke({"messages": messages})
+        # Extract the last AI message content
+        if result and "messages" in result:
+            for msg in reversed(result["messages"]):
+                if hasattr(msg, "content") and msg.content:
+                    return {"output": msg.content}
+        return {"output": "No response"}
+    
+    return run_and_extract | itemgetter("output")
 
 
 register_runnable(
