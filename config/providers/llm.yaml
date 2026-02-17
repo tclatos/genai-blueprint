@@ -31,347 +31,348 @@
 AZURE_API_VERSION: 2024-10-01-preview   # Dont work.  @TODO: use AZURE_OPENAI_API_VERSION in code 
 
 llm:
-- model:  # fake model for tests
-  id: parrot_local
   providers:
-    - fake: parrot
+  - model:  # fake model for tests
+    id: parrot_local
+    providers:
+      - fake: parrot
 
-# Anthropic Claude Models
-- model:
-  id: claude_opus46
-  providers:
-    - openrouter: anthropic/claude-opus-4.6
-  capabilities: ['structured_outputs', 'vision', 'pdf']
+  # Anthropic Claude Models
+  - model:
+    id: claude_opus46
+    providers:
+      - openrouter: anthropic/claude-opus-4.6
+    capabilities: ['structured_outputs', 'vision', 'pdf']
 
-- model:
-  id: claude_sonnet45
-  providers:
-    - openrouter: anthropic/claude-sonnet-4.5
-  capabilities: ['structured_outputs', 'vision', 'pdf']
+  - model:
+    id: claude_sonnet45
+    providers:
+      - openrouter: anthropic/claude-sonnet-4.5
+    capabilities: ['structured_outputs', 'vision', 'pdf']
 
-- model:
-  id: claude_haiku45
-  providers:
-    - openrouter: anthropic/claude-haiku-4.5
-  capabilities: ['structured_outputs']
+  - model:
+    id: claude_haiku45
+    providers:
+      - openrouter: anthropic/claude-haiku-4.5
+    capabilities: ['structured_outputs']
 
-# OpenAI GPT Models - Latest versions
-- model:
-  id: gpt_52
-  providers:
-    - openai: gpt-5.2
-    - openrouter: openai/gpt-5.2
-  capabilities: ['structured_outputs', 'vision', 'thinking']
+  # OpenAI GPT Models - Latest versions
+  - model:
+    id: gpt_52
+    providers:
+      - openai: gpt-5.2
+      - openrouter: openai/gpt-5.2
+    capabilities: ['structured_outputs', 'vision', 'thinking']
 
-- model:
-  id: gpt_52mini
-  providers:
-    - openai: gpt-5.2-mini
-    - openrouter: openai/gpt-5.2-mini
-  capabilities: ['structured_outputs', 'vision']
+  - model:
+    id: gpt_52mini
+    providers:
+      - openai: gpt-5.2-mini
+      - openrouter: openai/gpt-5.2-mini
+    capabilities: ['structured_outputs', 'vision']
 
-- model:
-  id: gpt_52nano
-  providers:
-    - openai: gpt-5.2-nano
-  capabilities: ['structured_outputs']
+  - model:
+    id: gpt_52nano
+    providers:
+      - openai: gpt-5.2-nano
+    capabilities: ['structured_outputs']
 
-- model:
-  id: gpt_51
-  providers:
-    - openai: gpt-5.1
-    - openrouter: openai/gpt-5.1
-  capabilities: ['structured_outputs', 'vision', 'thinking']
+  - model:
+    id: gpt_51
+    providers:
+      - openai: gpt-5.1
+      - openrouter: openai/gpt-5.1
+    capabilities: ['structured_outputs', 'vision', 'thinking']
 
-- model:
-  id: gpt_5
-  providers:
-    - openai: gpt-5
-    - openrouter: openai/gpt-5
-  capabilities: ['structured_outputs', 'vision', 'thinking']
+  - model:
+    id: gpt_5
+    providers:
+      - openai: gpt-5
+      - openrouter: openai/gpt-5
+    capabilities: ['structured_outputs', 'vision', 'thinking']
 
-- model:
-  id: gpt_41
-  providers:
-    - openai: gpt-4.1
-    - openrouter: openai/gpt-4.1
-    - edenai: gpt-4.1-2025-04-14
-    - azure: gpt-4.1/2024-10-01-preview
-  capabilities: ['structured_outputs', 'vision']
+  - model:
+    id: gpt_41
+    providers:
+      - openai: gpt-4.1
+      - openrouter: openai/gpt-4.1
+      - edenai: gpt-4.1-2025-04-14
+      - azure: gpt-4.1/2024-10-01-preview
+    capabilities: ['structured_outputs', 'vision']
 
-- model:
-  id: gpt_41mini
-  providers:
-    - openai: gpt-4.1-mini
-    - openrouter: openai/gpt-4.1-mini
-    - edenai: gpt-4.1-mini-2025-04-14
-  capabilities: ['structured_outputs']
+  - model:
+    id: gpt_41mini
+    providers:
+      - openai: gpt-4.1-mini
+      - openrouter: openai/gpt-4.1-mini
+      - edenai: gpt-4.1-mini-2025-04-14
+    capabilities: ['structured_outputs']
 
-- model:
-  id: gpt_4o
-  providers:
-    - openai: gpt-4o
-    - edenai: openai/gpt-4o
-    - azure: gpt-4o/2024-10-01-preview
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: gpt_4o
+    providers:
+      - openai: gpt-4o
+      - edenai: openai/gpt-4o
+      - azure: gpt-4o/2024-10-01-preview
+    capabilities: ['vision', 'structured_outputs']
 
-- model:
-  id: gpt_4omini
-  providers:
-    - openai: gpt-4o-mini
-    - edenai: openai/gpt-4o-mini
-  capabilities: ['structured_outputs', 'vision']
+  - model:
+    id: gpt_4omini
+    providers:
+      - openai: gpt-4o-mini
+      - edenai: openai/gpt-4o-mini
+    capabilities: ['structured_outputs', 'vision']
 
-# DeepSeek Models
-- model:
-  id: deepseek_v32
-  providers:
-    - deepseek: deepseek-chat
-    - openrouter: deepseek/deepseek-chat-v3.2
-    - edenai: deepseek/deepseek-chat
-  capabilities: ['structured_outputs', 'thinking']
+  # DeepSeek Models
+  - model:
+    id: deepseek_v32
+    providers:
+      - deepseek: deepseek-chat
+      - openrouter: deepseek/deepseek-chat-v3.2
+      - edenai: deepseek/deepseek-chat
+    capabilities: ['structured_outputs', 'thinking']
 
-# Google Gemini Models
-- model:
-  id: google_gemini3pro
-  providers:
-    - google: gemini-3-pro
-    - openrouter: google/gemini-3-pro
-  capabilities: ['vision', 'structured_outputs', 'thinking']
+  # Google Gemini Models
+  - model:
+    id: google_gemini3pro
+    providers:
+      - google: gemini-3-pro
+      - openrouter: google/gemini-3-pro
+    capabilities: ['vision', 'structured_outputs', 'thinking']
 
-- model:
-  id: google_gemini3flash
-  providers:
-    - google: gemini-3-flash
-    - openrouter: google/gemini-3-flash
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: google_gemini3flash
+    providers:
+      - google: gemini-3-flash
+      - openrouter: google/gemini-3-flash
+    capabilities: ['vision', 'structured_outputs']
 
-- model:
-  id: google_gemini25pro
-  providers:
-    - google: gemini-2.5-pro
-    - openrouter: google/gemini-2.5-pro
-  capabilities: ['vision', 'structured_outputs', 'thinking']
+  - model:
+    id: google_gemini25pro
+    providers:
+      - google: gemini-2.5-pro
+      - openrouter: google/gemini-2.5-pro
+    capabilities: ['vision', 'structured_outputs', 'thinking']
 
-- model:
-  id: google_gemini25flashlite
-  providers:
-    - google: gemini-2.5-flash-lite
-    - openrouter: google/gemini-2.5-flash-lite
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: google_gemini25flashlite
+    providers:
+      - google: gemini-2.5-flash-lite
+      - openrouter: google/gemini-2.5-flash-lite
+    capabilities: ['vision', 'structured_outputs']
 
-# Mistral Models
-- model:
-  id: mistral_large3
-  providers:
-    - mistralai: mistral-large-latest
-    - openrouter: mistralai/mistral-large-3
-  capabilities: ['structured_outputs', 'vision']
+  # Mistral Models
+  - model:
+    id: mistral_large3
+    providers:
+      - mistralai: mistral-large-latest
+      - openrouter: mistralai/mistral-large-3
+    capabilities: ['structured_outputs', 'vision']
 
-- model:
-  id: mistral_small32
-  providers:
-    - mistralai: mistral-small-latest
-    - openrouter: mistralai/mistral-small-3.2
-  capabilities: ['structured_outputs', 'vision']
+  - model:
+    id: mistral_small32
+    providers:
+      - mistralai: mistral-small-latest
+      - openrouter: mistralai/mistral-small-3.2
+    capabilities: ['structured_outputs', 'vision']
 
-- model:
-  id: mistral_nemo
-  providers:
-    - openrouter: mistralai/mistral-nemo
-  capabilities: ['structured_outputs']
+  - model:
+    id: mistral_nemo
+    providers:
+      - openrouter: mistralai/mistral-nemo
+    capabilities: ['structured_outputs']
 
-- model:
-  id: ministral_14b
-  providers:
-    - mistralai: ministral-14b-latest
-    - openrouter: mistralai/ministral-8b-latest
-  capabilities: ['structured_outputs']
+  - model:
+    id: ministral_14b
+    providers:
+      - mistralai: ministral-14b-latest
+      - openrouter: mistralai/ministral-8b-latest
+    capabilities: ['structured_outputs']
 
-- model:
-  id: ministral_8b
-  providers:
-    - mistralai: ministral-8b-latest
-  capabilities: ['structured_outputs']
+  - model:
+    id: ministral_8b
+    providers:
+      - mistralai: ministral-8b-latest
+    capabilities: ['structured_outputs']
 
-# Meta Llama Models
-- model:
-  id: llama4_maverick
-  providers:
-    - groq: meta-llama/llama-4-maverick-17b-128e-instruct
-    - openrouter: meta-llama/llama-4-maverick-17b-128e-instruct
-  capabilities: ['vision', 'structured_outputs']
+  # Meta Llama Models
+  - model:
+    id: llama4_maverick
+    providers:
+      - groq: meta-llama/llama-4-maverick-17b-128e-instruct
+      - openrouter: meta-llama/llama-4-maverick-17b-128e-instruct
+    capabilities: ['vision', 'structured_outputs']
 
-- model:
-  id: llama33_70
-  providers:
-    - groq: llama-3.3-70b-versatile
-    - openrouter: meta-llama/llama-3.3-70b-instruct
-    - edenai: together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo
-  capabilities: ['structured_outputs']
+  - model:
+    id: llama33_70
+    providers:
+      - groq: llama-3.3-70b-versatile
+      - openrouter: meta-llama/llama-3.3-70b-instruct
+      - edenai: together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+    capabilities: ['structured_outputs']
 
-- model:
-  id: llama32_90V
-  providers:
-    - deepinfra: meta-llama/Llama-3.2-90B-Vision-Instruct
-    - openrouter: meta-llama/llama-3.2-90b-vision-instruct
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: llama32_90V
+    providers:
+      - deepinfra: meta-llama/Llama-3.2-90B-Vision-Instruct
+      - openrouter: meta-llama/llama-3.2-90b-vision-instruct
+    capabilities: ['vision', 'structured_outputs']
 
-# Qwen Models
-- model:
-  id: qwen3_maxtinking
-  providers:
-    - openrouter: qwen/qwen3-max-thinking
-  capabilities: ['thinking', 'structured_outputs']
+  # Qwen Models
+  - model:
+    id: qwen3_maxtinking
+    providers:
+      - openrouter: qwen/qwen3-max-thinking
+    capabilities: ['thinking', 'structured_outputs']
 
-- model:
-  id: qwen3_coder_next
-  providers:
-    - openrouter: qwen/qwen3-coder-next
-  capabilities: ['structured_outputs']
+  - model:
+    id: qwen3_coder_next
+    providers:
+      - openrouter: qwen/qwen3-coder-next
+    capabilities: ['structured_outputs']
 
-- model:
-  id: qwen3_vl32
-  providers:
-    - openrouter: qwen/qwen3-vl-32b-instruct
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: qwen3_vl32
+    providers:
+      - openrouter: qwen/qwen3-vl-32b-instruct
+    capabilities: ['vision', 'structured_outputs']
 
-- model:
-  id: qwen25_coder32
-  providers:
-    - openrouter: qwen/qwen-2.5-coder-32b-instruct
-  capabilities: ['structured_outputs']
+  - model:
+    id: qwen25_coder32
+    providers:
+      - openrouter: qwen/qwen-2.5-coder-32b-instruct
+    capabilities: ['structured_outputs']
 
-- model:
-  id: qwen2_vl72
-  providers:
-    - openrouter: qwen/qwen-2-vl-72b-instruct
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: qwen2_vl72
+    providers:
+      - openrouter: qwen/qwen-2-vl-72b-instruct
+    capabilities: ['vision', 'structured_outputs']
 
-- model:
-  id: qwen_qwq32
-  providers:
-    - deepinfra: Qwen/QwQ-32B
-    - openrouter: qwen/qwq-32b
-  capabilities: ['structured_outputs', 'thinking']
+  - model:
+    id: qwen_qwq32
+    providers:
+      - deepinfra: Qwen/QwQ-32B
+      - openrouter: qwen/qwq-32b
+    capabilities: ['structured_outputs', 'thinking']
 
-# Kimi Models
-- model:
-  id: kimi_k25
-  providers:
-    - openrouter: moonshotai/kimi-k2.5
-  capabilities: ['structured_outputs', 'thinking']
+  # Kimi Models
+  - model:
+    id: kimi_k25
+    providers:
+      - openrouter: moonshotai/kimi-k2.5
+    capabilities: ['structured_outputs', 'thinking']
 
-- model:
-  id: kimi_k2
-  providers:
-    - openrouter: moonshotai/kimi-k2-instruct
-    - groq: moonshotai/kimi-k2-instruct
-  capabilities: ['structured_outputs']
+  - model:
+    id: kimi_k2
+    providers:
+      - openrouter: moonshotai/kimi-k2-instruct
+      - groq: moonshotai/kimi-k2-instruct
+    capabilities: ['structured_outputs']
 
-# Amazon Nova Models
-- model:
-  id: nova_pro
-  providers:
-    - openrouter: amazon/nova-pro-v1
-  capabilities: ['structured_outputs', 'vision']
+  # Amazon Nova Models
+  - model:
+    id: nova_pro
+    providers:
+      - openrouter: amazon/nova-pro-v1
+    capabilities: ['structured_outputs', 'vision']
 
-- model:
-  id: nova_lite
-  providers:
-    - openrouter: amazon/nova-lite-v1
-  capabilities: ['structured_outputs']
+  - model:
+    id: nova_lite
+    providers:
+      - openrouter: amazon/nova-lite-v1
+    capabilities: ['structured_outputs']
 
-# MiniMax Models
-- model:
-  id: minimax_m25
-  providers:
-    - openrouter: minimax/minimax-m2.5
-  capabilities: ['structured_outputs']
+  # MiniMax Models
+  - model:
+    id: minimax_m25
+    providers:
+      - openrouter: minimax/minimax-m2.5
+    capabilities: ['structured_outputs']
 
-# OpenAI Open-weight Models
-- model:
-  id: gpt_oss120
-  providers:
-    - openrouter: openai/gpt-oss-120b
-    - groq: openai/gpt-oss-120b
-  capabilities: ['structured_outputs', 'reasoning']
+  # OpenAI Open-weight Models
+  - model:
+    id: gpt_oss120
+    providers:
+      - openrouter: openai/gpt-oss-120b
+      - groq: openai/gpt-oss-120b
+    capabilities: ['structured_outputs', 'reasoning']
 
-- model:
-  id: gpt_oss20
-  providers:
-    - openrouter: openai/gpt-oss-20b
-    - groq: openai/gpt-oss-20b
-  capabilities: ['structured_outputs']
+  - model:
+    id: gpt_oss20
+    providers:
+      - openrouter: openai/gpt-oss-20b
+      - groq: openai/gpt-oss-20b
+    capabilities: ['structured_outputs']
 
-# Perplexity Models
-- model:
-  id: sonar_pro
-  providers:
-    - openrouter: perplexity/sonar-pro
-  capabilities: ['structured_outputs']
+  # Perplexity Models
+  - model:
+    id: sonar_pro
+    providers:
+      - openrouter: perplexity/sonar-pro
+    capabilities: ['structured_outputs']
 
-- model:
-  id: sonar_reasoning
-  providers:
-    - openrouter: perplexity/sonar-reasoning
-  capabilities: ['thinking', 'structured_outputs']
+  - model:
+    id: sonar_reasoning
+    providers:
+      - openrouter: perplexity/sonar-reasoning
+    capabilities: ['thinking', 'structured_outputs']
 
-# Liquid Models
-- model:
-  id: liquid_lfm40
-  providers:
-    - openrouter: liquid/lfm-40b
-  capabilities: ['structured_outputs']
+  # Liquid Models
+  - model:
+    id: liquid_lfm40
+    providers:
+      - openrouter: liquid/lfm-40b
+    capabilities: ['structured_outputs']
 
-# NVIDIA Nemotron Models
-- model:
-  id: nvidia_nemotron70
-  providers:
-    - deepinfra: nvidia/Llama-3.1-Nemotron-70B-Instruct
-    - openrouter: nvidia/llama-3.1-nemotron-70b-instruct
-  capabilities: ['structured_outputs']
+  # NVIDIA Nemotron Models
+  - model:
+    id: nvidia_nemotron70
+    providers:
+      - deepinfra: nvidia/Llama-3.1-Nemotron-70B-Instruct
+      - openrouter: nvidia/llama-3.1-nemotron-70b-instruct
+    capabilities: ['structured_outputs']
 
-# GLM Models (Z.ai)
-- model:
-  id: glm_5
-  providers:
-    - openrouter: z-ai/glm-5
-  capabilities: ['structured_outputs', 'thinking']
+  # GLM Models (Z.ai)
+  - model:
+    id: glm_5
+    providers:
+      - openrouter: z-ai/glm-5
+    capabilities: ['structured_outputs', 'thinking']
 
-# Open-source / Local Models
-- model:
-  id: falcon3_3
-  providers:
-    - ollama: falcon3
-  capabilities: ['structured_outputs']
+  # Open-source / Local Models
+  - model:
+    id: falcon3_3
+    providers:
+      - ollama: falcon3
+    capabilities: ['structured_outputs']
 
-- model:
-  id: gemma3_4b
-  providers:
-    - ollama: gemma3:4b
-  capabilities: ['structured_outputs', 'vision']
+  - model:
+    id: gemma3_4b
+    providers:
+      - ollama: gemma3:4b
+    capabilities: ['structured_outputs', 'vision']
 
-- model:
-  id: llava_phi3
-  providers:
-    - ollama: llava-phi3
-  capabilities: ['vision', 'structured_outputs']
+  - model:
+    id: llava_phi3
+    providers:
+      - ollama: llava-phi3
+    capabilities: ['vision', 'structured_outputs']
 
-- model:
-  id: mistral_7b
-  providers:
-    - openrouter: mistralai/mistral-7b-instruct:free
-    - custom:  # ChatOpenAI class parameters - see https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html
-        model: mistralai/Mistral-7B-Instruct-v0.3
-        base_url: https://gateway.cp4sc.platform.codex-platform.com/mistral/v1
-        default_headers:
-          X-Gravitee-Api-Key: ${oc.env:GRAVITEE_KEY, null } 
-  capabilities: ['structured_outputs']
+  - model:
+    id: mistral_7b
+    providers:
+      - openrouter: mistralai/mistral-7b-instruct:free
+      - custom:  # ChatOpenAI class parameters - see https://python.langchain.com/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html
+          model: mistralai/Mistral-7B-Instruct-v0.3
+          base_url: https://gateway.cp4sc.platform.codex-platform.com/mistral/v1
+          default_headers:
+            X-Gravitee-Api-Key: ${oc.env:GRAVITEE_KEY, null } 
+    capabilities: ['structured_outputs']
 
-- model:
-  id: zephyr_7b
-  providers:
-    - huggingface: HuggingFaceH4/zephyr-7b-beta
-  capabilities: ['structured_outputs']
+  - model:
+    id: zephyr_7b
+    providers:
+      - huggingface: HuggingFaceH4/zephyr-7b-beta
+    capabilities: ['structured_outputs']
 

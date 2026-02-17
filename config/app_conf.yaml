@@ -25,6 +25,8 @@ paths:
 # Other config files merged to this one at launch time
 :merge:
   - ${paths.config}/baseline.yaml
+  - ${paths.config}/providers/llm.yaml
+  - ${paths.config}/providers/embeddings.yaml
   - ${paths.config}/overrides.yaml
   - ${paths.config}/mcp_servers.yaml
   - ${paths.config}/components/gpt_researcher.yaml

@@ -4,6 +4,10 @@ from pathlib import Path
 import streamlit as st
 from dotenv import load_dotenv
 from genai_tk.utils.basic_auth import authenticate, load_auth_config
+from genai_tk.utils.config_exceptions import (
+    ConfigError,
+    ConfigKeyNotFoundError,
+)
 from genai_tk.utils.config_mngr import global_config
 from genai_tk.utils.logger_factory import setup_logging
 from loguru import logger
@@ -14,9 +18,21 @@ setup_logging()
 # print("Starting Web Application...")
 
 
-# Configure Streamlit page settings
+try:
+    # Configure Streamlit page settings
+    app_name = global_config().get_str("ui.app_name")
+except ConfigKeyNotFoundError as e:
+    st.error(f"❌ Configuration Error: {e.message}")
+    st.info(f"💡 {e.suggestion}")
+    st.stop()
+except ConfigError as e:
+    st.error(f"❌ Configuration Error: {e.message}")
+    if hasattr(e, "suggestion") and e.suggestion:
+        st.info(f"💡 {e.suggestion}")
+    st.stop()
+
 st.set_page_config(
-    page_title=global_config().get_str("ui.app_name"),
+    page_title=app_name,
     page_icon="🛠️",
     layout="wide",  #
     initial_sidebar_state="expanded",
@@ -55,10 +71,26 @@ logo = str(Path.cwd() / "genai_blueprint/webapp/static" / LOGO)
 st.logo(logo, size="medium")
 
 # Get Streamlit pages to display from config
-pages_dir = global_config().get_dir_path("ui.pages_dir")
+try:
+    pages_dir = global_config().get_dir_path("ui.pages_dir")
+except ConfigKeyNotFoundError as e:
+    st.error(f"❌ Pages directory not configured: {e.message}")
+    st.info(f"💡 {e.suggestion}")
+    st.stop()
+except ConfigError as e:
+    st.error(f"❌ Configuration error loading pages directory: {e.message}")
+    if hasattr(e, "suggestion") and e.suggestion:
+        st.info(f"💡 {e.suggestion}")
+    st.stop()
 
 # Get navigation structure from config
-nav_config = global_config().get("ui.navigation", {})
+try:
+    nav_config = global_config().get("ui.navigation", {})
+except ConfigError as e:
+    st.error(f"❌ Navigation configuration error: {e.message}")
+    if hasattr(e, "suggestion") and e.suggestion:
+        st.info(f"💡 {e.suggestion}")
+    st.stop()
 
 # Build pages dictionary with sections
 pages = {}
