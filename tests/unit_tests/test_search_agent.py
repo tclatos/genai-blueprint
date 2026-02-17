@@ -28,9 +28,9 @@ async def test_research_agent():
         # Create a simple mock model that doesn't require API keys
         from typing import Any, List, Optional
 
-        from langchain_core.language_models.base import LanguageModelInput, LanguageModelOutput
+        from langchain_core.language_models.base import LanguageModelInput
         from langchain_core.language_models.chat_models import BaseChatModel
-        from langchain_core.messages import AIMessage, BaseMessage
+        from langchain_core.messages import AIMessage
         from langchain_core.outputs import ChatGeneration, ChatResult
 
         class MockChatModel(BaseChatModel):
