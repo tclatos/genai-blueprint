@@ -29,8 +29,8 @@ paths:
   - ${paths.config}/providers/embeddings.yaml
   - ${paths.config}/overrides.yaml
   - ${paths.config}/mcp_servers.yaml
+  - ${paths.config}/agents/deerflow.yaml
   - ${paths.config}/components/gpt_researcher.yaml
-  - ${paths.config}/agents/deerflow_config.yaml
 
 
 #### 

@@ -1,34 +1,67 @@
-# Deer-flow Agent Profiles Configuration
+# Deer-flow Agent Configuration
 # 
-# Similar structure to config/agents/langchain.yaml but for Deer-flow agent profiles.
-# Each profile defines a Deer-flow agent configuration with specific tool groups,
-# MCP servers, and optional GenAI Blueprint tool injections.
+# Unified configuration for Deer-flow agents including profiles, skills, and sandbox settings.
 #
-# Key fields:
+# Profile Key Fields:
 #   name:              Profile display name
 #   description:       Profile description
 #   mode:              Agent mode: flash (fast), thinking (reasoning), pro (planning), ultra (all features)
+#   llm:               LLM identifier (ID like 'gpt_41mini@openai' or tag like 'fast_model'). Optional, defaults to global config.
 #   tool_groups:       Deer-flow tool groups to enable (web, file, bash, image)
-#   skills:            Deer-flow skills to enable (format: "category/skill-name" or "skill-name" for public)
+#   skill_directories: Directories to load skills from (loaded recursively)
 #   mcp_servers:       MCP server names from config/mcp_servers.yaml
 #   tools:             Additional GenAI Blueprint tools (factory/class/function patterns)
 #   features:          Feature badges for UI display
 #   examples:          Sample queries for the demo UI
 
+# ============================================================================
+# Global Configuration
+# ============================================================================
+deerflow:
+  # Skills configuration
+  skills:
+    # Default directories to load skills from (absolute or relative to project root)
+    # Skills are discovered recursively in 'public/' and 'custom/' subdirectories
+    directories:
+      - ${paths.project}/skills
+    
+    # Container mount path for skills (used in Docker sandbox)
+    container_path: /mnt/skills
+    
+    # Enable skill loading tracing
+    trace_loading: true
+  
+  # Sandbox configuration
+  sandbox:
+    # Use local sandbox by default (simpler, no Docker required)
+    provider: local
+    
+    # Docker sandbox configuration (uncomment to enable)
+    # provider: docker
+    # port: 8080
+    # auto_start: true
+    # container_prefix: deer-flow-sandbox
+
+  # Default profile (used when -p is not specified in CLI)
+  # This is a YAML alias reference - update to point to your preferred default
+  default_profile: &default_profile "Research Assistant"
+
+# ============================================================================
+# Agent Profiles
+# ============================================================================
 deerflow_agents:
   - name: "Research Assistant"
     description: "Web research with deep reasoning, visualizations, and skill execution"
     mode: "pro"  # thinking + plan mode
+    llm: "gpt_41mini@openai"  # Can use LLM ID or tag like 'fast_model'
     tool_groups:
       - web
       - file
       - bash
     mcp_servers:
       - tavily-mcp
-    skills:
-      - deep-research
-      - data-analysis
-      - chart-visualization
+    skill_directories:
+      - ${paths.project}/skills  # Load all skills recursively
     features:
       - "🌐 Web Search"
       - "📊 Data Analysis"
@@ -61,8 +94,8 @@ deerflow_agents:
       - web
       - file
       - bash
-    skills:
-      - github-deep-research
+    skill_directories:
+      - ${paths.project}/skills  # Load all skills recursively
     features:
       - "💻 Code Execution"
       - "📁 File Operations"
@@ -86,9 +119,8 @@ deerflow_agents:
           tool_name: "query_chinook"
           tool_description: "Query the Chinook music database for information about artists, albums, tracks, customers, and invoices"
           top_k: 15
-    skills:
-      - data-analysis
-      - chart-visualization
+    skill_directories:
+      - ${paths.project}/skills  # Load all skills recursively
     features:
       - "🗄️ SQL Database"
       - "🔍 Web Search"
@@ -105,8 +137,8 @@ deerflow_agents:
     mcp_servers:
       - weather
       - ppt
-    skills:
-      - ppt-generation
+    skill_directories:
+      - ${paths.project}/skills  # Load all skills recursively
     features:
       - "📁 File Operations"
       - "🌤️ Weather Info"
@@ -124,9 +156,8 @@ deerflow_agents:
       - bash
     mcp_servers:
       - tavily-mcp
-    skills:
-      - chart-visualization
-      - data-analysis
+    skill_directories:
+      - ${paths.project}/skills  # Load all skills recursively
     features:
       - "📊 Diagram Generation"
       - "🎨 Visualizations"
