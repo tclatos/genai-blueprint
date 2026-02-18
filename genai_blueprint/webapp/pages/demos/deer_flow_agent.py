@@ -682,17 +682,16 @@ async def main() -> None:
             st.markdown(f"**Thread ID:** `{sss.df_thread_id}`")
         sss.df_show_info = False
 
-    # Handle example input from sidebar
-    user_input = None
+    # Handle example input from sidebar or chat input widget
+    # Always show chat input widget. If an example is selected, show it as a suggestion above the input.
+    chat_placeholder = "Type your message or a command (/help, /info, /clear)..."
     if hasattr(sss, "df_example_input"):
-        user_input = sss.df_example_input
+        st.info(f"💡 Example: {sss.df_example_input}")
         del sss.df_example_input
-    else:
-        # Chat input
-        user_input = st.chat_input(
-            "Type your message or a command (/help, /info, /clear)...",
-            key="df_chat_input",
-        )
+    user_input = st.chat_input(
+        chat_placeholder,
+        key="df_chat_input",
+    )
 
     # LangSmith link
     st.link_button(
