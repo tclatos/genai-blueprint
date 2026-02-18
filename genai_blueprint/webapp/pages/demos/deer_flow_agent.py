@@ -22,6 +22,7 @@ from typing import Any, cast
 import streamlit as st
 from dotenv import load_dotenv
 from genai_tk.core.llm_factory import get_llm
+from genai_tk.extra.agents.deer_flow.config_thread_data_middleware import ConfigThreadDataMiddleware
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
@@ -29,7 +30,6 @@ from loguru import logger
 from streamlit import session_state as sss
 from streamlit.delta_generator import DeltaGenerator
 
-from genai_blueprint.webapp.middlewares.streamlit_thread_data import StreamlitThreadDataMiddleware
 from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
 from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
 from genai_blueprint.webapp.ui_components.message_renderer import render_message_with_mermaid
@@ -85,7 +85,7 @@ def initialize_session_state() -> None:
     if "df_show_info" not in sss:
         sss.df_show_info = False
     if "df_thread_data_mw" not in sss:
-        sss.df_thread_data_mw = StreamlitThreadDataMiddleware()
+        sss.df_thread_data_mw = ConfigThreadDataMiddleware()
     if "df_example_input" not in sss:
         sss.df_example_input = None
 

@@ -4,7 +4,9 @@
 
 Updated the Streamlit interface for Deer-flow agents to provide a user experience closer to deer-flow's native UI, with relaxed CLI constraints and enhanced capabilities in the web context.
 
-**✨ NEW: File I/O Support** - Now includes `StreamlitThreadDataMiddleware` to enable Python-based file I/O skills (ppt-generation, chart-visualization, etc.) with automatic workspace management and file downloads!
+**✨ NEW: File I/O Support** - Now includes `ConfigThreadDataMiddleware` (from genai-tk) to enable Python-based file I/O skills (ppt-generation, chart-visualization, etc.) with automatic workspace management and file downloads!
+
+**Note:** This middleware is NOT Streamlit-specific and can be used in CLI, FastAPI, or any LangGraph application!
 
 ## Key Changes
 
@@ -71,23 +73,26 @@ Mode changes trigger agent recreation to apply new configuration.
 - Help and info displayed in nice formatted containers
 - Mode descriptions shown in selector for guidance
 
-### 7. **StreamlitThreadDataMiddleware Implementation** ✨ NEW
+### 7. **ConfigThreadDataMiddleware Implementation** ✨ NEW
 
-Implemented custom middleware to enable Python-based file I/O skills without deer-flow's full infrastructure:
+Implemented generic middleware (in genai-tk) to enable Python-based file I/O skills without deer-flow's full infrastructure:
 
 **Features:**
-- ✅ Creates workspace directories: `.deer-flow-streamlit/threads/{thread_id}/user-data/{workspace,uploads,outputs}`
+- ✅ Creates workspace directories: `.deer-flow/threads/{thread_id}/user-data/{workspace,uploads,outputs}`
 - ✅ Gets thread_id from LangGraph's config (no runtime.context needed!)
 - ✅ Adds `state["thread_data"]` with paths for skills to use
 - ✅ Works with Python-based skills (ppt-generation, chart-visualization, csv-operations)
-- ✅ Automatic file browser in sidebar with download buttons
+- ✅ Works in **any context**: Streamlit, CLI, FastAPI, Jupyter, etc.
+- ✅ Automatic file browser in sidebar with download buttons (Streamlit)
 - ✅ Shows file size, path, and modification time
 - ✅ Workspace cleanup utilities included
+
+**Location:** `genai_tk.extra.agents.deer_flow.config_thread_data_middleware.ConfigThreadDataMiddleware`
 
 **Technical Solution:**
 ```python
 # Instead of runtime.context.get("thread_id") which isn't available,
-# we use LangGraph's config which IS available:
+# we use LangGraph's config which IS available everywhere:
 thread_id = runtime.config.get("configurable", {}).get("thread_id")
 
 # This allows skills to work normally:
@@ -96,7 +101,23 @@ output_file = os.path.join(workspace, "presentation.pptx")
 prs.save(output_file)
 ```
 
-**UI Components:**
+**Usage in ANY application:**
+```python
+from genai_tk.extra.agents.deer_flow.config_thread_data_middleware import ConfigThreadDataMiddleware
+from genai_tk.extra.agents.deer_flow.agent import create_deer_flow_agent_simple
+
+# Create middleware (works in CLI, Streamlit, FastAPI, etc.)
+thread_data_mw = ConfigThreadDataMiddleware()
+
+# Pass to agent creation
+agent = create_deer_flow_agent_simple(
+    profile=profile,
+    llm=llm,
+    thread_data_middleware=thread_data_mw,  # Enable file I/O!
+)
+```
+
+**UI Components (Streamlit):**
 - File browser in sidebar shows generated files
 - Download buttons for each file
 - Shows file info (size, relative path)
@@ -105,7 +126,7 @@ prs.save(output_file)
 
 **Limitations:**
 - ❌ Does NOT enable bash/docker tools (those require SandboxProvider with container infrastructure)
-- ✅ DOES enable all Python file I/O skills that run in the Streamlit process
+- ✅ DOES enable all Python file I/O skills that run in the same process
 
 ## File Structure
 
@@ -114,7 +135,7 @@ prs.save(output_file)
 - df_agent_mode: Current mode (flash/thinking/pro/ultra)
 - df_show_help: Flag to display help panel
 - df_show_info: Flag to display agent info
-- df_thread_data_mw: StreamlitThreadDataMiddleware instance
+- df_thread_data_mw: ConfigThreadDataMiddleware instance (from genai-tk)
 - df_example_input: Example query clicked from sidebar
 
 # Functions
@@ -125,8 +146,8 @@ prs.save(output_file)
 - display_workspace_files(): File browser with download buttons
 - main(): Handles commands, mode changes, example inputs
 
-# New Module
-- genai_blueprint/webapp/middlewares/streamlit_thread_data.py: Custom middleware implementation
+# Middleware Module (moved to genai-tk)
+- genai_tk/extra/agents/deer_flow/config_thread_data_middleware.py: Generic middleware for any LangGraph app
 ```
 
 ## Differences from CLI
@@ -135,7 +156,7 @@ prs.save(output_file)
 |---------|-----|--------------|
 | Interactive mode | False (except chat) | True (always) |
 | Middlewares | 2-3 active | More active (including Clarification) |
-| ThreadDataMiddleware | ❌ Disabled | ✅ StreamlitThreadDataMiddleware |
+| ThreadDataMiddleware | ❌ Disabled | ✅ ConfigThreadDataMiddleware (from genai-tk) |
 | Python file I/O skills | ❌ Limited | ✅ Fully supported |
 | Workspace file browser | N/A | ✅ With downloads |
 | Bash/docker tools | ❌ Disabled | ❌ Not supported |
@@ -147,7 +168,14 @@ prs.save(output_file)
 
 ## Remaining Limitations
 
-✅ **SOLVED: ThreadDataMiddleware** - Now implemented! See `StreamlitThreadDataMiddleware` above.
+✅ **SOLVED: ThreadDataMiddleware** - Now implemented as `ConfigThreadDataMiddleware` in genai-tk!
+
+**This solution works in ANY LangGraph application:**
+- ✅ Streamlit UI
+- ✅ CLI interface  
+- ✅ FastAPI servers
+- ✅ Jupyter notebooks
+- ✅ Any Python application using LangGraph
 
 Still limited:
 
@@ -272,9 +300,10 @@ intro, key features, and conclusion.
 Potential future improvements:
 
 ### Implemented ✅
-1. ~~**Runtime context mocking**~~ → **DONE!** StreamlitThreadDataMiddleware uses LangGraph's config
+1. ~~**Runtime context mocking**~~ → **DONE!** ConfigThreadDataMiddleware uses LangGraph's config (in genai-tk)
 2. ~~**Workspace directory creation**~~ → **DONE!** Automatic workspace management
 3. ~~**File browser UI**~~ → **DONE!** Display and download files from workspace
+4. ~~**Moved to genai-tk**~~ → **DONE!** Middleware now available for CLI, FastAPI, any LangGraph app
 
 ### Future Enhancements
 4. **File upload UI** - Allow users to upload files to the uploads directory
@@ -282,7 +311,8 @@ Potential future improvements:
 6. **Memory viewer** - Display conversation memory and summarization
 7. **Skill browser** - Interactive skill discovery and documentation
 8. **Trace visualization** - Enhanced trace display with graph visualization
-9. **StreamlitSandboxProvider** - Container support for bash tools (complex, lower priority)
+9. **CLI file I/O** - Enable ConfigThreadDataMiddleware in deer-flow CLI commands
+10. **StreamlitSandboxProvider** - Container support for bash tools (complex, lower priority)
 10. **Workspace cleanup UI** - Button to clean up old thread directories
 
 ## Implementation Details
@@ -294,11 +324,12 @@ Potential future improvements:
 The middleware solves the runtime.context issue by using LangGraph's config which IS available:
 
 ```python
-class StreamlitThreadDataMiddleware(AgentMiddleware):
-    """Provides workspace paths without runtime.context."""
+class ConfigThreadDataMiddleware:
+    """Provides workspace paths without runtime.context dependency."""
     
     def before_agent(self, state, runtime):
         # Get thread_id from config instead of runtime.context
+        # This works in CLI, Streamlit, FastAPI, anywhere!
         thread_id = runtime.config.get("configurable", {}).get("thread_id")
         
         # Create workspace directories
@@ -310,20 +341,60 @@ class StreamlitThreadDataMiddleware(AgentMiddleware):
 
 **Key features:**
 - Compatible with deer-flow's ThreadDataMiddleware state schema
-- Falls back to "streamlit-default" if no thread_id found
+- Falls back to "default" if no thread_id found
 - Creates directories immediately (not lazy) for reliability
 - Provides utility methods for file listing and cleanup
 - Works with existing deer-flow skills without modification
+- **Universal:** Works in any LangGraph application (not just Streamlit!)
 
 **Directory structure:**
 ```
-.deer-flow-streamlit/
+.deer-flow/
 └── threads/
     └── {thread_id}/
         └── user-data/
             ├── workspace/  # Main workspace for generated files
             ├── uploads/    # For user uploads (future)
             └── outputs/    # Deprecated, use workspace
+```
+
+**Usage Examples:**
+
+*In Streamlit (current):*
+```python
+from genai_tk.extra.agents.deer_flow.config_thread_data_middleware import ConfigThreadDataMiddleware
+
+mw = ConfigThreadDataMiddleware()
+agent = create_deer_flow_agent_simple(
+    profile=profile,
+    llm=llm,
+    thread_data_middleware=mw,
+)
+```
+
+*In CLI (future):*
+```python
+# Enable file I/O in CLI by passing the middleware
+mw = ConfigThreadDataMiddleware()
+agent = create_deer_flow_agent_simple(
+    profile=profile,
+    llm=llm,
+    thread_data_middleware=mw,
+    interactive_mode=False,  # CLI mode
+)
+```
+
+*In FastAPI:*
+```python
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    mw = ConfigThreadDataMiddleware
+()
+    agent = create_deer_flow_agent_simple(
+        profile=profile,
+        thread_data_middleware=mw,
+    )
+    # ... run agent ...
 ```
 
 ## Related Documentation

@@ -1,12 +1,14 @@
-# StreamlitThreadDataMiddleware Implementation Summary
+# ConfigThreadDataMiddleware Implementation Summary
 
 ## Overview
 
-Successfully implemented **StreamlitThreadDataMiddleware** to enable Python-based file I/O skills in the Deer-flow Streamlit UI without requiring deer-flow's full runtime infrastructure.
+Successfully implemented **ConfigThreadDataMiddleware** (in genai-tk) to enable Python-based file I/O skills in deer-flow agents without requiring deer-flow's full runtime infrastructure.
+
+**Key Insight:** This middleware is NOT Streamlit-specific! It works in **any LangGraph application**: CLI, FastAPI, Jupyter, or any Python environment.
 
 ## What Was Implemented
 
-### 1. Core Middleware (`genai_blueprint/webapp/middlewares/streamlit_thread_data.py`)
+### 1. Core Middleware (`genai_tk/extra/agents/deer_flow/config_thread_data_middleware.py`)
 
 **Key Innovation:** Gets `thread_id` from LangGraph's `config` instead of `runtime.context`, solving the core limitation.
 
@@ -29,10 +31,27 @@ Successfully implemented **StreamlitThreadDataMiddleware** to enable Python-base
 - ✅ Multiple thread isolation
 - ✅ Lazy initialization mode
 
-### 2. UI Integration (`genai_blueprint/webapp/pages/demos/deer_flow_agent.py`)
+### 2. GenAI-TK Integration
+
+**Added parameter to `create_deer_flow_agent_simple()`:**
+```python
+def create_deer_flow_agent_simple(
+    profile: DeerFlowAgentConfig,
+    llm: Any | None = None,
+    extra_tools: list[BaseTool] | None = None,
+    checkpointer: Any | None = None,
+    trace_middleware: Any | None = None,
+    thread_data_middleware: Any | None = None,  # ← NEW!
+    interactive_mode: bool = True,
+) -> DeerFlowAgent:
+```
+
+The function now accepts a `thread_data_middleware` parameter and adds it to the middleware chain alongside trace_middleware.
+
+### 3. UI Integration (`genai_blueprint/webapp/pages/demos/deer_flow_agent.py`)
 
 **Added:**
-- Import of StreamlitThreadDataMiddleware
+- Import from genai-tk: `from genai_tk.extra.agents.deer_flow.config_thread_data_middleware import ConfigThreadDataMiddleware`
 - Session state: `df_thread_data_mw` (middleware instance)
 - Pass middleware to `create_deer_flow_agent_simple()` via `thread_data_middleware` parameter
 - New function: `display_workspace_files()` - Shows generated files in sidebar
@@ -45,24 +64,26 @@ Successfully implemented **StreamlitThreadDataMiddleware** to enable Python-base
 - Expands automatically when files exist
 - Refreshes on page reload
 
-### 3. Documentation Updates
+### 4. Documentation Updates
 
 **Updated `docs/deer_flow_streamlit_update.md`:**
 - Added "✨ NEW: File I/O Support" badge in overview
-- New section: "StreamlitThreadDataMiddleware Implementation"
+- Noted that middleware works in any LangGraph application
+- New section: "ConfigThreadDataMiddleware Implementation"
 - Updated comparison table showing Python file I/O now ✅ supported
 - Changed "Remaining Limitations" to show ThreadDataMiddleware is ✅ SOLVED
 - Updated recommendation section
 - Added testing checklist with file I/O test cases
-- Added implementation details with architecture explanation
+- Added implementation details with usage examples for CLI, FastAPI, etc.
 
 **Key Documentation Points:**
 - Clear distinction: Python skills ✅ work, bash/docker tools ❌ still require containers
 - Technical explanation of how we solved runtime.context issue
+- **Universal applicability:** Not just for Streamlit!
 - Use case examples: ppt-generation, chart-visualization, csv-operations
-- Future enhancements roadmap
+- Future enhancements roadmap including CLI file I/O
 
-### 4. Test Suite (`examples/test_streamlit_thread_data_middleware.py`)
+### 5. Test Suite (`examples/test_streamlit_thread_data_middleware.py`)
 
 Comprehensive test coverage:
 - ✅ Directory creation and path validation

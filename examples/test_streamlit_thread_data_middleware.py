@@ -1,4 +1,4 @@
-"""Test script for StreamlitThreadDataMiddleware.
+"""Test script for ConfigThreadDataMiddleware.
 
 This script validates that the middleware:
 1. Creates workspace directories
@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 from types import SimpleNamespace
 
-from genai_blueprint.webapp.middlewares.streamlit_thread_data import StreamlitThreadDataMiddleware
+from genai_tk.extra.agents.deer_flow.config_thread_data_middleware import ConfigThreadDataMiddleware
 
 
 def test_middleware_basic():
@@ -22,7 +22,7 @@ def test_middleware_basic():
 
     # Create middleware with temp directory
     with tempfile.TemporaryDirectory() as tmpdir:
-        mw = StreamlitThreadDataMiddleware(base_dir=tmpdir)
+        mw = ConfigThreadDataMiddleware(base_dir=tmpdir)
         print(f"✓ Created middleware with base_dir: {tmpdir}")
 
         # Create mock runtime with config
@@ -65,7 +65,7 @@ def test_file_listing():
     print("=" * 60)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        mw = StreamlitThreadDataMiddleware(base_dir=tmpdir)
+        mw = ConfigThreadDataMiddleware(base_dir=tmpdir)
         thread_id = "test-thread-456"
 
         # Create mock runtime
@@ -114,7 +114,7 @@ def test_multiple_threads():
     print("=" * 60)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        mw = StreamlitThreadDataMiddleware(base_dir=tmpdir)
+        mw = ConfigThreadDataMiddleware(base_dir=tmpdir)
 
         threads = ["thread-1", "thread-2", "thread-3"]
         workspaces = {}
@@ -155,7 +155,7 @@ def test_lazy_init():
     print("=" * 60)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        mw = StreamlitThreadDataMiddleware(base_dir=tmpdir, lazy_init=True)
+        mw = ConfigThreadDataMiddleware(base_dir=tmpdir, lazy_init=True)
         print("✓ Created middleware with lazy_init=True")
 
         thread_id = "lazy-thread"
@@ -179,7 +179,7 @@ def test_lazy_init():
 
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("StreamlitThreadDataMiddleware Test Suite")
+    print("ConfigThreadDataMiddleware Test Suite")
     print("=" * 60 + "\n")
 
     try:
