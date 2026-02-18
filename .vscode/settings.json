@@ -16,6 +16,7 @@
   },
   "terminal.integrated.env.linux": {
     "PYTHONPATH": "${env:PYTHONPATH}:${workspaceFolder}/src:${env:PYTHONPATH}:${workspaceFolder}/notebooks:${workspaceFolder}/test",
+    "PATH": "/home/tcl/.nvm/versions/node/v24.11.0/bin:${env:PATH}"
   },
   "jupyter.notebookFileRoot": "${workspaceFolder}",
   "python.analysis.autoImportCompletions": true,

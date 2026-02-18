@@ -12,7 +12,7 @@ from streamlit.delta_generator import DeltaGenerator
 # LLM Model Selection
 def llm_selector_widget(w: DeltaGenerator) -> None:
     current_llm = global_config().get_str("llm.models.default")
-    available_models = LlmFactory().known_items()
+    available_models = LlmFactory.known_items()
 
     try:
         index = available_models.index(current_llm)
