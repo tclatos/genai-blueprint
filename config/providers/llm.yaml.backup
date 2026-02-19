@@ -34,7 +34,7 @@ llm:
     - model_id: deepseek_v32
       providers:
         - deepseek: deepseek-chat
-        - openrouter: deepseek/deepseek-chat-v3.2
+        - openrouter: deepseek/deepseek-v3.2
         - edenai: deepseek/deepseek-chat
       capabilities: ['structured_outputs']
 

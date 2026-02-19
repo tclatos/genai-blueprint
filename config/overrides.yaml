@@ -9,7 +9,7 @@ training_adn:
   llm:
     models:
       #default:  mistral_small@edenai
-      default: gpt_41@azure
+      default: gpt_oss120@openrouter
       azure: gpt_41@azure
       openai: gpt_41mini@openai
       for_vision : gpt_41@azure
