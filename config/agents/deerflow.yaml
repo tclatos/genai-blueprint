@@ -46,6 +46,9 @@ deerflow:
   # This is a YAML alias reference - update to point to your preferred default
   default_profile: &default_profile "Research Assistant"
 
+  # Max LangGraph recursion steps per run (helps complex multi-tool workflows)
+  recursion_limit: 1000
+
 # ============================================================================
 # Agent Profiles
 # ============================================================================
