@@ -158,8 +158,7 @@ def display_configuration_section() -> str:
 
         # Load configuration
         try:
-            gpt_researcher_config = global_config().merge_with("config/components/gpt_researcher.yaml")
-            available_configs = list(gpt_researcher_config.get("gpt_researcher").keys())
+            available_configs = list(global_config().get_dict("gpt_researcher").keys())
 
             config_name = st.selectbox(
                 "Research Profile",
@@ -452,7 +451,7 @@ async def main() -> None:
     # Main form for search input
     with st.form("search_form", clear_on_submit=False):
         # Use reloaded query if available, otherwise use sample
-        default_value = reloaded_query if reloaded_query else (sample_search if sample_search else "")
+        default_value = reloaded_query or (sample_search or "")
 
         search_input = st.text_area(
             "Your Research Query",

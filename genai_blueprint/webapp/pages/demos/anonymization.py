@@ -39,7 +39,7 @@ with st.sidebar:
         edit_config_dialog(CONF_YAML_FILE)
 
     # Load configuration from YAML
-    config = global_config().merge_with(CONF_YAML_FILE)
+    config = global_config()
     analyzed_fields = config.get_list("anonymization_config.analyzed_fields")
     company_names = config.get_list("anonymization_config.company_names")
     product_names = config.get_list("anonymization_config.product_names")

@@ -30,7 +30,12 @@ paths:
   - ${paths.config}/overrides.yaml
   - ${paths.config}/mcp_servers.yaml
   - ${paths.config}/agents/deerflow.yaml
+  - ${paths.config}/agents/smolagents.yaml
   - ${paths.config}/components/gpt_researcher.yaml
+  - ${paths.config}/demos/presidio_anonymization.yaml
+  - ${paths.config}/demos/graph_rag.yaml
+  - ${paths.config}/demos/cli_examples.yaml
+  - ${paths.config}/demos/cognee_kg.yaml
 
 
 #### 

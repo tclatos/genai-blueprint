@@ -85,7 +85,7 @@ except ConfigError as e:
 
 # Get navigation structure from config
 try:
-    nav_config = global_config().get("ui.navigation", {})
+    nav_config = global_config().get_dict("ui.navigation")
 except ConfigError as e:
     st.error(f"❌ Navigation configuration error: {e.message}")
     if hasattr(e, "suggestion") and e.suggestion:

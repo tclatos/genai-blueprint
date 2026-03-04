@@ -50,7 +50,7 @@ def load_demos_from_config() -> List[GraphRagDemo]:
         List of GraphRagDemo instances loaded from config
     """
     try:
-        demos_config = global_config().merge_with("config/demos/graph_rag.yaml").get_list("graph_rag_demos")
+        demos_config = global_config().get_list("graph_rag_demos")
         result = []
         # Create Demo objects from the configuration
         for demo_config in demos_config:

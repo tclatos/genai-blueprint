@@ -98,8 +98,7 @@ async def display_graph_visualization():
 def load_demos_from_config() -> List[CogneeDemoData]:
     """Load demo configurations from global config."""
     try:
-        demos_config_path = "config/demos/cognee_kg.yaml"
-        config = global_config().merge_with(demos_config_path)
+        config = global_config()
         demos = []
         for demo_name in config.get_dict("cognee-demo").keys():
             texts = config.get_list(f"cognee-demo.{demo_name}.texts", [])

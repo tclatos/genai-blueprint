@@ -16,7 +16,7 @@ from typer.testing import CliRunner
 
 def load_cli_examples() -> list[dict]:
     """Load CLI command examples from YAML config."""
-    return global_config().merge_with("config/demos/cli_examples.yaml").get_list("cli_commands")
+    return global_config().get_list("cli_commands")
 
 
 @st.cache_resource()
