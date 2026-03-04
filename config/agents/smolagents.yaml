@@ -10,7 +10,6 @@ smolagents_codeact:
     tools: 
       - class: smolagents:WebSearchTool
       - class: smolagents:VisitWebpageTool
-      - langchain: 
     authorized_imports: ["pandas", "matplotlib.*", "sklearn.*"]
     examples:
       - "How many seconds would it take for a leopard at full speed to run through Pont des Arts?"

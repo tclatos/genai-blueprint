@@ -15,7 +15,6 @@ import streamlit as st
 from dotenv import load_dotenv
 from genai_tk.core.deep_agents import DeepAgentConfig, deep_agent_factory, run_deep_agent
 from genai_tk.core.llm_factory import get_llm
-from genai_tk.tools.smolagents.config_loader import process_tools_from_config
 from genai_tk.tools.smolagents.deep_config_loader import (
     load_all_deep_agent_demos_from_config,
 )
@@ -180,11 +179,8 @@ async def handle_agent_execution(placeholder: DeltaGenerator, demo, query: str) 
             agent_tools = []
             if demo.tools:
                 try:
-                    # Process tools using the smolagents processor
-                    processed_tools = process_tools_from_config(demo.tools)
-
-                    # Convert SmolAgent tools to LangChain tools
-                    for tool_instance in processed_tools:
+                    # Use tools that are already instantiated and converted from the config
+                    for tool_instance in demo.tools:
                         if isinstance(tool_instance, SmolAgentTool):
                             # Convert SmolAgent tool to LangChain tool
                             try:
