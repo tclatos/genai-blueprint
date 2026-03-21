@@ -12,9 +12,9 @@ from typing import Any
 
 import streamlit as st
 from dotenv import load_dotenv
-from genai_tk.extra.agents.deer_flow import DeerFlowClient, DeerFlowProfile, load_deer_flow_profiles
-from genai_tk.extra.agents.deer_flow.cli_commands import _NODE_LABELS, _mode_to_configurable, _prepare_profile
-from genai_tk.extra.agents.deer_flow.client import ErrorEvent, NodeEvent, TokenEvent, ToolCallEvent, ToolResultEvent
+from genai_tk.agents.deer_flow import DeerFlowClient, DeerFlowProfile, load_deer_flow_profiles
+from genai_tk.agents.deer_flow.cli_commands import _NODE_LABELS, _mode_to_configurable, _prepare_profile
+from genai_tk.agents.deer_flow.client import ErrorEvent, NodeEvent, TokenEvent, ToolCallEvent, ToolResultEvent
 from loguru import logger
 from streamlit import session_state as sss
 
@@ -356,7 +356,7 @@ def main() -> None:
         sss.df_show_help = False
 
     if sss.df_show_info:
-        active_profile = sss.df_active_profile if sss.df_active_profile else profile
+        active_profile = sss.df_active_profile or profile
         with st.container(border=True):
             st.markdown(f"**Profile:** `{selected_name}`  |  **Mode:** `{selected_mode}`")
             st.markdown(f"**Model:** `{sss.df_model_name or '(server default)'}`")

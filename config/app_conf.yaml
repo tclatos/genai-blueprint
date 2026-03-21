@@ -86,7 +86,7 @@ cli:
     - genai_tk.core.commands_core:CoreCommands
     - genai_tk.core.commands_info:InfoCommands
     - genai_tk.extra.commands_extra:ExtraCommands
-    - genai_tk.extra.agents.commands_agents:AgentCommands
+    - genai_tk.agents.commands_agents:AgentCommands
     - genai_tk.extra.structured.commands_baml:BamlCommands
     - genai_tk.main.cli:register_commands
  
