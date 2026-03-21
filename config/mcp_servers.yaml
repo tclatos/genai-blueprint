@@ -26,6 +26,27 @@ mcpServers:
     args: 
     - "@playwright/mcp@latest"
 
+  # @agent-infra/mcp-server-browser — Puppeteer-based MCP browser automation.
+  # More stable than raw CDP (HTTP-wrapped), accessibility-tree navigation,
+  # runtime UA override via headers.  Can target sandbox or host browser.
+  browser_mcp:
+    command: npx
+    args:
+    - "@agent-infra/mcp-server-browser@latest"
+    - "--headless"
+    description: "Puppeteer MCP browser (host-local, headless)"
+
+  browser_mcp_sandbox:
+    command: npx
+    args:
+    - "@agent-infra/mcp-server-browser@latest"
+    - "--cdp-endpoint"
+    - "http://localhost:8080/cdp/json/version"
+    - "--user-agent"
+    - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    description: "Puppeteer MCP browser connected to AIO sandbox"
+    disabled: true
+
   github:
     command: npx
     args:  ["-y", "@modelcontextprotocol/server-github"]
