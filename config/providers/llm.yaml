@@ -20,7 +20,7 @@
 # Together: https://docs.together.ai/docs/inference-models
 # Google/Vertex AI: https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/text
 # Ollama: https://ollama.ai/library
-# EdenAI: :https//app.edenai.run/v2/feat/generative/chat ; https://app.edenai.run/bricks/text/chat  
+# EdenAI v3 OpenAI-compatible API: https://docs.edenai.co/v3/llms/chat-completions
 # Azure OpenAI: https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models
 # OpenRouter: https://openrouter.ai/docs#models
 # Amazon : https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
@@ -42,7 +42,7 @@ llm:
 
     - model_id: gpt41mini
       providers:
-        - edenai: gpt-4.1-mini-2025-04-14
+        - edenai: openai/gpt-4.1-mini-2025-04-14
 
     - model_id: mistral_7b
       providers:

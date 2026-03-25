@@ -1,64 +1,75 @@
 # ReAct Agent Demos Configuration
 langchain_agents:
-  - name: "Weather"
-    tools:  
-     # - function: genai-blueprint.webapp.pages.demos.reAct_agent:my_custom_weather
-      - factory: genai_tk.tools.langchain.search_tools_factory:create_search_function
-        verbose: true
-    mcp_servers:
-      - "weather"
-      - "playwright"
-    examples:
-      - "What is the wind in NY?"
-      - "Quel temps fait-il à Toulouse"
+  default_profile: "Weather"
 
-  - name: "Weather & PowerPoint"
-    mcp_servers:
-      - "weather"
-      - "ppt"
-    examples:
-      - "Get weather in Toulouse today. Create a PowerPoint file about it and usual climate in Toulouse"
-    
-  - name: "Web Research"
-    mcp_servers:
-      - "playwright"
-    examples:
-      - "Research the latest AI developments on OpenAI's website"
-      - "Find information about quantum computing on IBM's website"
-      - "Connect to atos.net with a browser, find the page with blogs, and get list of recent blog articles"
-  
-      
-  - name: "Chinook DB"
-    tools:
-      - factory: genai_tk.tools.langchain.sql_tool_factory:create_sql_tool_from_config
-        config:
-          database_uri: "sqlite:///use_case_data/other/Chinook.db"
-          tool_name: "query_chinook"
-          tool_description: "Query the Chinook music database for information about artists, albums, tracks, customers, and invoices"
-          examples:
-            - input: "List all artists"
-              query: "SELECT * FROM Artist LIMIT 10;"
-            - input: "Find all albums for the artist 'AC/DC'"
-              query: "SELECT * FROM Album WHERE ArtistId = (SELECT ArtistId FROM Artist WHERE Name = 'AC/DC');"
-            - input: "List all tracks in the 'Rock' genre"
-              query: "SELECT * FROM Track WHERE GenreId = (SELECT GenreId FROM Genre WHERE Name = 'Rock');"
-            - input: "Find the total duration of all tracks"
-              query: "SELECT SUM(Milliseconds) FROM Track;"
-            - input: "Which country's customers spent the most?"
-              query: "SELECT BillingCountry, SUM(Total) as TotalSpent FROM Invoice GROUP BY BillingCountry ORDER BY TotalSpent DESC LIMIT 1;"
-          top_k: 15
-    examples:
-      - "List all artists in the database"
-      - "Which country's customers spent the most?"
-      - "Show me albums by AC/DC"
-      - "How many tracks are in the Rock genre?"
+  defaults:
+    type: react
+    llm: null
 
-  - name: "legal"
-    tools: 
-      - class: langchain_tavily:TavilySearch 
-        max_results : 5
-        include_domains:  
-        - https://www.data.gouv.fr/datasets/legi-codes-lois-et-reglements-consolides
-        - https://www.journal-officiel.gouv.fr'
-    examples:
-      - "changements de réglementation sur la regulation des marchés financiers."
+  profiles:
+    - name: "Weather"
+      type: react
+      tools:
+       # - function: genai-blueprint.webapp.pages.demos.reAct_agent:my_custom_weather
+        - factory: genai_tk.tools.langchain.search_tools_factory:create_search_function
+          verbose: true
+      mcp_servers:
+        - "weather"
+        - "playwright"
+      examples:
+        - "What is the wind in NY?"
+        - "Quel temps fait-il à Toulouse"
+
+    - name: "Weather & PowerPoint"
+      type: react
+      mcp_servers:
+        - "weather"
+        - "ppt"
+      examples:
+        - "Get weather in Toulouse today. Create a PowerPoint file about it and usual climate in Toulouse"
+
+    - name: "Web Research"
+      type: react
+      mcp_servers:
+        - "playwright"
+      examples:
+        - "Research the latest AI developments on OpenAI's website"
+        - "Find information about quantum computing on IBM's website"
+        - "Connect to atos.net with a browser, find the page with blogs, and get list of recent blog articles"
+
+    - name: "Chinook DB"
+      type: react
+      tools:
+        - factory: genai_tk.tools.langchain.sql_tool_factory:create_sql_tool_from_config
+          config:
+            database_uri: "sqlite:///use_case_data/other/Chinook.db"
+            tool_name: "query_chinook"
+            tool_description: "Query the Chinook music database for information about artists, albums, tracks, customers, and invoices"
+            examples:
+              - input: "List all artists"
+                query: "SELECT * FROM Artist LIMIT 10;"
+              - input: "Find all albums for the artist 'AC/DC'"
+                query: "SELECT * FROM Album WHERE ArtistId = (SELECT ArtistId FROM Artist WHERE Name = 'AC/DC');"
+              - input: "List all tracks in the 'Rock' genre"
+                query: "SELECT * FROM Track WHERE GenreId = (SELECT GenreId FROM Genre WHERE Name = 'Rock');"
+              - input: "Find the total duration of all tracks"
+                query: "SELECT SUM(Milliseconds) FROM Track;"
+              - input: "Which country's customers spent the most?"
+                query: "SELECT BillingCountry, SUM(Total) as TotalSpent FROM Invoice GROUP BY BillingCountry ORDER BY TotalSpent DESC LIMIT 1;"
+            top_k: 15
+      examples:
+        - "List all artists in the database"
+        - "Which country's customers spent the most?"
+        - "Show me albums by AC/DC"
+        - "How many tracks are in the Rock genre?"
+
+    - name: "legal"
+      type: react
+      tools:
+        - class: langchain_tavily:TavilySearch
+          max_results: 5
+          include_domains:
+            - https://www.data.gouv.fr/datasets/legi-codes-lois-et-reglements-consolides
+            - https://www.journal-officiel.gouv.fr
+      examples:
+        - "changements de réglementation sur la regulation des marchés financiers."

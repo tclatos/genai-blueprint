@@ -448,7 +448,7 @@ def handle_submission(placeholder: Any, demo: SmolagentsAgentConfig, prompt: str
 
             # Initialize LLM model with error handling
             try:
-                factory = LlmFactory(llm=MODEL_ID)
+                factory = LlmFactory(llm=MODEL_ID or "default")
                 llm = factory.get_smolagent_model()
                 logger.info(f"Initialized LLM: {factory.llm_id} ({factory.provider}/{factory.info.model})")
             except Exception as e:
