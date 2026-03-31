@@ -1,0 +1,812 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "National Weather Service" [ref=e4] [cursor=pointer]:
+      - /url: https://www.weather.gov
+      - img "National Weather Service" [ref=e5]
+    - link "United States Department of Commerce" [ref=e6] [cursor=pointer]:
+      - /url: http://www.commerce.gov
+      - img "United States Department of Commerce" [ref=e7]
+    - link "National Oceanic and Atmospheric Administration" [ref=e8] [cursor=pointer]:
+      - /url: http://www.noaa.gov
+  - generic [ref=e11]:
+    - list [ref=e14]:
+      - listitem [ref=e15]:
+        - link "HOME" [ref=e16] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e17]:
+        - link "FORECAST" [ref=e18] [cursor=pointer]:
+          - /url: https://www.weather.gov/forecastmaps/
+      - listitem [ref=e19]:
+        - link "PAST WEATHER" [ref=e20] [cursor=pointer]:
+          - /url: https://www.weather.gov/wrh/climate
+      - listitem [ref=e21]:
+        - link "SAFETY" [ref=e22] [cursor=pointer]:
+          - /url: https://www.weather.gov/safety/
+      - listitem [ref=e23]:
+        - link "INFORMATION" [ref=e24] [cursor=pointer]:
+          - /url: https://www.weather.gov/informationcenter
+      - listitem [ref=e25]:
+        - link "EDUCATION" [ref=e26] [cursor=pointer]:
+          - /url: https://www.weather.gov/education/
+      - listitem [ref=e27]:
+        - link "NEWS" [ref=e28] [cursor=pointer]:
+          - /url: https://www.weather.gov/news
+      - listitem [ref=e29]:
+        - link "SEARCH" [ref=e30] [cursor=pointer]:
+          - /url: https://www.weather.gov/search/
+      - listitem [ref=e31]:
+        - link "ABOUT" [ref=e32] [cursor=pointer]:
+          - /url: https://www.weather.gov/about/
+    - generic [ref=e33]:
+      - generic:
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - text: Local forecast by
+            - text: "\"City, St\" or ZIP code"
+          - textbox "Local forecast by \"City, St\" or ZIP code" [ref=e38]: Enter location ...
+          - button "Go" [ref=e39]
+          - link "Location Help" [ref=e41] [cursor=pointer]:
+            - /url: javascript:void(window.open('https://www.weather.gov/ForecastSearchHelp.html','locsearchhelp','status=0,toolbar=0,location=0,menubar=0,directories=0,resizable=1,scrollbars=1,height=500,width=530').focus());
+        - generic [ref=e44]:
+          - heading "Severe Thunderstorms and Heavy Rainfall in the Ohio Valley and Great Lakes; Winter Weather in the Northern Tier" [level=1] [ref=e45]
+          - paragraph [ref=e46]:
+            - text: A slow moving front extending from the Great Lakes region into the Plains will bring snow, wintry mix, and ice accumulation north of the front from the Upper Midwest into New England, and severe weather and heavy rain south of the front. Scattered severe thunderstorms with damaging gusts, severe hail, and heavy rain are expected across parts of the Great Lakes/Midwest through tonight.
+            - link "Read More >" [ref=e47] [cursor=pointer]:
+              - /url: http://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+      - generic [ref=e49]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - text: Customize Your
+            - strong [ref=e55]: Weather.gov
+          - generic [ref=e56]:
+            - textbox "Enter Your City, ST or ZIP Code" [ref=e57]: City, ST
+            - text: Enter Your City, ST or ZIP Code
+            - checkbox "Remember Me" [ref=e58]
+            - text: Remember Me
+          - generic [ref=e59]:
+            - button "Get Weather" [ref=e60]
+            - paragraph [ref=e61]:
+              - link "Privacy Policy" [ref=e62] [cursor=pointer]:
+                - /url: /privacy.php
+        - generic [ref=e63]:
+          - list [ref=e66]:
+            - listitem [ref=e67]:
+              - link "ACTIVE ALERTS" [ref=e68] [cursor=pointer]:
+                - /url: /alerts
+            - listitem [ref=e69]:
+              - link "FORECAST MAPS" [ref=e70] [cursor=pointer]:
+                - /url: /forecastmaps/
+            - listitem [ref=e71]:
+              - link "RADAR" [ref=e72] [cursor=pointer]:
+                - /url: https://radar.weather.gov/region/conus/standard
+            - listitem [ref=e73]:
+              - link "RIVERS, LAKES, RAINFALL" [ref=e74] [cursor=pointer]:
+                - /url: https://water.noaa.gov/
+            - listitem [ref=e75]:
+              - link "AIR QUALITY" [ref=e76] [cursor=pointer]:
+                - /url: https://airquality.weather.gov
+            - listitem [ref=e77]:
+              - link "SATELLITE" [ref=e78] [cursor=pointer]:
+                - /url: /satellite
+            - listitem [ref=e79]:
+              - link "CURRENT" [ref=e80] [cursor=pointer]:
+                - /url: /current
+          - generic [ref=e81]:
+            - paragraph
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - img [ref=e85]
+              - img [ref=e86]
+              - img [ref=e87]
+              - generic:
+                - link "Southern Florida":
+                  - /url: https://www.weather.gov/mfl/
+                - link "NE Gulf N of 26N E of 87W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz057&syn=gmz001
+                - link "E Gulf from 22N to 26N E of 87W Including Straits of Florida":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz047&syn=gmz001
+                - link "NW Gulf including Stetson Bank":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz040&syn=gmz001
+                - link "SW Louisiana Offshore Waters including Flower Garden Banks Marine Sanctuary":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz041&syn=gmz001
+                - link "N Central Gulf N of 26N between 87W and 91W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz056&syn=gmz001
+                - link "W Central Gulf from 22N to 26N W of 94W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz058&syn=gmz001
+                - link "W Central Gulf from 22N to 26N between 91W and 94W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz045&syn=gmz001
+                - link "Central Gulf from 22Nto 26N between 87W and 91W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=gmz046&syn=gmz001
+                - link "Atlantic from 29N to 31N W of 77W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz063&syn=amz101
+                - link "Atlantic from 29N to 31N between 74W and 77W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz064&syn=amz101
+                - link "Atlantic from 29N to 31N between 70W and 74W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz065&syn=amz101
+                - link "Atlantic from 29N to 31N between 65W and 70W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz066&syn=amz101
+                - link "Atlantic from 27N to 29N between 74W and 77W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz070&syn=amz101
+                - link "Atlantic from 27N to 29N between 70W and 74W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz071&syn=amz101
+                - link "Atlantic from 27N to 29N W of 77W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz069&syn=amz101
+                - link "Atlantic from 25N to 27N E of Bahamas to 70W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz076&syn=amz101
+                - link "Atlantic from 22N to 25N E of Bahamas to 70W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz081&syn=amz101
+                - link "Northern Bahamas from 24N to 27N":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz075&syn=amz101
+                - link "Central Bahamas from 22N to 24N including Cay Sal Bank":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz080&syn=amz101
+                - link "Caribbean N of 18N W of 85W including Yucatan Basin":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz040&syn=amz001
+                - link "NW Caribbean N of 20N E of 85W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz041&syn=amz001
+                - link "NW Caribbean N of 20N E of 85W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz041&syn=amz001
+                - link "Caribbean approaches to the Windward Passage":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz044&syn=amz001
+                - link "Atlantic S of 22N W of 70W including Approaches to the Windward Passage":
+                  - /url: https://www.weather.gov/shmrn.php?mz=amz085&syn=amz101
+                - link "Newport/Morehead City, NC":
+                  - /url: https://www.weather.gov/mhx/
+                - link "Brownsville, TX":
+                  - /url: https://www.weather.gov/bro/
+                - link "Corpus Christi, TX":
+                  - /url: https://www.weather.gov/crp/
+                - link "Houston/Galveston, TX":
+                  - /url: https://www.weather.gov/hgx/
+                - link "New Orleans, LA":
+                  - /url: https://www.weather.gov/lix/
+                - link "Lake Charles, LA":
+                  - /url: https://www.weather.gov/lch/
+                - link "Mobile, AL":
+                  - /url: https://www.weather.gov/mob/
+                - link "Tallahassee, FL":
+                  - /url: https://www.weather.gov/tlh/
+                - link "Tampa, FL":
+                  - /url: https://www.weather.gov/tbw/
+                - link "Miami, FL":
+                  - /url: https://www.weather.gov/mfl/
+                - link "Key West, FL":
+                  - /url: https://www.weather.gov/key/
+                - link "Florida Keys":
+                  - /url: https://www.weather.gov/key/
+                - link "Miami, FL":
+                  - /url: https://www.weather.gov/mfl/
+                - link "Melbourne, FL":
+                  - /url: https://www.weather.gov/mlb/
+                - link "Jacksonville, FL":
+                  - /url: https://www.weather.gov/jax/
+                - link "Charleston, SC":
+                  - /url: https://www.weather.gov/chs/
+                - link "Wilmington, NC":
+                  - /url: https://www.weather.gov/ilm/
+                - link "Baltimore/Washington, DC":
+                  - /url: https://www.weather.gov/lwx/
+                - link "Wakefield, VA":
+                  - /url: https://www.weather.gov/akq/
+                - link "Philadelphia/Mt. Holly, PA/NJ":
+                  - /url: https://www.weather.gov/phi/
+                - link "New York, NY":
+                  - /url: https://www.weather.gov/okx/
+                - link "Boston, MA":
+                  - /url: https://www.weather.gov/box/
+                - link "Gray/Portland, ME":
+                  - /url: https://www.weather.gov/gyx/
+                - link "Intra Coastal Waters from Schoodic Point ME to Stonington ME":
+                  - /url: https://www.weather.gov/car/
+                - link "Coastal Waters from Schoodic Point ME to Stonington ME out 25 NM":
+                  - /url: https://www.weather.gov/car/
+                - link "Waters from Eastport ME to Stonington ME from 25 to 40 NM":
+                  - /url: https://www.weather.gov/car/
+                - link "Northeast Minnesota and Northern Wisconsin":
+                  - /url: https://www.weather.gov/dlh/
+                - link "Northern Michigan":
+                  - /url: https://www.weather.gov/mqt/
+                - link "Northern Michigan":
+                  - /url: https://www.weather.gov/mqt/
+                - link "Northern Michigan":
+                  - /url: https://www.weather.gov/mqt/
+                - link "East Central Wisconsin - Green Bay":
+                  - /url: https://www.weather.gov/grb/
+                - link "East Central Wisconsin - Green Bay":
+                  - /url: https://www.weather.gov/grb/
+                - link "Southern and Southeastern Wisconsin":
+                  - /url: https://www.weather.gov/mkx/
+                - link "Northeastern Illinois and Northwestern Indiana - Chicago":
+                  - /url: https://www.weather.gov/lot/
+                - link "Northern Indiana and Northwestern Ohio":
+                  - /url: https://www.weather.gov/iwx/
+                - link "Southwestern Michigan":
+                  - /url: https://www.weather.gov/grr/
+                - link "Northeast Michigan - Gaylord":
+                  - /url: https://www.weather.gov/apx/
+                - link "Northeast Michigan - Gaylord":
+                  - /url: https://www.weather.gov/apx/
+                - link "Northeast Michigan - Gaylord":
+                  - /url: https://www.weather.gov/apx/
+                - link "Southeastern Michigan - Detroit":
+                  - /url: https://www.weather.gov/dtx/
+                - link "Southeastern Michigan - Detroit":
+                  - /url: https://www.weather.gov/dtx/
+                - link "Southeastern Michigan - Detroit":
+                  - /url: https://www.weather.gov/dtx/
+                - link "Northern Ohio":
+                  - /url: https://www.weather.gov/cle/
+                - link "Western New York - Buffalo":
+                  - /url: https://www.weather.gov/buf/
+                - link "Western New York - Buffalo":
+                  - /url: https://www.weather.gov/buf/
+                - link "Northern Michigan":
+                  - /url: https://www.weather.gov/mqt/
+                - link "Los Angeles, CA":
+                  - /url: https://www.weather.gov/lox/
+                - link "San Diego, CA":
+                  - /url: https://www.weather.gov/sgx/
+                - link "San Francisco Bay Area/Monterey, CA":
+                  - /url: https://www.weather.gov/mtr/
+                - link "Eureka, CA":
+                  - /url: https://www.weather.gov/eka/
+                - link "Medford, OR":
+                  - /url: https://www.weather.gov/mfr/
+                - link "Portland, OR":
+                  - /url: https://www.weather.gov/pqr/
+                - link "Seattle, WA":
+                  - /url: https://www.weather.gov/sew/
+                - link "Los Angeles Area":
+                  - /url: https://www.weather.gov/lox/
+                - link "Los Angeles Area":
+                  - /url: https://www.weather.gov/lox/
+                - link "Los Angeles Area":
+                  - /url: https://www.weather.gov/lox/
+                - link "Los Angeles Area":
+                  - /url: https://www.weather.gov/lox/
+                - link "Los Angeles Area":
+                  - /url: https://www.weather.gov/lox/
+                - link "Los Angeles Area":
+                  - /url: https://www.weather.gov/lox/
+                - link "South Central California":
+                  - /url: https://www.weather.gov/hnx/
+                - link "San Francisco Area":
+                  - /url: https://www.weather.gov/mtr/
+                - link "Western Nevada":
+                  - /url: https://www.weather.gov/rev/
+                - link "North Central California":
+                  - /url: https://www.weather.gov/sto/
+                - link "Northwest California Coast":
+                  - /url: https://www.weather.gov/eka/
+                - link "Southwest Oregon and Northern California":
+                  - /url: https://www.weather.gov/mfr/
+                - link "Northeast Oregon and Southeast Washington":
+                  - /url: https://www.weather.gov/pdt/
+                - link "Northwest Oregon":
+                  - /url: https://www.weather.gov/pqr/
+                - link "Northwest Washington":
+                  - /url: https://www.weather.gov/sew/
+                - link "Eastern Washington and Northern Idaho":
+                  - /url: https://www.weather.gov/otx/
+                - link "Southern Nevada, Southeastern California and Northwestern Arizona - Las Vegas":
+                  - /url: https://www.weather.gov/vef/
+                - link "Southwestern California - San Diego":
+                  - /url: https://www.weather.gov/sgx/
+                - link "Central Arizona and California Deserts":
+                  - /url: https://www.weather.gov/psr/
+                - link "Southeast Arizona":
+                  - /url: https://www.weather.gov/twc/
+                - link "Northern Arizona":
+                  - /url: https://www.weather.gov/fgz/
+                - link "Utah":
+                  - /url: https://www.weather.gov/slc/
+                - link "Northern and Northeastern Nevada":
+                  - /url: https://www.weather.gov/lkn/
+                - link "Southwestern Idaho and Eastern Oregon":
+                  - /url: https://www.weather.gov/boi/
+                - link "Southeastern Idaho":
+                  - /url: https://www.weather.gov/pih/
+                - link "Western Montana and Central Idaho":
+                  - /url: https://www.weather.gov/mso/
+                - link "Central Montana - Great Falls":
+                  - /url: https://www.weather.gov/tfx/
+                - link "Northeastern Montana":
+                  - /url: https://www.weather.gov/ggw/
+                - link "Southeastern Montana":
+                  - /url: https://www.weather.gov/byz/
+                - link "Western Wyoming":
+                  - /url: https://www.weather.gov/riw/
+                - link "Southeastern Wyoming and Western Nebraska":
+                  - /url: https://www.weather.gov/cys/
+                - link "Northeastern Colorado":
+                  - /url: https://www.weather.gov/bou/
+                - link "Western Colorado and Eastern Utah":
+                  - /url: https://www.weather.gov/gjt/
+                - link "Southeastern Colorado":
+                  - /url: https://www.weather.gov/pub/
+                - link "Northern and Central New Mexico":
+                  - /url: https://www.weather.gov/abq/
+                - link "Southern New Mexico and extreme Western Texas - El Paso":
+                  - /url: https://www.weather.gov/elp/
+                - link "Texas and Oklahoma":
+                  - /url: https://www.weather.gov/ama/
+                - link "Lubbock and South Plains Texas":
+                  - /url: https://www.weather.gov/lub/
+                - link "Western Texas and Southeastern New Mexico":
+                  - /url: https://www.weather.gov/maf/
+                - link "Western South Dakota and Northeastern Wyoming":
+                  - /url: https://www.weather.gov/unr/
+                - link "Northwestern Kansas and East Central Colorado - Goodland":
+                  - /url: https://www.weather.gov/gld/
+                - link "Central Nebraska - North Platte":
+                  - /url: https://www.weather.gov/lbf/
+                - link "North Central Kansas and South Central Nebraska":
+                  - /url: https://www.weather.gov/gid/
+                - link "Southeastern South Dakota, Southwestern Minnesota, and Northwestern Iowa":
+                  - /url: https://www.weather.gov/fsd/
+                - link "Northern and Northeastern South Dakota":
+                  - /url: https://www.weather.gov/abr/
+                - link "Western North Dakota":
+                  - /url: https://www.weather.gov/bis/
+                - link "Eastern Nebraska and Southwestern Iowa - Omaha Valley":
+                  - /url: https://www.weather.gov/oax/
+                - link "Northeastern Kansas":
+                  - /url: https://www.weather.gov/top/
+                - link "Southeastern Kansas":
+                  - /url: https://www.weather.gov/ict/
+                - link "Southwestern Kansas - Dodge City":
+                  - /url: https://www.weather.gov/ddc/
+                - link "Central Oklahoma":
+                  - /url: https://www.weather.gov/oun/
+                - link "Eastern Oklahoma and Northwestern Arkansas":
+                  - /url: https://www.weather.gov/tulsa/
+                - link "Dallas and Fort Worth":
+                  - /url: https://www.weather.gov/fwd/
+                - link "Central Texas - San Angelo":
+                  - /url: https://www.weather.gov/sjt/
+                - link "Austin and San Antonio Texas":
+                  - /url: https://www.weather.gov/ewx/
+                - link "Corpus Christi, Victoria, and Laredo Texas":
+                  - /url: https://www.weather.gov/crp/
+                - link "Southern Texas":
+                  - /url: https://www.weather.gov/bro/
+                - link "Texas - Houston/Galveston":
+                  - /url: https://www.weather.gov/hgx/
+                - link "Southeast Texas and Southwest Louisiana":
+                  - /url: https://www.weather.gov/lch/
+                - link "Northern Louisiana and Eastern Texas - Shreveport":
+                  - /url: https://www.weather.gov/shv/
+                - link "Arkansas":
+                  - /url: https://www.weather.gov/lzk/
+                - link "Southwestern Missouri":
+                  - /url: https://www.weather.gov/sgf/
+                - link "Northwestern Missouri":
+                  - /url: https://www.weather.gov/eax/
+                - link "Central Iowa":
+                  - /url: https://www.weather.gov/dmx/
+                - link "Southern Minnesota":
+                  - /url: https://www.weather.gov/mpx/
+                - link "Northeastern North Dakota and Northwestern Minnesota":
+                  - /url: https://www.weather.gov/fgf/
+                - link "Northeast Minnesota and Northern Wisconsin":
+                  - /url: https://www.weather.gov/dlh/
+                - link "Southwestern Wisconsin, Southeastern Minnesota, and Northeast Iowa":
+                  - /url: https://www.weather.gov/arx/
+                - link "Eastern Iowa and Northwestern Illinois - Quad Cities":
+                  - /url: https://www.weather.gov/dvn/
+                - link "Eastern Missouri - West Central Illinois":
+                  - /url: https://www.weather.gov/lsx/
+                - link "Western Tennessee, Eastern Arkansas and Northern Mississippi - Memphis":
+                  - /url: https://www.weather.gov/meg/
+                - link "Central Mississippi":
+                  - /url: https://www.weather.gov/jan/
+                - link "Southeastern Louisiana":
+                  - /url: https://www.weather.gov/lix/
+                - link "Middle Tennessee":
+                  - /url: https://www.weather.gov/bna/
+                - link "Northern Alabama":
+                  - /url: https://www.weather.gov/hun/
+                - link "Central Alabama":
+                  - /url: https://www.weather.gov/bmx/
+                - link "Mobile - Pensacola":
+                  - /url: https://www.weather.gov/mob/
+                - link "West Central Florida":
+                  - /url: https://www.weather.gov/tbw/
+                - link "East Central Florida":
+                  - /url: https://www.weather.gov/mlb/
+                - link "Panhandle of Florida and Southwestern Georgia":
+                  - /url: https://www.weather.gov/tlh/
+                - link "Northeast Florida and Southeast Georgia":
+                  - /url: https://www.weather.gov/jax/
+                - link "Northern and Central Georgia":
+                  - /url: https://www.weather.gov/ffc/
+                - link "Low Country of South Carolina and Georgia":
+                  - /url: https://www.weather.gov/chs/
+                - link "Northeastern South Carolina and Southeastern North Carolina - Wilmington":
+                  - /url: https://www.weather.gov/ilm/
+                - link "Central South Carolina and CSRA":
+                  - /url: https://www.weather.gov/cae/
+                - link "Western North Carolina and Northwest South Carolina":
+                  - /url: https://www.weather.gov/gsp/
+                - link "Eastern Tennessee":
+                  - /url: https://www.weather.gov/mrx/
+                - link "Eastern Kentucky":
+                  - /url: https://www.weather.gov/jkl/
+                - link "Central Kentucky":
+                  - /url: https://www.weather.gov/lmk/
+                - link "Southern Illinois and Indiana, Southeastern Missouri and Western Kentucky":
+                  - /url: https://www.weather.gov/pah/
+                - link "Central and East Central Illinois":
+                  - /url: https://www.weather.gov/ilx/
+                - link "Central Indiana":
+                  - /url: https://www.weather.gov/ind/
+                - link "Northeastern Illinois and Northwestern Indiana - Chicago":
+                  - /url: https://www.weather.gov/lot/
+                - link "Southern and Southeastern Wisconsin":
+                  - /url: https://www.weather.gov/mkx/
+                - link "East Central Wisconsin - Green Bay":
+                  - /url: https://www.weather.gov/grb/
+                - link "Northern Michigan":
+                  - /url: https://www.weather.gov/mqt/
+                - link "Northeast Michigan - Gaylord":
+                  - /url: https://www.weather.gov/apx/
+                - link "Northeast Michigan - Gaylord":
+                  - /url: https://www.weather.gov/apx/
+                - link "Southeastern Michigan - Detroit":
+                  - /url: https://www.weather.gov/dtx/
+                - link "Southwestern Michigan":
+                  - /url: https://www.weather.gov/grr/
+                - link "Northern Indiana and Northwestern Ohio":
+                  - /url: https://www.weather.gov/iwx/
+                - link "Southwestern Ohio Northern Kentucky":
+                  - /url: https://www.weather.gov/iln/
+                - link "West Virginia":
+                  - /url: https://www.weather.gov/rlx/
+                - link "Western Virginia, Southeast West Virginia, and Northwest North Carolina":
+                  - /url: https://www.weather.gov/rnk/
+                - link "Central North Carolina - Raleigh":
+                  - /url: https://www.weather.gov/rah/
+                - link "Eastern North Carolina":
+                  - /url: https://www.weather.gov/mhx/
+                - link "Eastern Virginia, Southern Maryland and Northeast North Carolina":
+                  - /url: https://www.weather.gov/akq/
+                - link "Washington D.C., Central and Western Maryland, Northern Virginia, Eastern West Virginia":
+                  - /url: https://www.weather.gov/lwx/
+                - link "Western Pennsylvania, Eastern Ohio and Northern West Virginia":
+                  - /url: https://www.weather.gov/pbz/
+                - link "Northern Ohio":
+                  - /url: https://www.weather.gov/cle/
+                - link "Central Pennsylvania":
+                  - /url: https://www.weather.gov/ctp/
+                - link "New Jersey, Delaware, Southeastern Pennsylvania and eastern Maryland":
+                  - /url: https://www.weather.gov/phi/
+                - link "New York City and Surrounding Areas":
+                  - /url: https://www.weather.gov/okx/
+                - link "South Central New York and Northeastern Pennsylvania":
+                  - /url: https://www.weather.gov/bgm/
+                - link "Western New York - Buffalo":
+                  - /url: https://www.weather.gov/buf/
+                - link "Eastern New York and Western New England Areas":
+                  - /url: https://www.weather.gov/aly/
+                - link "Boston and Surrounding Areas":
+                  - /url: https://www.weather.gov/box/
+                - link "Northern Vermont and New York":
+                  - /url: https://www.weather.gov/btv/
+                - link "Southern Maine and New Hampshire":
+                  - /url: https://www.weather.gov/gyx/
+                - link "Northern Maine":
+                  - /url: https://www.weather.gov/car/
+                - link "Gulf of Maine to the Hague Line":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz800&syn=anz898
+                - link "Georges Bank between Cape Cod and 68W north of 1000 fathoms":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz805&syn=anz898
+                - link "South of New England between the Great South Channel and Montauk Point to 1000 fathoms":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz810&syn=anz898
+                - link "South of Long Island between Montauk Point and Sandy Hook to 1000 fathoms":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz815&syn=anz898
+                - link "Hudson Canyon to Baltimore Canyon to 1000 fathoms":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz820&syn=anz899
+                - link "Baltimore Canyon to Cape Charles Light to 100 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz825&syn=anz899
+                - link "Cape Charles Light to Currituck Beach Light to 100 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz828&syn=anz899
+                - link "Currituck Beach Light to Cape Hatteras to 100 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz830&syn=anz899
+                - link "Cape Hatteras to Cape Fear to 100 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz833&syn=anz899
+                - link "Cape Fear to 31N to 1000 FM":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz835&syn=anz899
+                - link "Georges Bank between 68W and the Hague Line":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz900&syn=anz898
+                - link "East of 69W to the Hague Line between 1000 fathoms and 39N":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz905&syn=anz899
+                - link "East of 69W and south of 39N to 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz910&syn=anz899
+                - link "Between 1000 fathoms and 38.5N west of 69W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz915&syn=anz899
+                - link "Baltimore Canyon to 69W east of 1000 fathoms and south of 38.5N to 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz920&syn=anz899
+                - link "Baltimore Canyon to Hatteras Canyon between 100 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz925&syn=anz899
+                - link "Hatteras Canyon to Cape Fear 100 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz930&syn=anz899
+                - link "Cape Fear to 31N east of 1000 fathoms to 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=anz935&syn=anz899
+                - link "Cape Flattery to Cape Shoalwater between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz800&syn=pzz898
+                - link "Cape Shoalwater to Cape Lookout between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz805&syn=pzz898
+                - link "Cape Lookout to Florence, OR between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz810&syn=pzz898
+                - link "Florence, OR to Point St. George between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz815&syn=pzz898
+                - link "Point St. George to Point Arena between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz820&syn=pzz899
+                - link "Point Arena to Pigeon Point between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz825&syn=pzz899
+                - link "Pigeon Point to Point Piedras Blancas between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz830&syn=pzz899
+                - link "Point Piedras Blancas to Santa Cruz Island, CA between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz835&syn=pzz899
+                - link "Santa Cruz Island, CA to San Clemente Island, CA between 60 NM and 150 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz840&syn=pzz899
+                - link "Cape Flattery to Cape Shoalwater between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz900&syn=pzz898
+                - link "Cape Shoalwater to Cape Lookout between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz905&syn=pzz898
+                - link "Cape Lookout to Florence, OR between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz910&syn=pzz898
+                - link "Florence, OR to Point St. George between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz915&syn=pzz898
+                - link "Point St. George to Point Arena between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz920&syn=pzz899
+                - link "Point Arena to Pigeon Point between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz925&syn=pzz899
+                - link "Pigeon Point to Point Piedras Blancas between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz930&syn=pzz899
+                - link "Point Piedras Blancas to Santa Cruz Island, CA between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz935&syn=pzz899
+                - link "Santa Cruz Island, CA to 120W between 150 NM and 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz940&syn=pzz899
+                - link "San Clemente Island, CA to Guadalupe Island from 60 NM Offshore west to 120W":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pzz945&syn=pzz899
+                - link "S OF 29N to Punta Eugenia to 250 NM offshore":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pmz011&syn=pmz001
+                - link "U.S. Mexico Border S to 29N within 60 NM offshore Mexico":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pmz009&syn=pmz001
+                - link "Northern Gulf of California":
+                  - /url: https://www.weather.gov/shmrn.php?mz=pmz017&syn=pmz001
+              - generic:
+                - link "Juneau, AK":
+                  - /url: https://www.weather.gov/ajk
+                - link "Fairbanks, AK":
+                  - /url: https://www.weather.gov/afg
+                - link "Anchorage, AK":
+                  - /url: https://www.weather.gov/afc
+                - link "Western US Arctic Offshore":
+                  - /url: https://www.weather.gov/afg
+                - link "Eastern US Arctic Offshore":
+                  - /url: https://www.weather.gov/afg
+                - link "Bering Sea offshore 171 degrees West to 180 degrees and north of 56 degrees North":
+                  - /url: https://www.weather.gov/afc
+                - link "Bering Sea offshore 171 degrees West to 180 degrees and south of 56 degrees North":
+                  - /url: https://www.weather.gov/afc
+                - link "Pribilof Islands (St. Paul and St. George)":
+                  - /url: https://www.weather.gov/afc/
+                - link "Bering Sea offshore east of 171 degrees West":
+                  - /url: https://www.weather.gov/afc
+                - link "Gulf of Alaska offshore north of 57 degrees North and west of 144 degrees West":
+                  - /url: https://www.weather.gov/afc
+                - link "Gulf of Alaska offshore south of 57 degrees North north of 55 degrees North and west of 144 degrees West":
+                  - /url: https://www.weather.gov/afc
+                - link "Gulf of Alaska north of 55 degrees North and east of 144 degrees West":
+                  - /url: https://www.weather.gov/ajk
+                - link "Juneau, AK":
+                  - /url: https://www.weather.gov/ajk
+              - generic:
+                - link "Honolulu, HI":
+                  - /url: https://www.weather.gov/hfo
+                - link "Hawaiian Offshore Waters":
+                  - /url: https://forecast.weather.gov/shmrn.php?mz=phz180&syn=phz105
+                - link "Hawaiian Offshore Waters":
+                  - /url: https://forecast.weather.gov/shmrn.php?mz=phz180&syn=phz105
+              - generic [ref=e88]:
+                - link "American Samoa" [ref=e89] [cursor=pointer]:
+                  - /url: /ppg/
+                - link "Guam" [ref=e90] [cursor=pointer]:
+                  - /url: /gum/
+                - link "Puerto Rico/Virgin Islands" [ref=e91] [cursor=pointer]:
+                  - /url: /sju/
+            - generic [ref=e92]:
+              - text: Click on the map above for detailed alerts or
+              - generic [ref=e93]:
+                - generic [ref=e94]:
+                  - combobox [ref=e95]:
+                    - option "Warnings By State" [selected]
+                    - option "Warnings By County"
+                    - option
+                    - option "Alabama"
+                    - option "Alaska"
+                    - option "Arizona"
+                    - option "Arkansas"
+                    - option "California"
+                    - option "Colorado"
+                    - option "Connecticut"
+                    - option "Delaware"
+                    - option "District of Columbia"
+                    - option "Florida"
+                    - option "Georgia"
+                    - option "Hawaii"
+                    - option "Idaho"
+                    - option "Illinois"
+                    - option "Indiana"
+                    - option "Iowa"
+                    - option "Kansas"
+                    - option "Kentucky"
+                    - option "Louisiana"
+                    - option "Maine"
+                    - option "Marianas"
+                    - option "Maryland"
+                    - option "Massachusetts"
+                    - option "Michigan"
+                    - option "Midway"
+                    - option "Minnesota"
+                    - option "Mississippi"
+                    - option "Missouri"
+                    - option "Montana"
+                    - option "Nebraska"
+                    - option "Nevada"
+                    - option "New Hampshire"
+                    - option "New Jersey"
+                    - option "New Mexico"
+                    - option "New York"
+                    - option "North Carolina"
+                    - option "North Dakota"
+                    - option "Ohio"
+                    - option "Oklahoma"
+                    - option "Oregon"
+                    - option "Pennsylvania"
+                    - option "Rhode Island"
+                    - option "South Carolina"
+                    - option "South Dakota"
+                    - option "Tennessee"
+                    - option "Texas"
+                    - option "Utah"
+                    - option "Vermont"
+                    - option "Virgin Islands"
+                    - option "Virginia"
+                    - option "Washington"
+                    - option "West Virginia"
+                    - option "Wisconsin"
+                    - option "Wyoming"
+                  - button "Go" [ref=e96]
+                - link "Public Alerts in XML/CAP v1.2 and ATOM Formats" [ref=e98] [cursor=pointer]:
+                  - /url: https://vlab.noaa.gov/web/nws-common-alerting-protocol
+              - generic:
+                - generic:
+                  - list [ref=e100]:
+                    - listitem [ref=e101]:
+                      - link "Severe Thunderstorm Warning" [ref=e103] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Severe%20Thunderstorm%20Warning
+                    - listitem [ref=e104]:
+                      - link "Severe Weather Statement" [ref=e106] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Severe%20Weather%20Statement
+                    - listitem [ref=e107]:
+                      - link "Flood Warning" [ref=e109] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Flood%20Warning
+                    - listitem [ref=e110]:
+                      - link "Severe Thunderstorm Watch" [ref=e112] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Severe%20Thunderstorm%20Watch
+                    - listitem [ref=e113]:
+                      - link "Gale Warning" [ref=e115] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Gale%20Warning
+                  - list [ref=e117]:
+                    - listitem [ref=e118]:
+                      - link "Winter Weather Advisory" [ref=e120] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Winter%20Weather%20Advisory
+                    - listitem [ref=e121]:
+                      - link "Flood Advisory" [ref=e123] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Flood%20Advisory
+                    - listitem [ref=e124]:
+                      - link "High Surf Advisory" [ref=e126] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=High%20Surf%20Advisory
+                    - listitem [ref=e127]:
+                      - link "Small Craft Advisory" [ref=e129] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Small%20Craft%20Advisory
+                    - listitem [ref=e130]:
+                      - link "Brisk Wind Advisory" [ref=e132] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Brisk%20Wind%20Advisory
+                  - list [ref=e134]:
+                    - listitem [ref=e135]:
+                      - link "Wind Advisory" [ref=e137] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Wind%20Advisory
+                    - listitem [ref=e138]:
+                      - link "Winter Storm Watch" [ref=e140] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Winter%20Storm%20Watch
+                    - listitem [ref=e141]:
+                      - link "Rip Current Statement" [ref=e143] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Rip%20Current%20Statement
+                    - listitem [ref=e144]:
+                      - link "Gale Watch" [ref=e146] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Gale%20Watch
+                    - listitem [ref=e147]:
+                      - link "Flood Watch" [ref=e149] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Flood%20Watch
+                  - list [ref=e151]:
+                    - listitem [ref=e152]:
+                      - link "High Wind Watch" [ref=e154] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=High%20Wind%20Watch
+                    - listitem [ref=e155]:
+                      - link "Fire Weather Watch" [ref=e157] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Fire%20Weather%20Watch
+                    - listitem [ref=e158]:
+                      - link "Special Weather Statement" [ref=e160] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Special%20Weather%20Statement
+                    - listitem [ref=e161]:
+                      - link "Marine Weather Statement" [ref=e163] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Marine%20Weather%20Statement
+                    - listitem [ref=e164]:
+                      - link "Hydrologic Outlook" [ref=e166] [cursor=pointer]:
+                        - /url: https://forecast.weather.gov/wwamap/wwatxtget.php?cwa=usa&wwa=Hydrologic%20Outlook
+      - paragraph [ref=e171]:
+        - link "Safety" [ref=e172] [cursor=pointer]:
+          - /url: http://weather.gov/safety
+          - img "Safety" [ref=e173]
+      - generic [ref=e175]:
+        - link "Follow us on X Follow us on X" [ref=e178] [cursor=pointer]:
+          - /url: http://twitter.com/nws
+          - img "Follow us on X" [ref=e179]
+          - text: Follow us on X
+        - link "Follow us on Facebook Follow us on Facebook" [ref=e182] [cursor=pointer]:
+          - /url: http://www.facebook.com/nws
+          - img "Follow us on Facebook" [ref=e183]
+          - text: Follow us on Facebook
+        - link "Follow us on YouTube Follow us on YouTube" [ref=e186] [cursor=pointer]:
+          - /url: http://www.youtube.com/usweathergov
+          - img "Follow us on YouTube" [ref=e187]
+          - text: Follow us on YouTube
+        - link "Follow us on Instagram Follow us on Instagram" [ref=e190] [cursor=pointer]:
+          - /url: https://instagram.com/nws
+          - img "Follow us on Instagram" [ref=e191]
+          - text: Follow us on Instagram
+        - link "Follow us on Bluesky Follow us on Bluesky" [ref=e194] [cursor=pointer]:
+          - /url: https://bsky.app/profile/nws.noaa.gov
+          - img "Follow us on Bluesky" [ref=e195]
+          - text: Follow us on Bluesky
+        - link "NWS RSS Feed NWS RSS Feed" [ref=e199] [cursor=pointer]:
+          - /url: /rss_page.php?site_name=nws
+          - img "NWS RSS Feed" [ref=e200]
+          - text: NWS RSS Feed
+  - generic [ref=e203]:
+    - link "usa.gov" [ref=e205] [cursor=pointer]:
+      - /url: http://www.usa.gov
+      - img "usa.gov" [ref=e206]
+    - paragraph [ref=e208]:
+      - link "US Dept of Commerce" [ref=e209] [cursor=pointer]:
+        - /url: http://www.commerce.gov
+      - link "National Oceanic and Atmospheric Administration" [ref=e210] [cursor=pointer]:
+        - /url: http://www.noaa.gov
+      - link "National Weather Service" [ref=e211] [cursor=pointer]:
+        - /url: https://www.weather.gov
+      - text: 1325 East West Highway
+      - text: Silver Spring, MD 20910
+      - link "Comments? Questions? Please Contact Us." [ref=e212] [cursor=pointer]:
+        - /url: https://www.weather.gov/Contact
+    - generic [ref=e213]:
+      - generic [ref=e214]:
+        - link "Disclaimer" [ref=e215] [cursor=pointer]:
+          - /url: https://www.weather.gov/disclaimer
+        - link "Information Quality" [ref=e216] [cursor=pointer]:
+          - /url: http://www.cio.noaa.gov/services_programs/info_quality.html
+        - link "Help" [ref=e217] [cursor=pointer]:
+          - /url: https://www.weather.gov/help
+        - link "Glossary" [ref=e218] [cursor=pointer]:
+          - /url: /glossary
+      - generic [ref=e219]:
+        - link "Privacy Policy" [ref=e220] [cursor=pointer]:
+          - /url: https://www.weather.gov/privacy
+        - link "Freedom of Information Act (FOIA)" [ref=e221] [cursor=pointer]:
+          - /url: https://www.noaa.gov/foia-freedom-of-information-act
+        - link "About Us" [ref=e222] [cursor=pointer]:
+          - /url: https://www.weather.gov/about
+        - link "Career Opportunities" [ref=e223] [cursor=pointer]:
+          - /url: https://www.weather.gov/careers

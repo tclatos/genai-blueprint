@@ -11,7 +11,6 @@ default_config: ${oc.env:BLUEPRINT_CONFIG,training_adn}
 # Note : configuration leverage OmegaConf solvers. See :
 # https://omegaconf.readthedocs.io/en/2.3_branch/usage.html#variable-interpolation
 
-
 paths:
   data_root : ${oc.env:HOME}
   project : ${oc.env:PWD}
@@ -21,6 +20,11 @@ paths:
   models: ${oc.env:HOME}/.models
   postgres: postgresql://${oc.env:POSTGRES_USER,unknown_user}:${oc.env:POSTGRES_PASSWORD,password}@localhost:5432/ekg
   datasets : ${paths.project}/use_case_data
+
+# Override environment variables
+:env:
+  LOGURU_LEVEL: INFO
+  LANGCHAIN_TRACING_V2: "false" 
 
 # Other config files merged to this one at launch time
 :merge:
@@ -35,7 +39,7 @@ paths:
   - ${paths.config}/demos/presidio_anonymization.yaml
   - ${paths.config}/demos/graph_rag.yaml
   - ${paths.config}/demos/cli_examples.yaml
-  - ${paths.config}/demos/cognee_kg.yaml
+ # - ${paths.config}/demos/cognee_kg.yaml
 
 
 #### 

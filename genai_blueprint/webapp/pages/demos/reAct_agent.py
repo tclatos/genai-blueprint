@@ -14,13 +14,11 @@ from typing import Any, cast
 
 import streamlit as st
 from dotenv import load_dotenv
+from genai_tk.agents.langchain.config import AgentProfileConfig, load_unified_config
 from genai_tk.core.llm_factory import get_llm
 from genai_tk.core.mcp_client import get_mcp_servers_dict
 from genai_tk.core.prompts import dedent_ws
-from genai_tk.tools.langchain.shared_config_loader import (
-    LangChainAgentConfig,
-    load_all_langchain_agent_configs,
-)
+from genai_tk.tools.langchain.shared_config_loader import process_langchain_tools_from_config
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -30,8 +28,11 @@ from langgraph.checkpoint.memory import MemorySaver
 from streamlit import session_state as sss
 from streamlit.delta_generator import DeltaGenerator
 
-from genai_blueprint.webapp.ui_components.config_editor import edit_config_dialog
-from genai_blueprint.webapp.ui_components.llm_selector import llm_selector_widget
+from genai_blueprint.webapp.ui_components.agent_layout import (
+    PANEL_HEIGHT,
+    render_agent_sidebar,
+    render_sidebar_demo_section,
+)
 from genai_blueprint.webapp.ui_components.message_renderer import render_message_with_mermaid
 from genai_blueprint.webapp.ui_components.trace_middleware import (
     TraceMiddleware,
@@ -89,85 +90,19 @@ def clear_all_history() -> None:
     clear_chat_history(keep_traces=False)
 
 
-def display_header_and_demo_selector(sample_demos: list[LangChainAgentConfig]) -> str | None:
-    """Displays the header and demo selector, returning the selected pill."""
-    st.title("🤖 ReAct Agent Chat")
-
-    if not sample_demos:
-        st.warning("No demo configurations found. Please check your config file.")
-        return None
-
-    # Demo selector in sidebar
-    with st.sidebar:
-        llm_selector_widget(st.sidebar)
-        if st.button(":material/edit: Edit Config", help="Edit agent configuration"):
-            edit_config_dialog(CONFIG_FILE)
-
-        st.divider()
-
-        # Find the current selection index to avoid constant recreation
-        current_demo_index = 0
-        if sss.current_demo:
-            try:
-                current_demo_index = [demo.name for demo in sample_demos].index(sss.current_demo)
-            except ValueError:
-                current_demo_index = 0
-
-        selected_pill = st.selectbox(
-            "Select Demo Configuration:",
-            options=[demo.name for demo in sample_demos],
-            index=current_demo_index,
-            key="demo_selector",
-        )
-
-        # Only clear chat messages if the demo actually changed (preserve traces)
-        if sss.current_demo and sss.current_demo != selected_pill:
-            clear_chat_history(keep_traces=True)
-            # Reset agent to force recreation with new demo
-            sss.agent = None
-            sss.agent_config = None
-
-        # Show demo info
-        demo = next((d for d in sample_demos if d.name == selected_pill), None)
-        if demo:
-            if demo.tools:
-                tools_list = ", ".join(f"'{t.name}'" for t in demo.tools)
-                st.markdown(f"**Tools**: {tools_list}")
-            if demo.mcp_servers:
-                mcp_list = ", ".join(f"'{mcp}'" for mcp in demo.mcp_servers)
-                st.markdown(f"**MCP**: {mcp_list}")
-            if demo.examples:
-                with st.container(border=True):
-                    st.markdown(
-                        "**Examples:**",
-                        help="💡 **Copy any example below and paste it into the chat input to get started!",
-                    )
-                    for _i, example in enumerate(demo.examples, 1):
-                        st.code(example, language="text", height=None, wrap_lines=True)
-
-        if st.button("🗑️ Clear Chat History"):
-            # Ask user if they want to also clear traces
-            has_traces = False
-            if "trace_middleware" in sss:
-                middleware = sss.trace_middleware
-                has_traces = bool(middleware.tool_calls or getattr(middleware, "llm_calls", None))
-
-            if has_traces:
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("Clear chat only", width="stretch"):
-                        clear_chat_history(keep_traces=True)
-                        st.rerun()
-                with col2:
-                    if st.button("Clear chat & traces", width="stretch"):
-                        clear_all_history()
-                        st.rerun()
-            else:
-                # No traces to preserve, just clear chat
-                clear_chat_history()
-                st.rerun()
-
-    return selected_pill
+def _react_demo_info(demo: AgentProfileConfig) -> None:
+    """Render per-demo metadata (tools, MCP) inside the page header."""
+    parts = []
+    if demo.tools:
+        tool_names = [
+            getattr(t, "tool_class", None) or getattr(t, "function", None) or getattr(t, "factory", "?")
+            for t in demo.tools
+        ]
+        parts.append("**Tools:** " + ", ".join(f"`{n}`" for n in tool_names))
+    if demo.mcp_servers:
+        parts.append("**MCP:** " + ", ".join(f"`{m}`" for m in demo.mcp_servers))
+    if parts:
+        st.markdown("  \n".join(parts))
 
 
 @st.cache_resource()
@@ -176,7 +111,7 @@ def get_cached_checkpointer():
     return MemorySaver()
 
 
-def get_or_create_agent(demo: LangChainAgentConfig) -> tuple[Any, RunnableConfig, BaseCheckpointSaver]:
+def get_or_create_agent(demo: AgentProfileConfig) -> tuple[Any, RunnableConfig, BaseCheckpointSaver]:
     """Get or create agent for the current demo configuration.
 
     Returns:
@@ -255,7 +190,7 @@ def handle_command(command: str) -> bool:
     return False
 
 
-async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
+async def setup_agent_if_needed(demo: AgentProfileConfig) -> Any:
     """Set up the agent if it doesn't exist or configuration changed."""
     agent, config, checkpointer = get_or_create_agent(demo)
 
@@ -265,7 +200,7 @@ async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
 
             # Get MCP servers from selected demo
             mcp_servers_params = get_mcp_servers_dict(demo.mcp_servers) if demo.mcp_servers else {}
-            all_tools = demo.tools.copy()
+            all_tools = process_langchain_tools_from_config(demo.tools)
 
             if mcp_servers_params:
                 try:
@@ -302,7 +237,7 @@ async def setup_agent_if_needed(demo: LangChainAgentConfig) -> Any:
 
 
 async def process_user_input(
-    demo: LangChainAgentConfig,
+    demo: AgentProfileConfig,
     user_input: str,
     status_container: DeltaGenerator,
     chat_container: DeltaGenerator | None = None,
@@ -424,91 +359,89 @@ async def process_user_input(
 
 async def main() -> None:
     """Main async function to run the ReAct agent demo."""
-    # Initialize session state
     initialize_session_state()
 
-    # Load demo configurations
-    sample_demos = load_all_langchain_agent_configs(CONFIG_FILE, "langchain_agents")
-
+    sample_demos = load_unified_config(CONFIG_FILE).profiles
     if not sample_demos:
         st.error(f"No demo configurations found in {CONFIG_FILE}")
         st.stop()
 
-    # Display header and demo selector (in sidebar)
-    selected_demo_name = display_header_and_demo_selector(sample_demos)
+    # ── Sidebar ───────────────────────────────────────────────────────────
+    render_agent_sidebar(CONFIG_FILE)
+    with st.sidebar:
+        st.divider()
+        demo = render_sidebar_demo_section(
+            sample_demos,
+            current_name=sss.current_demo,
+            info_fn=_react_demo_info,
+        )
+        st.divider()
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("🗑️ Chat", help="Clear conversation"):
+                clear_chat_history(keep_traces=True)
+                st.rerun()
+        with c2:
+            if st.button("🗑️ All", help="Clear conversation + traces"):
+                clear_all_history()
+                st.rerun()
 
-    # Get selected demo
-    demo = next((d for d in sample_demos if d.name == selected_demo_name), None)
     if demo is None:
-        st.error("Selected demo configuration not found")
         st.stop()
 
-    # Reset the just_processed flag at the start of each run
-    # This ensures that after one cycle of processing, we can handle new input
+    # ── Title ─────────────────────────────────────────────────────────────
+    st.title("🤖 ReAct Agent")
+
+    # Detect demo change → reset agent (keep traces)
+    if sss.current_demo and sss.current_demo != demo.name:
+        clear_chat_history(keep_traces=True)
+        sss.agent = None
+        sss.agent_config = None
+
     if sss.just_processed:
         sss.just_processed = False
 
-    # Single column layout with traces above conversation
+    # ── Two-panel main layout ─────────────────────────────────────────────
+    col_trace, col_chat = st.columns([2, 3], gap="medium")
 
-    # Section 1: Execution traces (LLM + Tool calls interleaved)
-    st.header("🔍 Execution Trace")
-    trace_container = st.container()
-    with trace_container:
-        if "trace_middleware" in sss:
-            display_interleaved_traces(sss.trace_middleware, key_prefix="main")
-        else:
-            st.info("No activity yet. Send a message to see LLM and tool interactions!")
+    with col_trace:
+        st.subheader("🔍 Execution Trace")
+        trace_container = st.container(height=PANEL_HEIGHT, border=True)
+        with trace_container:
+            if "trace_middleware" in sss:
+                display_interleaved_traces(sss.trace_middleware, key_prefix="main")
+            else:
+                st.info("No activity yet. Send a message to start.")
 
-    st.divider()
+    with col_chat:
+        st.subheader("💬 Conversation")
+        chat_container = st.container(height=PANEL_HEIGHT, border=True)
+        with chat_container:
+            for msg in sss.messages:
+                if isinstance(msg, HumanMessage):
+                    st.chat_message("human").write(msg.content)
+                elif isinstance(msg, AIMessage):
+                    with st.chat_message("ai"):
+                        render_message_with_mermaid(msg.content, st)
+        status_container = st.empty()
 
-    # Container for agent execution status (shown during processing)
-    status_container = st.container()
+    # ── Chat input ────────────────────────────────────────────────────────
+    user_input = st.chat_input("Type your message… (or /help)", key="chat_input")
 
-    st.divider()
+    if not user_input:
+        return
+    user_input = user_input.strip()
 
-    # Section 2: Chat conversation
-    st.header("💬 Conversation")
+    if handle_command(user_input):
+        return
 
-    # Display chat messages
-    chat_container = st.container(height=400)
-    with chat_container:
-        for msg in sss.messages:
-            if isinstance(msg, HumanMessage):
-                st.chat_message("human").write(msg.content)
-            elif isinstance(msg, AIMessage):
-                with st.chat_message("ai"):
-                    render_message_with_mermaid(msg.content, st)
-
-    # Chat input at the bottom
-    user_input = st.chat_input("Type your message here... (or use /help for commands)", key="chat_input")
-
-    # Link to LangSmith at the bottom
-    st.link_button(
-        "📊 View Full Traces in LangSmith", "https://smith.langchain.com/", help="View all traces in LangSmith"
+    await process_user_input(
+        demo,
+        user_input,
+        status_container,
+        chat_container,
+        trace_container,
     )
-
-    # Handle user input - but only if we haven't just processed something
-    if user_input and not sss.just_processed:
-        user_input = user_input.strip()
-
-        # Handle commands
-        if handle_command(user_input):
-            if user_input == "/clear":
-                # The rerun is handled in handle_command
-                pass
-            # Command handled, don't process as regular input
-            return
-
-        # Process regular user input
-        if user_input:
-            await process_user_input(
-                demo,
-                user_input,
-                status_container,
-                chat_container,
-                trace_container,
-            )
-            # Processing complete - response is already displayed
 
 
 # Run the async main function only when executing in Streamlit context
