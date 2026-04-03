@@ -322,7 +322,16 @@ def _ensure_runtime(profile_name: str) -> tuple[EmbeddedDeerFlowClient, DeerFlow
             verbose=False,
         )
     )
-    client = EmbeddedDeerFlowClient(config_path=config_path, model_name=model_name)
+    from genai_tk.agents.deer_flow.profile import resolve_middlewares
+
+    middlewares = resolve_middlewares(prepared_profile.middlewares)
+    available_skills = set(prepared_profile.available_skills) if prepared_profile.available_skills is not None else None
+    client = EmbeddedDeerFlowClient(
+        config_path=config_path,
+        model_name=model_name,
+        middlewares=middlewares,
+        available_skills=available_skills,
+    )
 
     sss.df_server_ready = True
     sss.df_client = client

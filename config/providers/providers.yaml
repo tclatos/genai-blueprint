@@ -1,6 +1,6 @@
 # Provider configuration for LLM and Embeddings factories
 # Each provider specifies:
-#   - use: Module and class in format 'module.path:ClassName'
+#   - use: Module and class in format 'module.path.ClassName'
 #   - api_key_env_var: Environment variable for API key (empty string if not required)
 #   - api_base: Optional API base URL for OpenAI-compatible providers
 #   - litellm_prefix: LiteLLM provider prefix string; null means no prefix (openai-style)
@@ -10,27 +10,27 @@ providers:
   # --- Providers with models.dev profile registry ---
 
   openai:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: OPENAI_API_KEY
     litellm_prefix: null
 
   anthropic:
-    use: langchain_anthropic:ChatAnthropic
+    use: langchain_anthropic.ChatAnthropic
     api_key_env_var: ANTHROPIC_API_KEY
     litellm_prefix: anthropic
 
   google:
-    use: langchain_google_genai:ChatGoogleGenerativeAI
+    use: langchain_google_genai.ChatGoogleGenerativeAI
     api_key_env_var: GOOGLE_API_KEY
     litellm_prefix: google
 
   mistral:
-    use: langchain_mistralai:ChatMistralAI
+    use: langchain_mistralai.ChatMistralAI
     api_key_env_var: MISTRAL_API_KEY
     litellm_prefix: mistralai
 
   groq:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: GROQ_API_KEY
     api_base: https://api.groq.com/openai/v1
     litellm_prefix: groq
@@ -38,14 +38,14 @@ providers:
   # --- Gateway providers (accept vendor-prefixed model names) ---
 
   openrouter:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: OPENROUTER_API_KEY
     api_base: https://openrouter.ai/api/v1
     litellm_prefix: openrouter
     gateway: true
 
   github:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: GITHUB_PRO_PAM
    # api_key_env_var: GITHUB_PERSONAL_ACCESS_TOKEN
     api_base: https://models.github.ai/inference
@@ -53,7 +53,7 @@ providers:
     gateway: true
 
   litellm:
-    use: litellm:ChatLiteLLM
+    use: litellm.ChatLiteLLM
     api_key_env_var: ""
     litellm_prefix: null   # model is already in LiteLLM format
     gateway: true
@@ -61,54 +61,54 @@ providers:
   # --- Other providers (no models.dev profile registry) ---
 
   fake:
-    use: langchain_core.language_models.fake_chat_models:ParrotFakeChatModel
+    use: langchain_core.language_models.fake_chat_models.ParrotFakeChatModel
     api_key_env_var: ""
 
   deepinfra:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: DEEPINFRA_API_TOKEN
     api_base: https://api.deepinfra.com/v1/openai
     litellm_prefix: deepinfra
 
   ollama:
-    use: langchain_ollama:ChatOllama
+    use: langchain_ollama.ChatOllama
     api_key_env_var: ""
     litellm_prefix: ollama
 
   edenai:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: EDENAI_API_KEY
     api_base: https://api.edenai.run/v3/llm
     litellm_prefix: edenai
 
   azure:
-    use: langchain_openai:AzureChatOpenAI
+    use: langchain_openai.AzureChatOpenAI
     api_key_env_var: AZURE_OPENAI_API_KEY
     litellm_prefix: null    # azure has special model-string handling
 
   together:
-    use: langchain_together:ChatTogether
+    use: langchain_together.ChatTogether
     api_key_env_var: TOGETHER_API_KEY
     litellm_prefix: together
 
   deepseek:
-    use: langchain_deepseek:ChatDeepSeek
+    use: langchain_deepseek.ChatDeepSeek
     api_key_env_var: DEEPSEEK_API_KEY
     litellm_prefix: deepseek
 
   huggingface:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: HUGGINGFACEHUB_API_TOKEN
     litellm_prefix: huggingface
 
   custom:
-    use: langchain_openai:ChatOpenAI
+    use: langchain_openai.ChatOpenAI
     api_key_env_var: ""
     litellm_prefix: null
 
   # NOT TESTED:
   bedrock:
-    use: langchain_aws:ChatBedrock
+    use: langchain_aws.ChatBedrock
     api_key_env_var: AWS_ACCESS_KEY_ID
     litellm_prefix: bedrock
 

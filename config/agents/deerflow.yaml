@@ -65,6 +65,13 @@ deerflow_agents:
       - tavily-mcp
     skill_directories:
       - ${paths.project}/skills  # Load all skills recursively
+    # Skill filtering: only expose these skills to the agent (omit to allow all)
+    # available_skills:
+    #   - public/deep-research
+    #   - public/data-analysis
+    # Custom middlewares by Python qualified class name (no-arg constructors):
+    # middlewares:
+    #   - genai_blueprint.demos.middlewares.AuditMiddleware
     features:
       - "🌐 Web Search"
       - "📊 Data Analysis"
@@ -116,7 +123,7 @@ deerflow_agents:
     mcp_servers:
       - tavily-mcp
     tools:
-      - factory: genai_tk.tools.langchain.sql_tool_factory:create_sql_tool_from_config
+      - factory: genai_tk.tools.langchain.sql_tool_factory.create_sql_tool_from_config
         config:
           database_uri: "sqlite:///use_case_data/other/Chinook.db"
           tool_name: "query_chinook"

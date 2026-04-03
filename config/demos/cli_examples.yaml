@@ -33,9 +33,6 @@ cli_commands:
   - name: Deer-flow Research Assistant
     command: deerflow -p "Research Assistant" "What are the latest AI trends?"
 
-  - name: Deer-flow with streaming
-    command: deerflow -p "Research Assistant" --stream "Explain transformer architecture"
-
   - name: Deer-flow interactive chat
     command: deerflow -p "Research Assistant" --chat
 
@@ -44,6 +41,9 @@ cli_commands:
 
   - name: Deer-flow with extra MCP server
     command: deerflow -p "Weather & Files" --mcp math "Calculate weather patterns"
+
+  - name: Deer-flow generate native config
+    command: deerflow -p "Research Assistant" --generate-config
 
 
   # - name: Agent with Browser

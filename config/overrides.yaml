@@ -74,11 +74,11 @@ ekg_local:
     default : PgVector
   cli:
     commands:  
-    - genai_tk.core.commands_core:CoreCommands
-    - genai_tk.core.commands_info:InfoCommands
-    - genai_tk.extra.commands_extra:ExtraCommands
-    - genai_tk.agents.commands_agents:AgentCommands
-    - genai_tk.extra.structured.commands_baml:BamlCommands
+    - genai_tk.core.commands_core.CoreCommands
+    - genai_tk.core.commands_info.InfoCommands
+    - genai_tk.extra.commands_extra.ExtraCommands
+    - genai_tk.agents.commands_agents.AgentCommands
+    - genai_tk.extra.structured.commands_baml.BamlCommands
 
   kv_store: 
     default:

@@ -43,7 +43,7 @@ deep_agent_demos:
 
       Be thorough, objective, and always cite your sources.
     tools:
-      - class: smolagents:WebSearchTool
+      - class: smolagents.WebSearchTool
     enable_file_system: true
     enable_planning: true
     examples:
@@ -113,7 +113,7 @@ deep_agent_demos:
       Use the file system to save intermediate results and final reports.
       Be thorough in your analysis and clearly communicate findings.
     tools:
-      - class: smolagents:WebSearchTool
+      - class: smolagents.WebSearchTool
     enable_file_system: true
     enable_planning: true
     examples:
@@ -133,8 +133,8 @@ deep_agent_demos:
       
       Always verify information from multiple sources and provide proper citations.
     tools:
-      - class: smolagents:WebSearchTool
-      - class: smolagents:VisitWebpageTool
+      - class: smolagents.WebSearchTool
+      - class: smolagents.VisitWebpageTool
     mcp_servers:
       - "playwright"
     enable_file_system: true
@@ -167,7 +167,7 @@ deep_agent_demos:
       
       Always ensure documentation is up-to-date, accurate, and helpful for users.
     tools:
-      - class: smolagents:WebSearchTool
+      - class: smolagents.WebSearchTool
     enable_file_system: true
     enable_planning: true
     examples:
@@ -189,8 +189,8 @@ deep_agent_demos:
     tools:
       - function: genai_tk.tools.smolagents.yfinance_tools:get_stock_info
       - function: genai_tk.tools.smolagents.yfinance_tools:get_historical_price
-      - class: smolagents:WebSearchTool
-      - class: smolagents:VisitWebpageTool
+      - class: smolagents.WebSearchTool
+      - class: smolagents.VisitWebpageTool
     enable_file_system: true
     enable_planning: true
     examples:
