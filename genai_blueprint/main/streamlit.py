@@ -177,7 +177,7 @@ def _resolve_page_path(page_file_name: str, pages_dir) -> "Path | None":
     from pathlib import Path
 
     if page_file_name.startswith("genai_tk://"):
-        rel = page_file_name[len("genai_tk://"):]
+        rel = page_file_name[len("genai_tk://") :]
         from importlib.resources import files as _pkg_files
 
         try:
