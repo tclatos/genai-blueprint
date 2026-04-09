@@ -47,6 +47,7 @@ paths:
 ####    
 ui:
   app_name : GenAI Lab and Practicum
+  logo: genai_blueprint/webapp/static/New Atos logo white.png
   pages_dir : ${paths.src}/webapp/pages
   navigation:
 

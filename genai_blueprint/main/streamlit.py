@@ -66,9 +66,15 @@ if auth_config.enabled and not st.session_state.authenticated:
     st.stop()
 
 # Only show the main application if authenticated
-LOGO = "New Atos logo white.png"
-logo = str(Path.cwd() / "genai_blueprint/webapp/static" / LOGO)
-st.logo(logo, size="medium")
+_logo_path = global_config().get_str("ui.logo", default=None)
+if _logo_path:
+    from pathlib import Path as _Path
+
+    _logo_resolved = _Path(_logo_path) if _Path(_logo_path).is_absolute() else _Path.cwd() / _logo_path
+    if _logo_resolved.exists():
+        st.logo(str(_logo_resolved), size="medium")
+    else:
+        logger.warning(f"Logo not found: {_logo_resolved}")
 
 # Get Streamlit pages to display from config
 try:

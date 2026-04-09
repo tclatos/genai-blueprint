@@ -31,8 +31,6 @@ Located in `[project.dependencies]` - these are **transitive** and automatically
 Located in `[dependency-groups]` - these are **NOT transitive** and must be explicitly requested:
 
 - **browser-control**: playwright, browser-use-sdk
-- **transformers**: accelerate, langchain-huggingface, sentence-transformers (⚠️ ~5GB)
-- **autogen**: autogen-agentchat, autogen-ext
 - **postgres**: langchain-postgres, psycopg
 - **dev**: ruff, pytest, ipykernel, ipywidgets
 
