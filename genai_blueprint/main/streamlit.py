@@ -1,5 +1,4 @@
 # Main Streamlit application configuration and setup
-from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -43,10 +42,13 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 # Authentication handling
-auth_config = load_auth_config()
+try:
+    auth_config = load_auth_config()
+except Exception:
+    auth_config = None
 
 # Only show login form if authentication is enabled and user is not authenticated
-if auth_config.enabled and not st.session_state.authenticated:
+if auth_config is not None and auth_config.enabled and not st.session_state.authenticated:
     st.title("Login")
 
     with st.form("login_form"):
@@ -157,12 +159,48 @@ def file_name_to_page_name(file_name: str) -> str:
         return file_name
 
 
+_KNOWN_TITLES = {
+    "deer_flow_agent": "🦌 DeerFlow Agent",
+    "reAct_agent": "🤖 ReAct Agent",
+    "smolagents_streamlit": "🤖 SmolAgents",
+}
+
+
+def _resolve_page_path(page_file_name: str, pages_dir) -> "Path | None":
+    """Resolve a page entry to an absolute Path.
+
+    Supports:
+      ``genai_tk://path``  — installed genai_tk/webapp/pages/<path>
+      ``/absolute/path``  — used as-is
+      ``relative/path``   — relative to pages_dir
+    """
+    from pathlib import Path
+
+    if page_file_name.startswith("genai_tk://"):
+        rel = page_file_name[len("genai_tk://"):]
+        from importlib.resources import files as _pkg_files
+
+        try:
+            return Path(str(_pkg_files("genai_tk") / "webapp" / "pages" / rel))
+        except Exception:
+            logger.warning(f"Could not resolve genai_tk package path: {page_file_name}")
+            return None
+    elif Path(page_file_name).is_absolute():
+        return Path(page_file_name)
+    else:
+        return pages_dir / page_file_name
+
+
 for section_name, page_files in nav_config.items():
     section_pages = []
     for page_file_name in page_files:
-        page_path = pages_dir / page_file_name
+        page_path = _resolve_page_path(page_file_name, pages_dir)
+        if page_path is None:
+            continue
+        stem = page_file_name.split("/")[-1].rsplit(".", 1)[0]
+        title = _KNOWN_TITLES.get(stem) or file_name_to_page_name(page_file_name)
         if page_path.exists():
-            section_pages.append(st.Page(page=page_path, title=file_name_to_page_name(page_file_name)))
+            section_pages.append(st.Page(page=page_path, title=title))
         else:
             logger.warning(f"page not found: {page_path} ")
     if section_pages:

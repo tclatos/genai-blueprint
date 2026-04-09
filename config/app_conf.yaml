@@ -78,7 +78,6 @@ ui:
     agents:
       - genai_tk://demos/deer_flow_agent.py
       - genai_tk://demos/reAct_agent.py
-      - demos/codeAct_agent.py
 
 
 
