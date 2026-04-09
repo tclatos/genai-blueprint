@@ -20,6 +20,7 @@ paths:
   models: ${oc.env:HOME}/.models
   postgres: postgresql://${oc.env:POSTGRES_USER,unknown_user}:${oc.env:POSTGRES_PASSWORD,password}@localhost:5432/ekg
   datasets : ${paths.project}/use_case_data
+  # prefix 'genai_tk://' in navigation entries resolves to this package's webapp/pages dir
 
 # Override environment variables
 :env:
@@ -66,13 +67,18 @@ ui:
       - demos/maintenance_agent.py
       - demos/mon_master.py
      # - demos/deep_search_agent.py
-      - demos/reAct_agent.py
+     # - demos/reAct_agent.py
       - demos/codeAct_agent.py
      # - demos/deep_agent.py
       - demos/graph_RAG.py
       - demos/anonymization.py
-      - demos/deer_flow_agent.py
+     # - demos/deer_flow_agent.py
       #- demos/cognee_KG.py
+
+    agents:
+      - genai_tk://demos/deer_flow_agent.py
+      - genai_tk://demos/reAct_agent.py
+      - demos/codeAct_agent.py
 
 
 
