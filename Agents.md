@@ -39,7 +39,7 @@ Comprehensive knowledge graph solution for enterprise documents:
 **Components:**
 - **Graph Core** (`graph_core.py`) - Core graph operations and schema
 - **BAML Integration** (`baml_src/`, `cli_commands_baml.py`) - Structured data extraction
-- **Kuzu Database** - Graph database backend with Cypher queries
+- **Ladybug Database** - Graph database backend with Cypher queries (Kuzu-compatible maintained fork)
 - **Document Processing** (`struct_rag_doc_processing.py`) - RAG with structured extraction
 - **CLI Tools** (`cli_commands_ekg.py`) - Command-line management interface
 

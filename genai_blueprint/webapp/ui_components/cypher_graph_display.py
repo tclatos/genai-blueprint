@@ -3,7 +3,7 @@
 This module provides functions to convert graph data from a Cypher grap database to
 a JSON format usable by Cytoscape-js, a graph visualisation library.
 
-It's been tested with Kuzu, but should work with limited change with other Cyper graph databases.
+It's been tested with Ladybug (Kuzu-compatible), but should work with limited change with other Cypher graph databases.
 
 """
 
