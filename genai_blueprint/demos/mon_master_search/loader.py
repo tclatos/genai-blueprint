@@ -67,7 +67,7 @@ def add_accronym(s: str) -> str:
 
 
 def process_json(source: str, formation: ParcoursFormations) -> Iterator[Document]:
-    logger.debug(f"load {source}")
+    logger.debug("load {}", source)
 
     metadata_offre = {
         "eta_uai": formation.etab.desgn_etab.eta_uai,
@@ -163,16 +163,16 @@ def create_embeddings(embeddings: str = EMBEDDINGS_MODEL) -> None:
     vector_factory = EmbeddingsStore.create_from_config("default")
     docs = list(load_objects_from_jsonl(FILES, Document))
 
-    logger.info(f"There are {vector_factory.document_count()} documents in  vector store")
+    logger.info("There are {} documents in  vector store", vector_factory.document_count())
 
-    logger.info(f"add {len(docs)} documents to vector store: {vector_factory.description}")
+    logger.info("add {} documents to vector store: {}", len(docs), vector_factory.description)
     # vector_factory.get()
     for doc in docs:
         try:
             print(".", end="", flush=True)
             vector_factory.add_documents([doc])
         except Exception as ex:
-            logger.warning(f"cannot add {doc.metadata['source']} - {ex}")
+            logger.warning("cannot add {} - {}", doc.metadata["source"], ex)
     print("done")
 
 
@@ -286,7 +286,7 @@ def llm_for_abbrev() -> None:
         d |= {k.strip("- "): v.strip()}
 
     OUT_FILE = REPO / "abbreviation_llm_2.xlsx"
-    logger.info(f"write Exel file : {OUT_FILE}")
+    logger.info("write Exel file : {}", OUT_FILE)
     df_llm = pd.DataFrame.from_dict(d, orient="index")
     with pd.ExcelWriter(OUT_FILE) as writer:
         df_extract.to_excel(writer, sheet_name="extracted")

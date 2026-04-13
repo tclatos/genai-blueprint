@@ -76,7 +76,7 @@ if _logo_path:
     if _logo_resolved.exists():
         st.logo(str(_logo_resolved), size="medium")
     else:
-        logger.warning(f"Logo not found: {_logo_resolved}")
+        logger.warning("Logo not found: {}", _logo_resolved)
 
 # Get Streamlit pages to display from config
 try:
@@ -183,7 +183,7 @@ def _resolve_page_path(page_file_name: str, pages_dir) -> "Path | None":
         try:
             return Path(str(_pkg_files("genai_tk") / "webapp" / "pages" / rel))
         except Exception:
-            logger.warning(f"Could not resolve genai_tk package path: {page_file_name}")
+            logger.warning("Could not resolve genai_tk package path: {}", page_file_name)
             return None
     elif Path(page_file_name).is_absolute():
         return Path(page_file_name)
@@ -202,7 +202,7 @@ for section_name, page_files in nav_config.items():
         if page_path.exists():
             section_pages.append(st.Page(page=page_path, title=title))
         else:
-            logger.warning(f"page not found: {page_path} ")
+            logger.warning("page not found: {} ", page_path)
     if section_pages:
         pages[section_name.title()] = section_pages
 

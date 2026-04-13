@@ -63,7 +63,7 @@ class ResearchAgentExample:
                 )
                 return results
             except Exception as e:
-                logger.error(f"Search error: {e}")
+                logger.error("Search error: {}", e)
                 return {"error": str(e), "results": []}
 
         return internet_search
@@ -226,7 +226,7 @@ Your final report should include:
         # Run the research
         messages = [{"role": "user", "content": query}]
 
-        logger.info(f"Starting research on topic: {topic}")
+        logger.info("Starting research on topic: {}", topic)
         result = await run_deep_agent(agent=self.agent, messages=messages, stream=False)
 
         logger.info("Research completed")
@@ -259,7 +259,7 @@ Your final report should include:
 
         messages = [{"role": "user", "content": query}]
 
-        logger.info(f"Starting contextual research on topic: {topic}")
+        logger.info("Starting contextual research on topic: {}", topic)
         result = await run_deep_agent(agent=self.agent, messages=messages, files=context_files, stream=False)
 
         logger.info("Contextual research completed")

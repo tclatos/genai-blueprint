@@ -184,7 +184,7 @@ def display_configuration_section() -> str:
 
         except Exception as e:
             st.error(f"Failed to load configuration: {e}")
-            logger.error(f"Configuration loading error: {e}", exc_info=True)
+            logger.error("Configuration loading error: {}", e, exc_info=True)
             return "default"
 
 
@@ -287,7 +287,7 @@ def display_report_tabs(research_full_report: Any) -> None:
                         st.image(image_path, caption=f"Image {index + 1}", width="stretch")
                     except Exception as e:
                         st.warning(f"Cannot display image: {image_path[:50]}...")
-                        logger.warning(f"Image display error: {e}")
+                        logger.warning("Image display error: {}", e)
         else:
             st.info("No images found in this research")
 
@@ -377,7 +377,7 @@ def generate_pdf_report() -> None:
                     )
         except Exception as e:
             st.error(f"❌ Failed to generate PDF: {e}")
-            logger.error(f"PDF generation error: {e}", exc_info=True)
+            logger.error("PDF generation error: {}", e, exc_info=True)
 
 
 async def run_research(search_input: str, config_name: str, log_handler: CustomLogsHandler) -> None:
@@ -416,7 +416,7 @@ async def run_research(search_input: str, config_name: str, log_handler: CustomL
     except Exception as e:
         error_msg = f"❌ Research failed: {str(e)}"
         st.error(error_msg)
-        logger.error(f"Research execution error: {e}", exc_info=True)
+        logger.error("Research execution error: {}", e, exc_info=True)
         await log_handler.write_log(error_msg)
         sss.research_full_report = None
 
@@ -548,6 +548,6 @@ try:
     asyncio.run(main())
 except Exception as e:
     st.error(f"❌ Application error: {e}")
-    logger.error(f"Application error: {e}", exc_info=True)
+    logger.error("Application error: {}", e, exc_info=True)
     if st.button("🔄 Restart Application"):
         st.rerun()

@@ -23,7 +23,7 @@ def get_retriever_fn(query: str | None, config: RunnableConfig) -> Runnable:
         raise FileNotFoundError(f"Path in does not exists: {path}")
     vector_store = EmbeddingsStore.create_from_config("default").get()
 
-    logger.info(f"indexing text document  {path} in VectorStore")
+    logger.info("indexing text document  {} in VectorStore", path)
     loader = TextLoader(path)
     docs = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=200)

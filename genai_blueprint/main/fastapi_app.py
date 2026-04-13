@@ -19,5 +19,5 @@ app = FastAPI()
 
 @app.get("/echo/{message}")
 def read_root(message:str):
-    logger.info(f"received /echo/{message}")
+    logger.info("received /echo/{}", message)
     return {"msg": message}

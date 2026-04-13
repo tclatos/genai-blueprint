@@ -192,5 +192,5 @@ def dummy_database() -> str:
     _ = pd.read_sql("""SELECT * FROM "tasks" ;""", DATABASE_URI)
 
     # Log database creation
-    logger.info(f"create database {DATABASE_URI}")
+    logger.info("create database {}", DATABASE_URI)
     return DATABASE_URI

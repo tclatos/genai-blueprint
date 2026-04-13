@@ -65,7 +65,7 @@ def load_demos_from_config() -> List[GraphRagDemo]:
                 if isinstance(rel, list) and len(rel) == 3:
                     allowed_relationships.append(tuple(rel))
                 else:
-                    logger.warning(f"Skipping invalid relationship format: {rel}")
+                    logger.warning("Skipping invalid relationship format: {}", rel)
 
             example_queries = demo_config.get("example_queries", [])
 

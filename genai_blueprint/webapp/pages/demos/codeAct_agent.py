@@ -226,7 +226,7 @@ def my_final_answer(answer: Any) -> Any:
     """
     global _shared_agent_outputs
 
-    logger.info(f"my_final_answer called with {type(answer).__name__}: {answer}")
+    logger.info("my_final_answer called with {}: {}", type(answer).__name__, answer)
 
     try:
         # Convert string paths to Path objects for consistent image handling

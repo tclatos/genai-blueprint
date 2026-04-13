@@ -167,7 +167,7 @@ def route_question(question: str) -> DataRoute:
 @entrypoint(checkpointer=MemorySaver())
 def agentic_rag_workflow(question: str) -> dict:
     """Agentic RAG workflow that decides when and how to retrieve information."""
-    logger.info(f"Processing question: {question}")
+    logger.info("Processing question: {}", question)
 
     # Initialize state
     state = AgentState(question=question)
@@ -233,4 +233,4 @@ if __name__ == "__main__":
     # Test the workflow
     config = {"configurable": {"thread_id": "1"}}
     result = agentic_rag_workflow.invoke("What are the types of agent memory?", config)
-    logger.info(f"Final result: {result}")
+    logger.info("Final result: {}", result)

@@ -194,7 +194,7 @@ if __name__ == '__main__':
                         {"current": name, "suggestion": f"Consider using a more descriptive name instead of '{name}'"}
                     )
 
-            return suggestions if suggestions else [{"message": "No obvious naming issues found"}]
+            return suggestions or [{"message": "No obvious naming issues found"}]
 
         @tool
         def add_type_hints(function_signature: str) -> str:
@@ -357,7 +357,7 @@ Focus on clarity, completeness, and usefulness for different audiences.""",
 
         messages = [{"role": "user", "content": query}]
 
-        logger.info(f"Generating function: {description[:50]}...")
+        logger.info("Generating function: {}...", description[:50])
         result = await run_deep_agent(agent=self.agent, messages=messages, stream=False)
 
         return result

@@ -404,13 +404,13 @@ def test_graph_stream() -> None:
     inputs = {"question": "What are the types of agent memory?"}
     for output in app.stream(inputs):
         for key, value in output.items():
-            logger.info(f"Finished running: {key}:")
+            logger.info("Finished running: {}:", key)
     print(value["generation"])
 
     inputs = {"question": "Who are the Bears expected to draft first in the NFL draft?"}
     for output in app.stream(inputs):
         for key, value in output.items():
-            logger.info(f"Finished running: {key}:")
+            logger.info("Finished running: {}:", key)
     print(value["generation"])
 
     # https://smith.langchain.com/public/c785f9c0-f519-4a38-ad5a-febb59a2139c/r

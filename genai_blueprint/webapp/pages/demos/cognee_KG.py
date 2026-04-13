@@ -69,7 +69,7 @@ async def process_files(demo_data: CogneeDemoData, node_set: list[str] | None) -
     try:
         await _process_documents(demo_data=demo_data, node_set=node_set)
     except Exception as e:
-        logger.error(f"Error processing files: {e}")
+        logger.error("Error processing files: {}", e)
         return False
     return True
 
@@ -80,7 +80,7 @@ async def query_knowledge_graph(query: str, search_type: SearchType) -> list:
         results = await cognee.search(query_type=SearchType.INSIGHTS, query_text=query)
         return results
     except Exception as e:
-        logger.error(f"Error querying knowledge graph: {e}")
+        logger.error("Error querying knowledge graph: {}", e)
         return [f"error: {e}"]
 
 
@@ -115,7 +115,7 @@ def load_demos_from_config() -> List[CogneeDemoData]:
             )
         return demos
     except Exception as e:
-        logger.error(f"Error loading demos from config: {e}")
+        logger.error("Error loading demos from config: {}", e)
         return []
 
 
@@ -228,7 +228,7 @@ async def _handle_cognify_process(demo_data: CogneeDemoData, process_func: Calla
                     await cognee.prune.prune_system(metadata=True)
                     st.success("✅ Stored data cleared")
                 except Exception as e:
-                    logger.error(f"Error clearing data: {e}")
+                    logger.error("Error clearing data: {}", e)
                     st.error(f"❌ Failed to clear stored data: {e}")
                     return
 
@@ -243,7 +243,7 @@ async def _handle_cognify_process(demo_data: CogneeDemoData, process_func: Calla
                 else:
                     st.error("❌ Failed to process data")
             except Exception as e:
-                logger.error(f"Error processing data: {e}")
+                logger.error("Error processing data: {}", e)
                 st.error(f"❌ Failed to process data: {e}")
 
 

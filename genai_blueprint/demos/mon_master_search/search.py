@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     OUT_FILE = REPO / "master_search_v0_5.xlsx"
 
-    logger.info(f"write Exel file : {OUT_FILE}")
+    logger.info("write Exel file : {}", OUT_FILE)
     with pd.ExcelWriter(OUT_FILE) as writer:
         logger.info("Vector Search (solon_large_local)...")
         d_vector = process_questions(EXAMPLE_QUERIES, SearchMode.VECTOR)
