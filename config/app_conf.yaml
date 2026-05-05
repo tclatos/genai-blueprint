@@ -99,6 +99,7 @@ cli:
     - genai_tk.agents.commands_agents.AgentCommands
     - genai_tk.extra.structured.commands_baml.BamlCommands
     - genai_tk.main.cli.register_commands
+    - genai_tk.core.commands_test.TestCommands
  
 logging:
   format: "<cyan>{time:HH:mm:ss}</cyan>-<level>{level: <7}</level> | <magenta>{file.name}</magenta>:<green>{line} <italic>{function}</italic></green>- <level>{message}</level>"
