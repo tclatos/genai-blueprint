@@ -22,7 +22,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from genai_tk.core.llm_factory import LlmFactory, get_llm_info
+from genai_tk.core.factories.llm_factory import LlmFactory, get_llm_info
 
 
 def demo_vllm_configuration():
@@ -91,7 +91,7 @@ def demo_vllm_usage_example():
 
     example_code = """
 # Example: Using VLLM with GenAI-Blueprint
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 
 # Method 1: Direct model specification
 llm = get_llm(llm_id="mpt_7b_vllm_vllm")
