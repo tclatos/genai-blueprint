@@ -1,6 +1,6 @@
 """Wrappers to facilitate SmallAgents and LangChain integration."""
 
-from genai_tk.core.llm_factory import LlmFactory
+from genai_tk.core.factories.llm_factory import LlmFactory
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnableLambda
 from smolagents import CodeAgent, LiteLLMModel, MultiStepAgent, Tool

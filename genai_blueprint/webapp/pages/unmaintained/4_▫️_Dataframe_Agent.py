@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.utils.load_data import (
     TABULAR_FILE_FORMATS_READERS,
     load_tabular_data_once,

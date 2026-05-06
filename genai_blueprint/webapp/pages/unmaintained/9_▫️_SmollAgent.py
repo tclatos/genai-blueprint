@@ -1,5 +1,5 @@
 import streamlit as st
-from genai_tk.core.llm_factory import LlmFactory
+from genai_tk.core.factories.llm_factory import LlmFactory
 from smolagents import (
     CodeAgent,
     LiteLLMModel,

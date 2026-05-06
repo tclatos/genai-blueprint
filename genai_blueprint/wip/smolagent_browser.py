@@ -3,7 +3,7 @@ from time import sleep
 
 import helium
 from dotenv import load_dotenv
-from genai_tk.core.llm_factory import LlmFactory
+from genai_tk.core.factories.llm_factory import LlmFactory
 from PIL import Image
 from selenium import webdriver
 from selenium.common.exceptions import ElementNotInteractableException, TimeoutException

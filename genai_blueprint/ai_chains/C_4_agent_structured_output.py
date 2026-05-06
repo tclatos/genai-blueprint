@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from genai_tk.core.llm_factory import get_llm, llm_config
+from genai_tk.core.factories.llm_factory import get_llm, llm_config
 from genai_tk.extra.graphs.react_agent_structured_output import create_react_structured_output_graph
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 from langchain_core.tools import tool

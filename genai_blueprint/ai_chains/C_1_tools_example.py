@@ -2,12 +2,12 @@
 
 from operator import itemgetter
 
-from genai_tk.core.chain_registry import (
+from genai_blueprint.chain_registry import (
     Example,
     RunnableItem,
     register_runnable,
 )
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from langchain.agents import create_agent
 from langchain_core.runnables import Runnable
 from langchain_core.tools import tool

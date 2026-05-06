@@ -9,8 +9,8 @@ import sys
 from operator import itemgetter
 from typing import Literal, TypedDict
 
-from genai_tk.core.chain_registry import Example, RunnableItem, register_runnable
-from genai_tk.core.llm_factory import get_llm
+from genai_blueprint.chain_registry import Example, RunnableItem, register_runnable
+from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import def_prompt
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import (

@@ -18,7 +18,7 @@ try:
 except ImportError as ex:
     raise ImportError("Could not import crewai, please install with `uv add crewai --group demos") from ex
 
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from langchain_community.tools import DuckDuckGoSearchRun
 
 # NOTE: to find which model names you have, use cli tool:  `ollama list`

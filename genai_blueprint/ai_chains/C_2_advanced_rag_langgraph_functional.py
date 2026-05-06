@@ -10,7 +10,7 @@ from enum import Enum
 
 from dotenv import load_dotenv
 from genai_tk.core.embeddings_store import EmbeddingsStore
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import def_prompt
 from genai_tk.tools.langchain.web_search_tool import basic_web_search
 from genai_tk.utils.singleton import once

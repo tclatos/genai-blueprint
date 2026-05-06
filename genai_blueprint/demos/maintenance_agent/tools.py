@@ -17,7 +17,7 @@ from textwrap import dedent
 
 import streamlit as st
 from genai_tk.core.embeddings_store import EmbeddingsStore
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, def_prompt
 from genai_tk.tools.langchain.sql_tool_factory import SQLToolConfig, SQLToolFactory
 from genai_tk.utils.config_mngr import global_config

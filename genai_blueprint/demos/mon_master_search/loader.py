@@ -17,7 +17,7 @@ try:
 except ImportError as ex:
     raise ImportError("abbreviations package is required. Install with: uv add abbreviations --group demos") from ex
 from genai_tk.core.embeddings_store import EmbeddingsStore
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import def_prompt
 from genai_tk.extra.retrievers.bm25s_retriever import BM25FastRetriever, get_spacy_preprocess_fn
 from langchain_community.document_loaders.base import BaseLoader

@@ -1,12 +1,12 @@
 """The usual "tell me a joke" LLM call."""
 
 from dotenv import load_dotenv
-from genai_tk.core.chain_registry import (
+from genai_blueprint.chain_registry import (
     Example,
     RunnableItem,
     register_runnable,
 )
-from genai_tk.core.llm_factory import get_llm_unified
+from genai_tk.core.factories.llm_factory import get_llm_unified
 from genai_tk.core.prompts import def_prompt
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import Runnable, RunnableConfig, RunnableLambda, RunnablePassthrough

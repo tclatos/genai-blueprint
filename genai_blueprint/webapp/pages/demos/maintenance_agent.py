@@ -19,7 +19,7 @@ from typing import cast
 
 import pandas as pd
 import streamlit as st
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, dict_input_message
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage

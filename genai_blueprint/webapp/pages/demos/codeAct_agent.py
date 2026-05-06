@@ -55,7 +55,7 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
-from genai_tk.core.llm_factory import LlmFactory
+from genai_tk.core.factories.llm_factory import LlmFactory
 from genai_tk.core.mcp_client import dict_to_stdio_server_list, get_mcp_servers_dict
 from genai_tk.core.prompts import dedent_ws
 

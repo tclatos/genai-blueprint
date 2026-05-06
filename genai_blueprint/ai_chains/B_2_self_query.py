@@ -5,13 +5,13 @@
 from functools import cache
 
 from devtools import debug  # noqa: F401
-from genai_tk.core.chain_registry import (
+from genai_blueprint.chain_registry import (
     Example,
     RunnableItem,
     register_runnable,
 )
 from genai_tk.core.embeddings_store import EmbeddingsStore
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from langchain_classic.chains.query_constructor.base import (
     StructuredQueryOutputParser,
     get_query_constructor_prompt,

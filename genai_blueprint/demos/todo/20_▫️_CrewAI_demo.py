@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from genai_tk.core.llm_factory import LlmFactory
+from genai_tk.core.factories.llm_factory import LlmFactory
 
 try:
     import pandas as pd

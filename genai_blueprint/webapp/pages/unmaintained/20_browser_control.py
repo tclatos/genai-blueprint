@@ -2,7 +2,7 @@ import asyncio
 
 import streamlit as st
 from browser_use import Agent, BrowserSession
-from genai_tk.core.llm_factory import get_llm
+from genai_tk.core.factories.llm_factory import get_llm
 from streamlit import session_state as sss
 
 LLM_ID = "gpt_4o_azure"

@@ -137,7 +137,6 @@ Configure LLMs via `/config/providers/llm.yaml` after setting up API keys.
 - `genai_blueprint/main/`: Main application entry points
   - `cli.py`: Command-line interface implementation
   - `fastapi_app.py`: FastAPI web application
-  - `langserve_app.py`: LangServe integration
   - `modal_app.py`: Modal deployment setup
   - `streamlit.py`: Streamlit web application
 

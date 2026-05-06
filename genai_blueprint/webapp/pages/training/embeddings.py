@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from genai_tk.core.embeddings_factory import EmbeddingsFactory, get_embeddings
+from genai_tk.core.factories.embeddings_factory import EmbeddingsFactory, get_embeddings
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity

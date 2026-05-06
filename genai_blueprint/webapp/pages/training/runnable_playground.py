@@ -17,7 +17,7 @@ from pathlib import Path
 
 import streamlit as st
 from devtools import debug
-from genai_tk.core.chain_registry import ChainRegistry
+from genai_blueprint.chain_registry import ChainRegistry
 from genai_tk.utils.config_mngr import global_config
 from pydantic import BaseModel
 

@@ -28,7 +28,6 @@ cli run joke -m openai/gpt-4 "Tell me a technical joke"
 #### Web Applications
 - **Streamlit App** (`streamlit.py`) - Main web interface for interactive AI experiences
 - **FastAPI App** (`fastapi_app.py`) - REST API backend for AI services  
-- **LangServe App** (`langserve_app.py`) - LangChain serving for production deployment
 - **Modal App** (`modal_app.py`) - Serverless deployment configuration
 
 ### Demo Applications (`src/demos/`)
