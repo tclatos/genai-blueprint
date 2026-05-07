@@ -271,3 +271,93 @@ python src/demos/deep_agents/research_agent_example.py
 - **API Reference** - Complete API documentation for all modules
 
 This blueprint provides a comprehensive foundation for building production AI applications while maintaining flexibility for customization and extension.
+
+## Workflow Integration
+
+GenAI Blueprint applications can be orchestrated using the **genai-tk Workflow Engine**, which provides YAML-driven composition of multi-step AI pipelines.
+
+### Integrating Workflows into Blueprint Apps
+
+Create reusable pipeline definitions in your blueprint application:
+
+```yaml
+# config/workflows.yaml
+workflows:
+  research_and_summarize:
+    description: "Research a topic and generate a summary"
+    steps:
+      - id: search
+        uses: genai_blueprint.demos.deep_agents.research_agent_example.research_flow
+        inputs:
+          topic: "${profile.topic}"
+          max_results: "${profile.max_results}"
+
+      - id: summarize
+        uses: genai_blueprint.demos.deep_agents.research_agent_example.summarize_flow
+        needs: [search]
+        inputs:
+          research_results: "${profile.research_output_path}"
+
+workflow_profiles:
+  ai_trends:
+    workflow: research_and_summarize
+    values:
+      topic: "Latest AI trends 2025"
+      max_results: 10
+      research_output_path: "${paths.data_root}/ai_trends_research"
+```
+
+Invoke from CLI:
+
+```bash
+# List available workflows
+uv run cli workflow list
+
+# Dry-run to see the plan
+uv run cli workflow run ai_trends --dry-run
+
+# Execute the full workflow
+uv run cli workflow run ai_trends
+```
+
+### Chain Blueprint Components
+
+Combine multiple blueprint demos into a single workflow:
+
+```yaml
+workflows:
+  full_knowledge_pipeline:
+    steps:
+      - id: extract_entities
+        uses: genai_blueprint.demos.ekg.cli_commands_baml.baml_extraction_flow
+        inputs:
+          docs_path: "${profile.docs_path}"
+
+      - id: build_graph
+        uses: genai_blueprint.demos.ekg.graph_core.create_knowledge_graph
+        needs: [extract_entities]
+        inputs:
+          entities_path: "${profile.entities_output_path}"
+
+      - id: search
+        uses: genai_blueprint.demos.mon_master_search.search.search_knowledge_graph
+        needs: [build_graph]
+        inputs:
+          query: "${profile.search_query}"
+
+workflow_profiles:
+  enterprise_pipeline:
+    workflow: full_knowledge_pipeline
+    values:
+      docs_path: "${paths.data_root}/docs"
+      entities_output_path: "${paths.data_root}/entities"
+      search_query: "What are the main risks?"
+```
+
+### Documentation
+
+For comprehensive workflow documentation, see:
+
+- **[../genai-tk/docs/workflows.md](../genai-tk/docs/workflows.md)** — Core workflow engine documentation
+- **[../genai-graph/docs/workflows.md](../genai-graph/docs/workflows.md)** — Knowledge graph workflow examples
+- **[../genai-tk/docs/cli.md](../genai-tk/docs/cli.md)** — CLI commands including `workflow` group
