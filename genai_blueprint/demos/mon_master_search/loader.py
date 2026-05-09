@@ -19,7 +19,7 @@ except ImportError as ex:
 from genai_tk.core.embeddings_store import EmbeddingsStore
 from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import def_prompt
-from genai_tk.extra.retrievers.bm25s_retriever import BM25FastRetriever, get_spacy_preprocess_fn
+from genai_tk.workflow.retrievers.bm25s_retriever import BM25FastRetriever, get_spacy_preprocess_fn
 from langchain_community.document_loaders.base import BaseLoader
 from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
