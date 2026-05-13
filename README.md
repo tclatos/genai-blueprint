@@ -1,3 +1,18 @@
+# GenAI Blueprint
+
+A **reference implementation** and **demo showcase** built on [genai-tk](../genai-tk/README.md).
+
+GenAI Blueprint demonstrates production patterns for the three toolkit domains:
+- **🧠 Core GenAI** — LLM factories, embeddings, retrieval pipelines (RAG)
+- **🤖 Agents** — ReAct, Deep, Deer-flow, SmolAgents in action
+- **⚙️ Workflows** — Prefect-orchestrated multi-stage pipelines (research → analysis → export)
+
+See [Agents.md](Agents.md) for the full blueprint structure, demo applications, and integration examples.
+
+For the toolkit overview, installation, and API reference, see [genai-tk README](../genai-tk/README.md).
+
+---
+
 # GenAI Framework
 
 A framework for building and deploying Generative AI/ Agentic AI applications with the following features:
