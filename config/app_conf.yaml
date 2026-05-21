@@ -2,11 +2,9 @@
 # Application configuration file 
 ################
 
-# Default configuration, as defined in baseline.yaml, overrides.yaml, here, or elsewhere.
-# It can be overidden by 'BLUEPRINT_CONFIG' environment variable, or in code
-
-#default_config: ${oc.env:BLUEPRINT_CONFIG,training_adn}
-default_config: ${oc.env:BLUEPRINT_CONFIG,training_adn}
+# Profile selects a profile overlay directory: config/profiles/<profile>/
+# Override with BLUEPRINT_CONFIG env var.
+profile: ${oc.env:BLUEPRINT_CONFIG,training_adn}
 
 # Note : configuration leverage OmegaConf solvers. See :
 # https://omegaconf.readthedocs.io/en/2.3_branch/usage.html#variable-interpolation
@@ -27,20 +25,11 @@ paths:
   LOGURU_LEVEL: INFO
   LANGCHAIN_TRACING_V2: "false" 
 
-# Other config files merged to this one at launch time
-:merge:
-  - ${paths.config}/baseline.yaml
-  - ${paths.config}/providers/llm.yaml
-  - ${paths.config}/providers/embeddings.yaml
-  - ${paths.config}/overrides.yaml
-  - ${paths.config}/mcp_servers.yaml
-  - ${paths.config}/agents/deerflow.yaml
-  - ${paths.config}/agents/smolagents.yaml
-  - ${paths.config}/components/gpt_researcher.yaml
-  - ${paths.config}/demos/presidio_anonymization.yaml
-  - ${paths.config}/demos/graph_rag.yaml
-  - ${paths.config}/demos/cli_examples.yaml
- # - ${paths.config}/demos/cognee_kg.yaml
+# Directories scanned recursively for YAML files at startup.
+# config_dirs: [config/]
+
+# Glob patterns to exclude from auto-scan (relative to each config_dir).
+# config_exclude: []
 
 
 #### 
