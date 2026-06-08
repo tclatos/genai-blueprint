@@ -9,7 +9,7 @@ from pathlib import Path
 import json_repair
 import pandas as pd
 import typer
-from genai_tk.utils.config_mngr import global_config
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.utils.pydantic_utils.jsonl_store import load_objects_from_jsonl, store_objects_to_jsonl
 
 try:

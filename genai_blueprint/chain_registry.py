@@ -33,7 +33,7 @@ import importlib
 from collections.abc import Callable
 from typing import Any
 
-from genai_tk.utils.config_mngr import global_config
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.utils.singleton import once
 from langchain_core.runnables import Runnable, RunnableLambda
 from loguru import logger

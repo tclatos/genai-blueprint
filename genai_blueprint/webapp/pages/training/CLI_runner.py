@@ -9,8 +9,8 @@ Provides a simple interface to:
 import shlex
 
 import streamlit as st
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.main.cli import cli_app, load_and_register_commands
-from genai_tk.utils.config_mngr import global_config
 from typer.testing import CliRunner
 
 

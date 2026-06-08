@@ -14,8 +14,8 @@ from typing import Any, Final
 
 import pandas as pd
 import streamlit as st
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.extra.gpt_researcher_helper import run_gpt_researcher
-from genai_tk.utils.config_mngr import global_config
 from loguru import logger
 from md2pdf import md2pdf
 from streamlit import session_state as sss

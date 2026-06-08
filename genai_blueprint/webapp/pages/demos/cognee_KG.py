@@ -13,8 +13,8 @@ from beartype.door import is_bearable
 from cognee.api.v1.search import SearchType
 from cognee.api.v1.visualize.visualize import visualize_graph
 from devtools import debug  # noqa: F401
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.extra.cognee_utils import get_search_type_description, set_cognee_config
-from genai_tk.utils.config_mngr import global_config
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 from streamlit import session_state as sss

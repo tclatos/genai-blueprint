@@ -13,7 +13,7 @@ from streamlit import session_state as sss
 
 try:
     import src.demos.mon_master_search.search as master_search
-    from genai_tk.utils.config_mngr import global_config
+    from genai_tk.config_mgmt.config_mngr import global_config
 
     from genai_blueprint.demos.mon_master_search.loader import add_accronym
     from genai_blueprint.demos.mon_master_search.model_subset import EXAMPLE_QUERIES

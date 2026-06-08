@@ -16,11 +16,11 @@ from pathlib import Path
 from textwrap import dedent
 
 import streamlit as st
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.core.embeddings_store import EmbeddingsStore
 from genai_tk.core.factories.llm_factory import get_llm
 from genai_tk.core.prompts import dedent_ws, def_prompt
 from genai_tk.tools.langchain.sql_tool_factory import SQLToolConfig, SQLToolFactory
-from genai_tk.utils.config_mngr import global_config
 from langchain.tools import BaseTool, tool
 from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader

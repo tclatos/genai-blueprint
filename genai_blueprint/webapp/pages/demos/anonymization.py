@@ -7,8 +7,8 @@ Demonstrates PII detection, anonymization, and reversible de-anonymization capab
 from typing import Any
 
 import streamlit as st
+from genai_tk.config_mgmt.config_mngr import global_config
 from genai_tk.extra.custom_presidio_anonymizer import CustomizedPresidioAnonymizer
-from genai_tk.utils.config_mngr import global_config
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 from streamlit import session_state as sss
