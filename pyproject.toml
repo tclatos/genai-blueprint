@@ -37,8 +37,7 @@ dependencies = [
     # ============================================
     # Structured Data Extraction
     # ============================================
-    "baml-py>=0.209.0", # BAML Python library for LLM parsing
-    "baml-cli>=0.1.0",  # BAML CLI for structured extraction
+    "baml-py>=0.209.0", # BAML runtime and CLI for structured extraction
     # ============================================
     # Database Backends
     # ============================================
@@ -53,6 +52,25 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/tclatos/genai-blueprint"
 Repository = "https://github.com/tclatos/genai-blueprint"
+
+[project.optional-dependencies]
+# `ui`, `demos`, `extra`, and `dev` are default dependency groups. This extra
+# supplies the remaining groups so `uv sync --extra all` installs everything.
+all = [
+    "playwright>=1.51.0",
+    "helium>=5.1.0,<6",
+    "browser-use-sdk>=2.0.4",
+    "presidio-analyzer>=2.2.0",
+    "presidio-anonymizer>=2.2.0",
+    "agent-sandbox>=0.0.19",
+    "markitdown[all,xlsx]>=0.0.1a2",
+    "readabilipy>=0.3.0",
+    "ddgs>=9.10.0",
+    "langchain-mcp-adapters>=0.1.0",
+    "langchain-deepseek>=1.0.1",
+    "markdownify>=1.2.2",
+    "duckdb>=1.4.4",
+]
 
 
 [dependency-groups]

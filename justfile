@@ -27,12 +27,6 @@ mod modal 'deploy/modal.just'
 default:
     @just --list --unsorted
 
-# ─── Web Applications ───────────────────────────────────────────────────────
-
-[doc('Launch Streamlit app')]
-webapp:
-    PYTHONPATH={{ dev_pythonpath }} uv run streamlit run "{{ streamlit_entry }}"
-
 [doc('Launch FastAPI server locally')]
 fast-api:
     PYTHONPATH={{ dev_pythonpath }} uv run uvicorn genai_blueprint.main.fastapi_app:app --reload

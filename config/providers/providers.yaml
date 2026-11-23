@@ -1,114 +1,288 @@
 # Provider configuration for LLM and Embeddings factories
+# 
 # Each provider specifies:
 #   - use: Module and class in format 'module.path.ClassName'
 #   - api_key_env_var: Environment variable for API key (empty string if not required)
 #   - api_base: Optional API base URL for OpenAI-compatible providers
 #   - litellm_prefix: LiteLLM provider prefix string; null means no prefix (openai-style)
 #   - gateway: true for providers that accept vendor-prefixed model names (openrouter, github, litellm)
+#   - openai_compatible: Explicitly mark OpenAI-compatible providers (auto-detected by default)
+#   - extra_body: Extra fields to pass to OpenAI API (e.g. quantization settings for gateways)
+#   - seed_param_location: Where to place seed parameter ('root', 'model_kwargs', or null to omit)
+#   - special_env_vars: Additional environment variables (e.g. {api_version: AZURE_OPENAI_API_VERSION})
+#   - custom_headers: Custom HTTP headers to send with requests
 
 providers:
-  # --- Providers with models.dev profile registry ---
-
+  # --- Standard OpenAI API ---
   openai:
-    use: langchain_openai.ChatOpenAI
+    chat_class: genai_tk.core.providers.chat.OpenAIChat
+    embeddings_class: langchain_openai.OpenAIEmbeddings
+    decision_class: genai_tk.core.decision_models.openai.OpenAIDecisionModel
     api_key_env_var: OPENAI_API_KEY
     litellm_prefix: null
+    openai_compatible: true
+
+  # --- Non-OpenAI APIs (use LangChain provider-specific classes) ---
 
   anthropic:
-    use: langchain_anthropic.ChatAnthropic
+    chat_class: langchain_anthropic.ChatAnthropic
     api_key_env_var: ANTHROPIC_API_KEY
     litellm_prefix: anthropic
+    openai_compatible: false
 
   google:
-    use: langchain_google_genai.ChatGoogleGenerativeAI
+    chat_class: langchain_google_genai.ChatGoogleGenerativeAI
+    embeddings_class: langchain_google_genai.GoogleGenerativeAIEmbeddings
     api_key_env_var: GOOGLE_API_KEY
     litellm_prefix: google
+    openai_compatible: false
 
   mistral:
-    use: langchain_mistralai.ChatMistralAI
+    chat_class: genai_tk.core.providers.chat.MistralChat
     api_key_env_var: MISTRAL_API_KEY
     litellm_prefix: mistralai
+    openai_compatible: false
+    seed_param_location: null  # MistralAI does not accept seed
+
+  # --- OpenAI-compatible providers ---
 
   groq:
-    use: langchain_openai.ChatOpenAI
+    chat_class: genai_tk.core.providers.chat.GroqChat
     api_key_env_var: GROQ_API_KEY
     api_base: https://api.groq.com/openai/v1
     litellm_prefix: groq
-
-  # --- Gateway providers (accept vendor-prefixed model names) ---
-
-  openrouter:
-    use: langchain_openai.ChatOpenAI
-    api_key_env_var: OPENROUTER_API_KEY
-    api_base: https://openrouter.ai/api/v1
-    litellm_prefix: openrouter
-    gateway: true
-
-  github:
-    use: langchain_openai.ChatOpenAI
-    api_key_env_var: GITHUB_PRO_PAM
-   # api_key_env_var: GITHUB_PERSONAL_ACCESS_TOKEN
-    api_base: https://models.github.ai/inference
-    litellm_prefix: github
-    gateway: true
-
-  litellm:
-    use: litellm.ChatLiteLLM
-    api_key_env_var: ""
-    litellm_prefix: null   # model is already in LiteLLM format
-    gateway: true
-
-  # --- Other providers (no models.dev profile registry) ---
-
-  fake:
-    use: langchain_core.language_models.fake_chat_models.ParrotFakeChatModel
-    api_key_env_var: ""
+    openai_compatible: true
+    seed_param_location: model_kwargs  # Groq expects seed in model_kwargs
 
   deepinfra:
-    use: langchain_openai.ChatOpenAI
+    chat_class: genai_tk.core.providers.chat.DeepInfraChat
+    embeddings_class: langchain_openai.OpenAIEmbeddings
     api_key_env_var: DEEPINFRA_API_TOKEN
     api_base: https://api.deepinfra.com/v1/openai
     litellm_prefix: deepinfra
-
-  ollama:
-    use: langchain_ollama.ChatOllama
-    api_key_env_var: ""
-    litellm_prefix: ollama
+    openai_compatible: true
+    gateway: false
 
   edenai:
-    use: langchain_openai.ChatOpenAI
+    chat_class: genai_tk.core.providers.chat.EdenAIChat
+    embeddings_class: langchain_openai.OpenAIEmbeddings
+    decision_class: genai_tk.core.decision_models.edenai.EdenAIDecisionModel
     api_key_env_var: EDENAI_API_KEY
     api_base: https://api.edenai.run/v3/llm
-    litellm_prefix: edenai
+    openai_compatible: true
+    gateway: true
+    # EdenAI v3: accepts vendor/model format (e.g. openai/gpt-4, anthropic/claude-sonnet)
+
+  edenai-eur:
+    chat_class: genai_tk.core.providers.chat.EdenAIChat
+    embeddings_class: langchain_openai.OpenAIEmbeddings
+    decision_class: genai_tk.core.decision_models.edenai.EdenAIDecisionModel
+    api_key_env_var: EDENAI_API_KEY
+    api_base: https://api.eu.edenai.run/v3/llm
+    openai_compatible: true
+    gateway: true
+
+  openrouter:
+    chat_class: genai_tk.core.providers.chat.OpenRouterChat
+    embeddings_class: langchain_openai.OpenAIEmbeddings
+    decision_class: genai_tk.core.decision_models.openrouter.OpenRouterDecisionModel
+    api_key_env_var: OPENROUTER_API_KEY
+    api_base: https://openrouter.ai/api/v1
+    litellm_prefix: openrouter
+    openai_compatible: true
+    gateway: true
+    # Accepts vendor/model format; may need quantization preferences
+    extra_body:
+      # Avoid fp4 quantization by default; applied only for non-major vendors
+      default_quantization: ["fp8", "unknown", "fp16", "fp32", "bf16"]
+
+  github:
+    chat_class: genai_tk.core.providers.chat.BaseOpenAIChat
+    api_key_env_var: GITHUB_PRO_PAM
+    api_base: https://models.github.ai/inference
+    litellm_prefix: github
+    openai_compatible: true
+    gateway: true
+    # GitHub Models API: OpenAI-compatible
+
+  # --- Other providers ---
+
+  fake:
+    chat_class: genai_tk.core.providers.chat.FakeChat
+    embeddings_class: langchain_core.embeddings.fake.DeterministicFakeEmbedding
+    decision_class: genai_tk.core.decision_models.fake.FakeDecisionModel
+    api_key_env_var: ""
+    openai_compatible: false
+
+  ollama:
+    chat_class: genai_tk.core.providers.chat.OllamaChat
+    embeddings_class: langchain_ollama.OllamaEmbeddings
+    api_key_env_var: ""
+    litellm_prefix: ollama
+    openai_compatible: false
+    # Note: Ollama runs locally; requires special proxy handling in code
+
+  local:
+    embeddings_class: genai_tk.utils.langchain_community_repl.fastembed_embeddings.FastEmbedEmbeddings
+    api_key_env_var: ""
+    openai_compatible: false
+    # FastEmbed local ONNX models for embeddings; no API key required
 
   azure:
-    use: langchain_openai.AzureChatOpenAI
+    chat_class: genai_tk.core.providers.chat.AzureChat
+    embeddings_class: genai_tk.core.providers.embeddings.AzureEmbeddingsWrapper
     api_key_env_var: AZURE_OPENAI_API_KEY
-    litellm_prefix: null    # azure has special model-string handling
+    litellm_prefix: null
+    openai_compatible: false  # Uses custom AzureChatOpenAI class
+    special_env_vars:
+      api_version: AZURE_OPENAI_API_VERSION
+    # Azure OpenAI requires special model name parsing (name/version format)
 
   together:
-    use: langchain_together.ChatTogether
+    chat_class: langchain_together.ChatTogether
     api_key_env_var: TOGETHER_API_KEY
     litellm_prefix: together
+    openai_compatible: false
 
   deepseek:
-    use: langchain_deepseek.ChatDeepSeek
+    chat_class: langchain_deepseek.ChatDeepSeek
     api_key_env_var: DEEPSEEK_API_KEY
     litellm_prefix: deepseek
+    openai_compatible: false
 
   huggingface:
-    use: langchain_openai.ChatOpenAI
+    chat_class: genai_tk.core.providers.chat.HuggingFaceChat
+    embeddings_class: langchain_huggingface.HuggingFaceEmbeddings
     api_key_env_var: HUGGINGFACEHUB_API_TOKEN
     litellm_prefix: huggingface
+    openai_compatible: false
+
+  vllm:
+    chat_class: genai_tk.core.providers.chat.VllmChat
+    embeddings_class: langchain_openai.OpenAIEmbeddings
+    api_key_env_var: VLLM_API_KEY
+    api_base: http://localhost:8000/v1
+    openai_compatible: true
+
+  laya:
+    decision_class: genai_tk.core.decision_models.laya.LayaDecisionModel
+    api_key_env_var: LAYA_API_KEY
+    openai_compatible: false
 
   custom:
-    use: langchain_openai.ChatOpenAI
+    chat_class: genai_tk.core.providers.chat.BaseOpenAIChat
+    api_key_env_var: ""
+    openai_compatible: true
+    # For vLLM and other OpenAI-compatible providers;
+    # base_url and other params should be set in llm.yaml exceptions
+
+  litellm:
+    chat_class: genai_tk.core.providers.chat.LiteLLMChat
     api_key_env_var: ""
     litellm_prefix: null
+    openai_compatible: false
+    gateway: true
+    # LiteLLM handles provider routing; model is in LiteLLM format
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AI Labs — model creators, independent of the provider/API used to access them.
+#
+# vendor_prefixes: prefixes found in gateway model IDs (e.g. "meta-llama/llama-…")
+# model_patterns:  case-insensitive substrings matched against the bare model name
+# direct_provider: optional provider key whose entire model catalogue belongs to
+#                  this lab (saves pattern matching for single-lab providers)
+# ─────────────────────────────────────────────────────────────────────────────
+labs:
+  openai:
+    display_name: OpenAI
+    vendor_prefixes: [openai]
+    model_patterns: [gpt, o1, o3, o4, codex, whisper, davinci, babbage, curie]
+    direct_provider: openai
+
+  anthropic:
+    display_name: Anthropic
+    vendor_prefixes: [anthropic]
+    model_patterns: [claude, haiku, sonnet, opus]
+    direct_provider: anthropic
+
+  google:
+    display_name: Google DeepMind
+    vendor_prefixes: [google]
+    model_patterns: [gemini, palm, bard, gemma]
+
+  meta:
+    display_name: Meta AI
+    vendor_prefixes: [meta-llama, meta]
+    model_patterns: [llama]
+
+  mistral:
+    display_name: Mistral AI
+    vendor_prefixes: [mistralai]
+    model_patterns: [mistral, mixtral, codestral, mathstral, pixtral, ministral]
+    direct_provider: mistral
+
+  deepseek:
+    display_name: DeepSeek
+    vendor_prefixes: [deepseek]
+    model_patterns: [deepseek]
+    direct_provider: deepseek
+
+  xai:
+    display_name: xAI
+    vendor_prefixes: [x-ai, xai]
+    model_patterns: [grok]
+
+  qwen:
+    display_name: Alibaba / Qwen
+    vendor_prefixes: [qwen, alibaba, qwen-coder]
+    model_patterns: [qwen]
+
+  microsoft:
+    display_name: Microsoft
+    vendor_prefixes: [microsoft]
+    model_patterns: [phi]
+
+  amazon:
+    display_name: Amazon
+    vendor_prefixes: [amazon]
+    model_patterns: [nova, titan]
+
+  cohere:
+    display_name: Cohere
+    vendor_prefixes: [cohere]
+    model_patterns: [command, aya, c4ai]
+
+  nvidia:
+    display_name: NVIDIA
+    vendor_prefixes: [nvidia]
+    model_patterns: [nemotron, llama-3]
+
+  moonshotai:
+    display_name: Moonshot AI
+    vendor_prefixes: [moonshotai]
+    model_patterns: [kimi, moonshot]
+
+  ibm:
+    display_name: IBM
+    vendor_prefixes: [ibm-granite]
+    model_patterns: [granite]
+
+  groq:
+    display_name: Groq (inference)
+    vendor_prefixes: []
+    model_patterns: []
+    direct_provider: groq
+
+  together:
+    display_name: Together AI
+    vendor_prefixes: [together]
+    model_patterns: []
+    direct_provider: together
 
   # NOT TESTED:
   bedrock:
     use: langchain_aws.ChatBedrock
     api_key_env_var: AWS_ACCESS_KEY_ID
     litellm_prefix: bedrock
+    openai_compatible: false
 

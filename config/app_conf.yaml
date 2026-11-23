@@ -31,6 +31,32 @@ paths:
 # Glob patterns to exclude from auto-scan (relative to each config_dir).
 # config_exclude: []
 
+# Load the provider registries and application defaults required by the active
+# profile. Profile-specific values are applied below.
+:merge:
+  - "providers/**/*.yaml"
+  - "profiles/baseline/**/*.yaml"
+
+:profiles:
+  training_adn:
+    llm:
+      models:
+        default: gpt_oss120@openrouter
+        azure: gpt_41@azure
+        openai: gpt_41mini@openai
+        for_vision: gpt_41@azure
+        openrouter: gpt_oss120@openrouter
+        local: gemma3_4b@ollama
+    embeddings:
+      models:
+        default: ada_002@azure
+        cheap: qwen3_06b@deepinfra
+        edenai: ada_002@edenai
+        local: artic_22@ollama
+        azure: ada_002@azure
+    vector_store:
+      default: Chroma_in_memory
+
 
 #### 
 # User Interface Configuration : list of Streamlit pages, authentication, ... 
@@ -82,13 +108,20 @@ auth:
 ####
 cli:
   commands:  # List modules:functions to register CLI commands
-    - genai_tk.core.commands_core.CoreCommands
-    - genai_tk.core.commands_info.InfoCommands
+    - genai_tk.cli.commands_core.CoreCommands
+    - genai_tk.cli.commands_info.InfoCommands
+    - genai_tk.cli.commands_test.TestCommands
+    - genai_tk.workflow.commands.WorkflowCommands
+    - genai_tk.workflow.prefect_commands.PrefectCommands
     - genai_tk.extra.commands_extra.ExtraCommands
     - genai_tk.agents.commands_agents.AgentCommands
+    - genai_tk.agents.sandbox.cli_commands.SandboxCommands
     - genai_tk.extra.structured.commands_baml.BamlCommands
+    - genai_tk.workflow.rag.commands_rag.RagCommands
+    - genai_tk.mcp.cli_commands.McpCommands
+    - genai_tk.cli.commands_skills.SkillsCommands
     - genai_tk.main.cli.register_commands
-    - genai_tk.core.commands_test.TestCommands
+    - genai_tk.cli.commands_monitoring.MonitoringCommands
  
 logging:
   format: "<cyan>{time:HH:mm:ss}</cyan>-<level>{level: <7}</level> | <magenta>{file.name}</magenta>:<green>{line} <italic>{function}</italic></green>- <level>{message}</level>"
